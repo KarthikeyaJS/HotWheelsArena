@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+public
+functions/lib
+functions/node_modules
+.firebase
+emulator-data
+package-lock.json
+functions/package-lock.json
+*.log
+index.html

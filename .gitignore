@@ -1,0 +1,40 @@
+# dependencies
+node_modules/
+functions/node_modules/
+
+# builds
+dist/
+dist-ssr/
+functions/lib/
+coverage/
+*.tsbuildinfo
+
+# env — only .env.example is committed
+.env
+.env.local
+.env.*.local
+
+# firebase
+.firebase/
+.runtimeconfig.json
+emulator-data/
+.emulator-data/
+firebase-export-*/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+database-debug.log*
+pubsub-debug.log*
+service-account*.json
+serviceAccount*.json
+
+# logs
+*.log
+npm-debug.log*
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

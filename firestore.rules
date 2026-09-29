@@ -1,0 +1,343 @@
+rules_version = '2';
+
+// =====================================================================================
+//  HotWheelsArena — Cloud Firestore security rules
+//
+//  Principles
+//  - Default deny. Every readable/writable path is listed explicitly below.
+//  - The storefront catalogue (products, categories, series, settings) is public-read;
+//    only an admin (custom claim `admin: true`) may write it. The future admin site
+//    shares this project and signs in with that claim.
+//  - Everything that affects money, XP, badges, stats or reviews is written ONLY by
+//    Cloud Functions through the Admin SDK (which bypasses these rules):
+//      orders, users/{uid} creation + xp/level/badges/stats/role, reviews, newsletter,
+//      rateLimits, processedPayments, garage entries with source 'purchase'.
+//  - Client-writable user data is validated field-by-field (exact key sets, types,
+//    sizes, server timestamps) so a tampered client cannot smuggle extra fields.
+//
+//  Contract source: docs/ARCHITECTURE.md §10. Tests: tests/rules/*.test.ts
+//  (run with `npm run test:rules`). Keep INDIAN_STATES below in sync with
+//  shared/india.ts — a test fails if they drift.
+// =====================================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------------
+    //  Identity helpers
+    // -------------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Admin is a custom claim set with the Admin SDK (scripts/set-admin.ts), never a
+    // document field. `get` with a default avoids evaluation errors for normal users.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.get('admin', false) == true;
+    }
+
+    // -------------------------------------------------------------------------------
+    //  Field-validation helpers
+    // -------------------------------------------------------------------------------
+
+    // The document keys are exactly `keys` (all present, nothing extra).
+    function hasExactKeys(data, keys) {
+      return data.keys().hasAll(keys) && data.keys().hasOnly(keys);
+    }
+
+    // Keys whose value differs between the stored and the incoming document.
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // An update touches only `keys`.
+    function onlyChanges(keys) {
+      return changedKeys().hasOnly(keys);
+    }
+
+    // `key` is part of this update.
+    function changes(key) {
+      return changedKeys().hasAny([key]);
+    }
+
+    function isString(value, minSize, maxSize) {
+      return value is string && value.size() >= minSize && value.size() <= maxSize;
+    }
+
+    function isIntBetween(value, min, max) {
+      return value is int && value >= min && value <= max;
+    }
+
+    // Set with serverTimestamp() in this very request.
+    function isRequestTime(value) {
+      return value is timestamp && value == request.time;
+    }
+
+    // An https URL of sane length (profile photos) or null.
+    function isOptionalHttpsUrl(value) {
+      return value == null || (isString(value, 9, 2048) && value.matches('^https://.+$'));
+    }
+
+    // Garage / wishlist entries may only reference cars that exist in the catalogue.
+    function productExists(productId) {
+      return exists(/databases/$(database)/documents/products/$(productId));
+    }
+
+    // -------------------------------------------------------------------------------
+    //  Domain constants (mirror shared/*.ts)
+    // -------------------------------------------------------------------------------
+
+    function garageMaxQuantity() {
+      return 99; // shared/gamification.ts MAX_GARAGE_QUANTITY
+    }
+
+    function orderStatuses() {
+      return ['placed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    }
+
+    // shared/india.ts INDIAN_STATES — 28 states + 8 union territories.
+    function indianStates() {
+      return [
+        'Andhra Pradesh',
+        'Arunachal Pradesh',
+        'Assam',
+        'Bihar',
+        'Chhattisgarh',
+        'Goa',
+        'Gujarat',
+        'Haryana',
+        'Himachal Pradesh',
+        'Jharkhand',
+        'Karnataka',
+        'Kerala',
+        'Madhya Pradesh',
+        'Maharashtra',
+        'Manipur',
+        'Meghalaya',
+        'Mizoram',
+        'Nagaland',
+        'Odisha',
+        'Punjab',
+        'Rajasthan',
+        'Sikkim',
+        'Tamil Nadu',
+        'Telangana',
+        'Tripura',
+        'Uttar Pradesh',
+        'Uttarakhand',
+        'West Bengal',
+        'Andaman and Nicobar Islands',
+        'Chandigarh',
+        'Dadra and Nagar Haveli and Daman and Diu',
+        'Delhi',
+        'Jammu and Kashmir',
+        'Ladakh',
+        'Lakshadweep',
+        'Puducherry'
+      ];
+    }
+
+    // -------------------------------------------------------------------------------
+    //  Document validators
+    // -------------------------------------------------------------------------------
+
+    // users/{uid}: the client may edit only its display name and photo, and must stamp
+    // updatedAt with the server time. xp / level / badges / stats / role / email /
+    // createdAt are function-owned and therefore immutable here.
+    function isValidProfileUpdate() {
+      let data = request.resource.data;
+      return onlyChanges(['displayName', 'photoURL', 'updatedAt'])
+        && isRequestTime(data.updatedAt)
+        && (!changes('displayName') || isString(data.displayName, 1, 80))
+        && (!changes('photoURL') || isOptionalHttpsUrl(data.photoURL));
+    }
+
+    // users/{uid}/addresses/{id}: Indian address format (same limits as the zod
+    // AddressSchema in shared/schemas.ts). line2 / landmark are always strings ('' ok).
+    function isValidAddress(data) {
+      return hasExactKeys(data, [
+          'name', 'phone', 'pincode', 'line1', 'line2', 'landmark',
+          'city', 'state', 'isDefault', 'createdAt', 'updatedAt'
+        ])
+        && isString(data.name, 2, 80)
+        && data.phone is string && data.phone.matches('^[6-9][0-9]{9}$')
+        && data.pincode is string && data.pincode.matches('^[1-9][0-9]{5}$')
+        && isString(data.line1, 5, 120)
+        && isString(data.line2, 0, 120)
+        && isString(data.landmark, 0, 80)
+        && isString(data.city, 2, 60)
+        && data.state in indianStates()
+        && data.isDefault is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAddressCreate() {
+      let data = request.resource.data;
+      return isValidAddress(data)
+        && isRequestTime(data.createdAt)
+        && isRequestTime(data.updatedAt);
+    }
+
+    function isValidAddressUpdate() {
+      let data = request.resource.data;
+      return isValidAddress(data)
+        && data.createdAt == resource.data.createdAt
+        && isRequestTime(data.updatedAt);
+    }
+
+    // users/{uid}/garage/{productId}: manual "parked" cars only. Purchased cars
+    // (source 'purchase') are written by the placeOrder function.
+    function isValidGarageCreate(productId) {
+      let data = request.resource.data;
+      return hasExactKeys(data, ['productId', 'addedAt', 'source', 'isFavorite', 'quantity'])
+        && data.productId == productId
+        && isRequestTime(data.addedAt)
+        && data.source == 'manual'
+        && data.isFavorite is bool
+        && isIntBetween(data.quantity, 1, garageMaxQuantity())
+        && productExists(productId);
+    }
+
+    // Only the favourite flag and the duplicates counter may change; productId,
+    // addedAt and source are immutable (also on function-created purchase entries).
+    function isValidGarageUpdate() {
+      let data = request.resource.data;
+      return onlyChanges(['isFavorite', 'quantity'])
+        && (!changes('isFavorite') || data.isFavorite is bool)
+        && (!changes('quantity') || isIntBetween(data.quantity, 1, garageMaxQuantity()));
+    }
+
+    // users/{uid}/wishlist/{productId}: { productId, addedAt } — create/delete only.
+    function isValidWishlistCreate(productId) {
+      let data = request.resource.data;
+      return hasExactKeys(data, ['productId', 'addedAt'])
+        && data.productId == productId
+        && isRequestTime(data.addedAt)
+        && productExists(productId);
+    }
+
+    // orders/{id}: admins may move an order through its status lifecycle only.
+    function isValidOrderStatusUpdate() {
+      let data = request.resource.data;
+      return onlyChanges(['status', 'updatedAt'])
+        && data.status in orderStatuses()
+        && isRequestTime(data.updatedAt);
+    }
+
+    // ===============================================================================
+    //  Catalogue — public read, admin write
+    // ===============================================================================
+
+    match /products/{productId} {
+      // Public: the storefront lists `isActive == true`; garage/wishlist views also
+      // fetch retired (inactive) cars by id, so every product doc is readable.
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Reviews are created/updated ONLY by the submitReview callable, which also
+      // maintains products/{id}.ratingAvg / ratingCount. Moderation (future admin
+      // site) must go through a callable too, so the aggregates stay consistent.
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /series/{seriesId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // settings/site — shipping threshold, fees, tax, COD flag…
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ===============================================================================
+    //  Collectors
+    // ===============================================================================
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      // Created by ensureUserProfile / the onUserCreate trigger (Admin SDK).
+      allow create: if false;
+      allow update: if isOwner(uid) && isValidProfileUpdate();
+      // Account deletion is a server-side flow (it must also clean up orders etc.).
+      allow delete: if false;
+
+      match /addresses/{addressId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidAddressCreate();
+        allow update: if isOwner(uid) && isValidAddressUpdate();
+        allow delete: if isOwner(uid);
+      }
+
+      match /garage/{productId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidGarageCreate(productId);
+        allow update: if isOwner(uid) && isValidGarageUpdate();
+        allow delete: if isOwner(uid);
+      }
+
+      match /wishlist/{productId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidWishlistCreate(productId);
+        allow update: if false;
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ===============================================================================
+    //  Orders — created only by the placeOrder callable
+    // ===============================================================================
+
+    match /orders/{orderId} {
+      // A missing id resolves to "not found" (resource == null) instead of
+      // permission-denied, so the order page can show a friendly empty state.
+      allow get: if isSignedIn()
+        && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
+      // Queries must be constrained to the caller's uid (where('uid', '==', me)).
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if false;
+      allow update: if isAdmin() && isValidOrderStatusUpdate();
+      allow delete: if false;
+    }
+
+    // ===============================================================================
+    //  Function-only collections — no client access at all
+    // ===============================================================================
+
+    // subscribeNewsletter callable (validates + dedupes).
+    match /newsletter/{docId} {
+      allow read, write: if false;
+    }
+
+    // Per-user / per-action throttling counters used by callables.
+    match /rateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // Idempotency ledger of verified payment transaction ids (placeOrder).
+    match /processedPayments/{docId} {
+      allow read, write: if false;
+    }
+
+    // Anything not matched above is denied (Firestore's default). Stated explicitly
+    // for readers; rules are OR-ed, so this never revokes an allow above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

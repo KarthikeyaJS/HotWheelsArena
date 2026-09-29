@@ -1,0 +1,40 @@
+{
+  // Editor + typecheck project (includes unit tests). The deployable build uses tsconfig.build.json.
+  //
+  // rootDir is the repo root so the shared/ source folder compiles into lib/shared/ next to
+  // lib/functions/src/ — everything Firebase deploys stays inside functions/.
+  // module=commonjs keeps every emitted file CommonJS even though the root package.json is
+  // "type": "module" (shared/ would otherwise be treated as ESM under NodeNext).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+
+    "rootDir": "..",
+    "outDir": "lib",
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    // Resolve types ONLY from functions/node_modules (never the web app's root node_modules).
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types"],
+    // shared/ lives outside this package; make its bare `zod` import resolve to functions/node_modules.
+    "paths": {
+      "zod": ["./node_modules/zod"]
+    }
+  },
+  "include": ["src", "../shared"],
+  "exclude": ["lib", "node_modules", "../shared/**/*.test.ts"]
+}

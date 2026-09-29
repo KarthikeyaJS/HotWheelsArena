@@ -1,0 +1,159 @@
+# Verifies every push to `main` and deploys it to Firebase.
+#
+# Deploy order: Firestore rules + indexes → Cloud Functions (optional) → Hosting, so a new web
+# build never talks to an older backend.
+#
+# Repository configuration (Settings → Secrets and variables → Actions) — see README "CI/CD":
+#   Variables
+#     FIREBASE_PROJECT_ID   Firebase project id. Deploys are skipped while it is unset.
+#     DEPLOY_FUNCTIONS      "true" to deploy Cloud Functions on every push (optional).
+#     VITE_CLOUDINARY_CLOUD_NAME, VITE_SITE_URL, VITE_ENABLE_ANALYTICS, VITE_PAYMENT_PROVIDER,
+#     VITE_FUNCTIONS_REGION (all optional).
+#   Secrets
+#     FIREBASE_SERVICE_ACCOUNT   JSON key of the deploy service account.
+#   Secrets or variables (the web app config — public values, embedded in the bundle)
+#     VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID,
+#     VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, VITE_FIREBASE_APP_ID,
+#     VITE_FIREBASE_MEASUREMENT_ID (optional).
+name: Deploy to Firebase (main)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_functions:
+        description: Also deploy Cloud Functions
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Never cancel a deploy half-way; queue the next one instead.
+concurrency:
+  group: firebase-deploy-live
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy:
+    name: Verify, build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      DEPLOY_ENABLED: ${{ vars.FIREBASE_PROJECT_ID != '' }}
+      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY || secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN || secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID || secrets.VITE_FIREBASE_PROJECT_ID || vars.FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET || secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID || secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID || secrets.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ vars.VITE_FIREBASE_MEASUREMENT_ID || secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+      VITE_USE_EMULATORS: 'false'
+      VITE_FUNCTIONS_REGION: ${{ vars.VITE_FUNCTIONS_REGION || 'asia-south1' }}
+      VITE_CLOUDINARY_CLOUD_NAME: ${{ vars.VITE_CLOUDINARY_CLOUD_NAME }}
+      VITE_PAYMENT_PROVIDER: ${{ vars.VITE_PAYMENT_PROVIDER || 'dummy' }}
+      VITE_ENABLE_ANALYTICS: ${{ vars.VITE_ENABLE_ANALYTICS || 'false' }}
+      VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - name: Set up Java (Firestore emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Firebase emulator binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Check deploy configuration
+        env:
+          HAS_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        run: |
+          if [ "$DEPLOY_ENABLED" != "true" ]; then
+            echo "::notice::FIREBASE_PROJECT_ID is not set — running checks only, nothing will be deployed."
+            exit 0
+          fi
+          case "$FIREBASE_PROJECT_ID" in
+            demo-*) echo "::error::FIREBASE_PROJECT_ID is a demo-* (emulator-only) id. Use your real project id."; exit 1 ;;
+          esac
+          if [ "$HAS_SERVICE_ACCOUNT" != "true" ]; then
+            echo "::error::Secret FIREBASE_SERVICE_ACCOUNT is missing (JSON key of the deploy service account)."
+            exit 1
+          fi
+          if [ -z "$VITE_FIREBASE_API_KEY" ] || [ -z "$VITE_FIREBASE_APP_ID" ]; then
+            echo "::error::The VITE_FIREBASE_* web app config is incomplete (see README → CI/CD)."
+            exit 1
+          fi
+          if [ "$VITE_FIREBASE_PROJECT_ID" != "$FIREBASE_PROJECT_ID" ]; then
+            echo "::error::VITE_FIREBASE_PROJECT_ID ($VITE_FIREBASE_PROJECT_ID) differs from FIREBASE_PROJECT_ID ($FIREBASE_PROJECT_ID)."
+            exit 1
+          fi
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install functions dependencies
+        run: npm --prefix functions ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check web, shared, scripts and tests
+        run: npm run typecheck
+
+      - name: Unit tests (web + shared)
+        run: npm test
+
+      - name: Type-check functions
+        run: npm --prefix functions run typecheck
+
+      - name: Unit tests (functions)
+        run: npm --prefix functions test -- --passWithNoTests
+
+      - name: Security rules tests (Firestore emulator)
+        run: npm run test:rules
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Build functions
+        run: npm run functions:build
+
+      - name: Authenticate to Google Cloud
+        if: env.DEPLOY_ENABLED == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Deploy Firestore rules and indexes
+        if: env.DEPLOY_ENABLED == 'true'
+        run: npx firebase deploy --only firestore --project "$FIREBASE_PROJECT_ID" --non-interactive
+
+      - name: Deploy Cloud Functions
+        if: env.DEPLOY_ENABLED == 'true' && (inputs.deploy_functions == true || vars.DEPLOY_FUNCTIONS == 'true')
+        run: npx firebase deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
+
+      - name: Deploy Hosting (live channel)
+        if: env.DEPLOY_ENABLED == 'true'
+        run: >-
+          npx firebase deploy --only hosting --project "$FIREBASE_PROJECT_ID" --non-interactive
+          --message "main@${GITHUB_SHA::7}"

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en-IN" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>%BRAND_TITLE%</title>
+    <meta name="description" content="%BRAND_DESCRIPTION%" />
+    <meta name="theme-color" content="%THEME_COLOR%" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="application-name" content="%BRAND_NAME%" />
+    <meta property="og:site_name" content="%BRAND_NAME%" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="%BRAND_TITLE%" />
+    <meta property="og:description" content="%BRAND_DESCRIPTION%" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="%BRAND_TITLE%" />
+    <meta name="twitter:description" content="%BRAND_DESCRIPTION%" />
+    <meta name="twitter:image" content="/og-image.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap"
+    />
+    <script>(function(){var d=document.documentElement,t;try{t=JSON.parse(localStorage.getItem('hwa-prefs-v1')).state.theme}catch(e){}if(t!=='light'&&t!=='dark'){try{t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}catch(e){t='dark'}}d.classList.remove('light','dark');d.classList.add(t);d.style.colorScheme=t})();</script>
+  </head>
+  <body>
+    <noscript>
+      <div style="padding: 2rem; font-family: system-ui, sans-serif; text-align: center">
+        %BRAND_NAME% needs JavaScript to start its engine. Please enable JavaScript and reload.
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

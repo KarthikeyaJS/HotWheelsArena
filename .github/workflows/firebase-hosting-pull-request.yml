@@ -1,0 +1,131 @@
+# Verifies every pull request and, for branches of this repository, deploys the build to a
+# temporary Firebase Hosting preview channel (expires after 7 days). The action comments the
+# preview URL on the pull request. Previews use the LIVE project's Firestore, Functions and Auth.
+#
+# Pull requests from forks get the checks only: secrets are not available to them.
+# Configuration is shared with firebase-hosting-merge.yml — see README "CI/CD".
+name: Verify and preview (pull request)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, type-check, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY || secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN || secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID || secrets.VITE_FIREBASE_PROJECT_ID || vars.FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET || secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID || secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID || secrets.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ vars.VITE_FIREBASE_MEASUREMENT_ID || secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+      VITE_USE_EMULATORS: 'false'
+      VITE_FUNCTIONS_REGION: ${{ vars.VITE_FUNCTIONS_REGION || 'asia-south1' }}
+      VITE_CLOUDINARY_CLOUD_NAME: ${{ vars.VITE_CLOUDINARY_CLOUD_NAME }}
+      VITE_PAYMENT_PROVIDER: ${{ vars.VITE_PAYMENT_PROVIDER || 'dummy' }}
+      VITE_ENABLE_ANALYTICS: ${{ vars.VITE_ENABLE_ANALYTICS || 'false' }}
+      VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - name: Set up Java (Firestore emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Firebase emulator binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install functions dependencies
+        run: npm --prefix functions ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check web, shared, scripts and tests
+        run: npm run typecheck
+
+      - name: Unit tests (web + shared)
+        run: npm test
+
+      - name: Type-check functions
+        run: npm --prefix functions run typecheck
+
+      - name: Unit tests (functions)
+        run: npm --prefix functions test -- --passWithNoTests
+
+      - name: Security rules tests (Firestore emulator)
+        run: npm run test:rules
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Build functions
+        run: npm run functions:build
+
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 3
+
+  preview:
+    name: Deploy preview channel
+    needs: verify
+    # Same-repository branches only, and only once deploys are configured.
+    if: github.event.pull_request.head.repo.full_name == github.repository && vars.FIREBASE_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Download web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+
+      - name: Deploy to a preview channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          expires: 7d

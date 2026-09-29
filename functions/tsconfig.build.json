@@ -1,0 +1,5 @@
+{
+  // Deployable build: same settings as tsconfig.json, minus unit tests and test fixtures.
+  "extends": "./tsconfig.json",
+  "exclude": ["lib", "node_modules", "src/**/*.test.ts", "src/testing/**", "../shared/**/*.test.ts"]
+}
