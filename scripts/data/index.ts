@@ -71,7 +71,11 @@ export function buildSeedCatalog(runAt: Date = new Date()): SeedCatalog {
     series,
     products,
     reviews,
-    settings: { ...SITE_SETTINGS, createdAt: parseIsoDate(SITE_SETTINGS.createdAt), updatedAt: runAt },
+    settings: {
+      ...SITE_SETTINGS,
+      createdAt: parseIsoDate(SITE_SETTINGS.createdAt),
+      updatedAt: runAt,
+    },
     settingsDocId: SITE_SETTINGS_DOC_ID,
   };
 }

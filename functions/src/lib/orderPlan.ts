@@ -17,13 +17,13 @@ import {
   type BadgeId,
   type Currency,
   type OrderItem,
+  type OrderPayment,
   type PaymentMethod,
-  type PaymentMode,
   type PaymentProviderId,
   type PlaceOrderResponse,
   type UserStats,
 } from '../../../shared/index.js';
-import type { OrderPaymentStatus, VerifiedPayment } from '../payments/types.js';
+import type { VerifiedPayment } from '../payments/types.js';
 import { AppError } from './errors.js';
 import {
   readProfileState,
@@ -101,12 +101,11 @@ export function resolveReplay(
 
 /* -------------------------------- Documents ------------------------------- */
 
-export interface OrderPaymentDoc {
-  provider: PaymentProviderId;
-  /** `paid` for card / UPI, `pending` for cash on delivery. */
-  status: OrderPaymentStatus;
-  transactionId: string;
-  mode: PaymentMode;
+/**
+ * `orders/{id}.payment` — the shared `OrderPayment` shape (status is always `'success'` for a
+ * placed order, cash on delivery included) plus the method used.
+ */
+export interface OrderPaymentDoc extends OrderPayment {
   method: PaymentMethod;
 }
 

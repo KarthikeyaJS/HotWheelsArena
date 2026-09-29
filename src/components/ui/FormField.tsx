@@ -57,8 +57,16 @@ export function FormField({
 
   return (
     <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
-      <div className={cn('flex items-baseline justify-between gap-3', hideLabel && !labelAction && 'sr-only')}>
-        <label htmlFor={htmlFor} className={cn('text-sm font-medium text-fg', hideLabel && 'sr-only')}>
+      <div
+        className={cn(
+          'flex items-baseline justify-between gap-3',
+          hideLabel && !labelAction && 'sr-only',
+        )}
+      >
+        <label
+          htmlFor={htmlFor}
+          className={cn('text-sm font-medium text-fg', hideLabel && 'sr-only')}
+        >
           {label}
           {required ? (
             <>

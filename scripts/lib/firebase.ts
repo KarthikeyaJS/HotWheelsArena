@@ -152,10 +152,16 @@ export async function closeAdminApp(app: App): Promise<void> {
 /** Friendly hint for common connection / credential failures. */
 export function describeFirebaseError(error: unknown, target: Target | null): string {
   const message = error instanceof Error ? error.message : String(error);
-  if (target?.mode === 'emulator' && /ECONNREFUSED|UNAVAILABLE|No connection established/i.test(message)) {
+  if (
+    target?.mode === 'emulator' &&
+    /ECONNREFUSED|UNAVAILABLE|No connection established/i.test(message)
+  ) {
     return `${message}\n  → Is the ${target.service} emulator running on ${target.emulatorHost ?? 'its default port'}? Start it with "npm run emulators" (or run this command through "firebase emulators:exec").`;
   }
-  if (target?.mode === 'live' && /default credentials|invalid_grant|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)) {
+  if (
+    target?.mode === 'live' &&
+    /default credentials|invalid_grant|PERMISSION_DENIED|UNAUTHENTICATED/i.test(message)
+  ) {
     return `${message}\n  → Set GOOGLE_APPLICATION_CREDENTIALS to a service-account key with Firestore/Auth admin access for project "${target.projectId}".`;
   }
   return message;

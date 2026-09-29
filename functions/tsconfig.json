@@ -6,7 +6,8 @@
   // module=commonjs keeps every emitted file CommonJS even though the root package.json is
   // "type": "module" (shared/ would otherwise be treated as ESM under NodeNext).
   "compilerOptions": {
-    "target": "ES2022",
+    // Node.js 22 runtime: full ES2023 support (native, no down-levelling needed).
+    "target": "ES2023",
     "lib": ["ES2023"],
     "module": "commonjs",
     "moduleResolution": "node10",

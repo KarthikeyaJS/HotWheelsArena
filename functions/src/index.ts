@@ -1,5 +1,5 @@
 /**
- * HotWheelsArena Cloud Functions — Node 20, region asia-south1 (Mumbai).
+ * HotWheelsArena Cloud Functions — Node.js 22, region asia-south1 (Mumbai).
  *
  * Callables (names = shared `CALLABLES`; typed wrappers in the web app's src/services/functions.ts):
  *   ensureUserProfile   · idempotent collector profile bootstrap

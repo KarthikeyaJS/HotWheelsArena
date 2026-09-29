@@ -129,6 +129,7 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
       ) : null}
       <span className="relative inline-grid min-w-0 place-items-center">
         <span
+          aria-hidden={loading && hasLoadingText ? true : undefined}
           className={cn(
             'col-start-1 row-start-1 inline-flex min-w-0 items-center',
             gap,

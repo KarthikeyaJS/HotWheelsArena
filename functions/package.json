@@ -5,7 +5,7 @@
   "description": "HotWheelsArena Cloud Functions — orders, reviews, newsletter, collector profiles and gamification (region asia-south1).",
   "main": "lib/functions/src/index.js",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('lib', { recursive: true, force: true })\"",
@@ -27,7 +27,7 @@
     "zod": "~3.25.76"
   },
   "devDependencies": {
-    "@types/node": "~20.19.43",
+    "@types/node": "~22.20.4",
     "typescript": "~5.9.3",
     "vitest": "~3.2.7"
   }

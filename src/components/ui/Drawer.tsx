@@ -150,7 +150,12 @@ function DrawerContent({
           closeLabel={closeLabel}
           className="shrink-0 border-b border-line px-5 py-4"
         />
-        <div className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5', bodyClassName)}>
+        <div
+          className={cn(
+            'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5',
+            bodyClassName,
+          )}
+        >
           {children}
         </div>
         {footer ? (

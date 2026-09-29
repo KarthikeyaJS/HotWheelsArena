@@ -9,8 +9,12 @@ export function fieldErrorId(fieldId: string): string {
 }
 
 /** Space-separated id list for `aria-describedby` (`undefined` when empty). */
-export function joinIds(...ids: ReadonlyArray<string | false | null | undefined>): string | undefined {
-  const joined = ids.filter((id): id is string => typeof id === 'string' && id.length > 0).join(' ');
+export function joinIds(
+  ...ids: ReadonlyArray<string | false | null | undefined>
+): string | undefined {
+  const joined = ids
+    .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    .join(' ');
   return joined.length > 0 ? joined : undefined;
 }
 

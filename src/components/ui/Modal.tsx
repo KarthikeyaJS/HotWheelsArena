@@ -61,7 +61,12 @@ const PANEL_VARIANTS: Variants = {
     scale: 1,
     transition: { duration: DURATION.base, ease: EASE_OUT_EXPO },
   },
-  exit: { opacity: 0, y: 16, scale: 0.98, transition: { duration: DURATION.fast, ease: EASE_IN_OUT } },
+  exit: {
+    opacity: 0,
+    y: 16,
+    scale: 0.98,
+    transition: { duration: DURATION.fast, ease: EASE_IN_OUT },
+  },
 };
 
 type ModalContentProps = Omit<ModalProps, 'open' | 'onExitComplete'>;
@@ -138,7 +143,7 @@ function ModalContent({
           </div>
         ) : null}
         {footer ? (
-          <div className="safe-bottom flex flex-col-reverse gap-3 border-t border-line bg-bg/40 px-5 pt-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
+          <div className="safe-bottom flex flex-col-reverse gap-3 border-t border-line bg-bg/40 px-5 pt-4 sm:flex-row sm:flex-wrap-reverse sm:items-center sm:justify-end sm:px-6">
             {footer}
           </div>
         ) : null}

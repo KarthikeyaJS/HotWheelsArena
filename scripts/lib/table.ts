@@ -40,7 +40,14 @@ export function renderTable(
       })
       .join('|')}|`;
 
-  const out = [separator, line(columns.map((column) => column.header), true), separator];
+  const out = [
+    separator,
+    line(
+      columns.map((column) => column.header),
+      true,
+    ),
+    separator,
+  ];
   for (const row of rows) out.push(line(row));
   out.push(separator);
   if (options.footer) {

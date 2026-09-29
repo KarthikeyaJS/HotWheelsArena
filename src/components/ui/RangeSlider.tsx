@@ -276,7 +276,7 @@ export function RangeSlider({
               onKeyUp={handleKeyUp}
               className={cn(
                 'group/thumb absolute top-1/2 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-accent bg-surface shadow-card transition-[transform,box-shadow] duration-150 ease-race',
-                'before:absolute before:-inset-3 before:rounded-full before:content-[""]',
+                'before:absolute before:-inset-3 before:rounded-full',
                 !disabled &&
                   'cursor-grab hover:scale-110 hover:shadow-[0_0_0_6px_rgb(var(--accent)/0.15)] focus-visible:shadow-[0_0_0_6px_rgb(var(--accent)/0.18)] active:scale-110 active:cursor-grabbing',
                 index === 1 && low === high && 'z-10',
@@ -289,7 +289,10 @@ export function RangeSlider({
         })}
       </div>
       {showScale ? (
-        <div aria-hidden="true" className="mt-1 flex justify-between font-mono text-[11px] text-muted">
+        <div
+          aria-hidden="true"
+          className="mt-1 flex justify-between font-mono text-[11px] text-muted"
+        >
           <span>{formatValue(lowerBound)}</span>
           <span>{formatValue(upperBound)}</span>
         </div>

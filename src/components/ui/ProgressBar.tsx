@@ -1,7 +1,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, type CSSProperties, type ReactNode } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { EASE_OUT_EXPO } from '@/lib/animations';
+import { EASE_OUT_EXPO, inViewOnce } from '@/lib/animations';
 import { cn } from '@/lib/cn';
 
 export type ProgressTone = 'accent' | 'highlight' | 'success' | 'danger' | 'metal';
@@ -86,7 +86,7 @@ export function ProgressBar({
 }: ProgressBarProps) {
   const reduceMotion = useReducedMotion();
   const trackRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(trackRef, { once: true, amount: 0.5 });
+  const inView = useInView(trackRef, inViewOnce);
 
   const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
   const clamped = Number.isFinite(value) ? Math.min(safeMax, Math.max(0, value)) : 0;
@@ -131,8 +131,14 @@ export function ProgressBar({
         aria-valuemax={safeMax}
         aria-valuenow={Math.round(clamped * 100) / 100}
         aria-valuetext={ariaValueText}
-        className={cn('relative w-full overflow-hidden rounded-full bg-fg/10', TRACK_SIZES[size], trackClassName)}
-        style={segments !== undefined && segments > 1 ? segmentMask(Math.floor(segments)) : undefined}
+        className={cn(
+          'relative w-full overflow-hidden rounded-full bg-fg/10',
+          TRACK_SIZES[size],
+          trackClassName,
+        )}
+        style={
+          segments !== undefined && segments > 1 ? segmentMask(Math.floor(segments)) : undefined
+        }
       >
         {shouldAnimate ? (
           <motion.div

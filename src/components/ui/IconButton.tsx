@@ -16,8 +16,10 @@ import { Spinner } from './Spinner';
 export type IconButtonVariant = 'ghost' | 'outline' | 'solid' | 'danger';
 export type IconButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
-export interface IconButtonProps
-  extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'onClick' | 'aria-label'> {
+export interface IconButtonProps extends Omit<
+  HTMLAttributes<HTMLElement>,
+  'children' | 'onClick' | 'aria-label'
+> {
   /** Accessible name (also used as the native tooltip unless `title` is given). Required. */
   label: string;
   icon: ReactNode;

@@ -10,6 +10,7 @@ export interface RouteFallbackProps {
 
 /**
  * Racing loader shown while a lazy route chunk loads (fades in after 200ms to avoid flashes).
+ * Under reduced motion the speed line holds still.
  */
 export function RouteFallback({
   label = 'WARMING UP ENGINE',
@@ -20,6 +21,7 @@ export function RouteFallback({
     <div
       role="status"
       aria-live="polite"
+      aria-busy="true"
       className={cn(
         'flex w-full animate-fade-in-delayed flex-col items-center justify-center gap-5 px-4',
         fullScreen ? 'min-h-screen' : 'min-h-[50vh]',

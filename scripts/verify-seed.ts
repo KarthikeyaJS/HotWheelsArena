@@ -78,7 +78,11 @@ async function main(): Promise<number> {
 
   let target: Target;
   try {
-    target = resolveTarget({ service: 'firestore', emulator: values.emulator, project: values.project });
+    target = resolveTarget({
+      service: 'firestore',
+      emulator: values.emulator,
+      project: values.project,
+    });
   } catch (error) {
     if (error instanceof TargetError) {
       console.error(`✖ ${error.message}`);
@@ -129,7 +133,8 @@ async function main(): Promise<number> {
           continue;
         }
         for (const key of ['name', 'slug', 'icon', 'order', 'description', 'isActive'] as const) {
-          if (!isDeepStrictEqual(data[key], category[key])) problems.push(`categories/${category.id}.${key} differs`);
+          if (!isDeepStrictEqual(data[key], category[key]))
+            problems.push(`categories/${category.id}.${key} differs`);
         }
         if (!isTimestamp(data.createdAt) || !isTimestamp(data.updatedAt)) {
           problems.push(`categories/${category.id} timestamps are not Timestamps`);
@@ -150,15 +155,26 @@ async function main(): Promise<number> {
           problems.push(`missing series/${entry.id}`);
           continue;
         }
-        for (const key of ['name', 'slug', 'year', 'totalCars', 'carIds', 'description', 'isActive'] as const) {
-          if (!isDeepStrictEqual(data[key], entry[key])) problems.push(`series/${entry.id}.${key} differs`);
+        for (const key of [
+          'name',
+          'slug',
+          'year',
+          'totalCars',
+          'carIds',
+          'description',
+          'isActive',
+        ] as const) {
+          if (!isDeepStrictEqual(data[key], entry[key]))
+            problems.push(`series/${entry.id}.${key} differs`);
         }
         const carIds: unknown = data.carIds;
         if (Array.isArray(carIds)) {
           for (const carId of carIds) {
             const product = typeof carId === 'string' ? products.get(carId) : undefined;
-            if (!product) problems.push(`series/${entry.id} lists missing product "${String(carId)}"`);
-            else if (product.series !== entry.id) problems.push(`products/${String(carId)}.series ≠ ${entry.id}`);
+            if (!product)
+              problems.push(`series/${entry.id} lists missing product "${String(carId)}"`);
+            else if (product.series !== entry.id)
+              problems.push(`products/${String(carId)}.series ≠ ${entry.id}`);
           }
         }
         if (!isTimestamp(data.createdAt) || !isTimestamp(data.updatedAt)) {
@@ -175,11 +191,37 @@ async function main(): Promise<number> {
         problems.push(`expected ${expected.products.length} documents, found ${products.size}`);
       }
       const compared = [
-        'slug', 'name', 'description', 'make', 'model', 'series', 'seriesName', 'seriesNumber',
-        'collectionNumber', 'year', 'scale', 'color', 'material', 'vehicleType', 'category',
-        'rarity', 'rarityScore', 'collectorScore', 'themedStats', 'price', 'compareAtPrice',
-        'currency', 'stock', 'limitedEdition', 'images', 'primaryImage', 'tags', 'isNew',
-        'isFeatured', 'isVault', 'isActive',
+        'slug',
+        'name',
+        'description',
+        'make',
+        'model',
+        'series',
+        'seriesName',
+        'seriesNumber',
+        'collectionNumber',
+        'year',
+        'scale',
+        'color',
+        'material',
+        'vehicleType',
+        'category',
+        'rarity',
+        'rarityScore',
+        'collectorScore',
+        'themedStats',
+        'price',
+        'compareAtPrice',
+        'currency',
+        'stock',
+        'limitedEdition',
+        'images',
+        'primaryImage',
+        'tags',
+        'isNew',
+        'isFeatured',
+        'isVault',
+        'isActive',
       ] as const;
       for (const product of expected.products) {
         const data = products.get(product.id);
@@ -188,7 +230,8 @@ async function main(): Promise<number> {
           continue;
         }
         for (const key of compared) {
-          if (!isDeepStrictEqual(data[key], product[key])) problems.push(`products/${product.id}.${key} differs`);
+          if (!isDeepStrictEqual(data[key], product[key]))
+            problems.push(`products/${product.id}.${key} differs`);
         }
         if ('id' in data) problems.push(`products/${product.id} stores a redundant "id" field`);
         if (!isTimestamp(data.createdAt) || !isTimestamp(data.updatedAt)) {
@@ -197,12 +240,18 @@ async function main(): Promise<number> {
       }
       const flag = (key: 'isNew' | 'isFeatured' | 'isVault'): number =>
         [...products.values()].filter((data) => data[key] === true).length;
-      const [newCount, featuredCount, vaultCount] = [flag('isNew'), flag('isFeatured'), flag('isVault')];
-      if (newCount !== CATALOG_RULES.newCount) problems.push(`isNew count ${newCount} ≠ ${CATALOG_RULES.newCount}`);
+      const [newCount, featuredCount, vaultCount] = [
+        flag('isNew'),
+        flag('isFeatured'),
+        flag('isVault'),
+      ];
+      if (newCount !== CATALOG_RULES.newCount)
+        problems.push(`isNew count ${newCount} ≠ ${CATALOG_RULES.newCount}`);
       if (featuredCount !== CATALOG_RULES.featuredCount) {
         problems.push(`isFeatured count ${featuredCount} ≠ ${CATALOG_RULES.featuredCount}`);
       }
-      if (vaultCount < CATALOG_RULES.minVault) problems.push(`isVault count ${vaultCount} < ${CATALOG_RULES.minVault}`);
+      if (vaultCount < CATALOG_RULES.minVault)
+        problems.push(`isVault count ${vaultCount} < ${CATALOG_RULES.minVault}`);
       check(
         'products',
         `${products.size} docs · ${newCount} new · ${featuredCount} featured · ${vaultCount} vault`,
@@ -221,7 +270,15 @@ async function main(): Promise<number> {
           problems.push(`missing products/${review.productId}/reviews/${review.uid}`);
           continue;
         }
-        for (const key of ['productId', 'uid', 'displayName', 'photoURL', 'rating', 'text', 'verifiedBuyer'] as const) {
+        for (const key of [
+          'productId',
+          'uid',
+          'displayName',
+          'photoURL',
+          'rating',
+          'text',
+          'verifiedBuyer',
+        ] as const) {
           if (!isDeepStrictEqual(data[key], review[key])) {
             problems.push(`reviews/${review.productId}/${review.uid}.${key} differs`);
           }
@@ -273,11 +330,17 @@ async function main(): Promise<number> {
           'codEnabled',
           'maxQtyPerItem',
         ] as const) {
-          if (data[key] !== DEFAULT_SITE_SETTINGS[key]) problems.push(`${key} ≠ ${String(DEFAULT_SITE_SETTINGS[key])}`);
+          if (data[key] !== DEFAULT_SITE_SETTINGS[key])
+            problems.push(`${key} ≠ ${String(DEFAULT_SITE_SETTINGS[key])}`);
         }
-        if (!isTimestamp(data.createdAt) || !isTimestamp(data.updatedAt)) problems.push('timestamps are not Timestamps');
+        if (!isTimestamp(data.createdAt) || !isTimestamp(data.updatedAt))
+          problems.push('timestamps are not Timestamps');
       }
-      check(`${COLLECTIONS.settings}/${expected.settingsDocId}`, settingsSnap.exists ? 'present' : 'missing', problems);
+      check(
+        `${COLLECTIONS.settings}/${expected.settingsDocId}`,
+        settingsSnap.exists ? 'present' : 'missing',
+        problems,
+      );
     }
 
     console.log(

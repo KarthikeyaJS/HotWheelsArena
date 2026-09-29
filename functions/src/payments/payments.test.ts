@@ -42,7 +42,7 @@ describe('amount checks', () => {
 });
 
 describe('dummyPaymentVerifier', () => {
-  it('accepts a successful test payment for exactly the server total (card / UPI → paid)', async () => {
+  it('accepts a successful test payment for exactly the server total (status success)', async () => {
     await expect(
       dummyPaymentVerifier.verify(dummyPayment({ amount: 1497, method: 'upi' }), context()),
     ).resolves.toEqual({
@@ -51,16 +51,16 @@ describe('dummyPaymentVerifier', () => {
       mode: 'test',
       method: 'upi',
       amount: 1497,
-      status: 'paid',
+      status: 'success',
     });
   });
 
-  it('records cash on delivery as pending', async () => {
+  it('records cash on delivery as success too (the order keeps paymentMethod cod)', async () => {
     const verified = await dummyPaymentVerifier.verify(
       dummyPayment({ amount: 1497, method: 'cod' }),
       context(),
     );
-    expect(verified.status).toBe('pending');
+    expect(verified.status).toBe('success');
     expect(verified.method).toBe('cod');
   });
 
@@ -126,7 +126,7 @@ describe('payment verifier registry', () => {
 
   it('verifies through the registered verifier', async () => {
     const verified = await verifyPayment(dummyPayment({ amount: 1497 }), context());
-    expect(verified.status).toBe('paid');
+    expect(verified.status).toBe('success');
   });
 
   it('rejects providers without a verifier', async () => {
@@ -147,7 +147,7 @@ describe('payment verifier registry', () => {
           mode: 'live',
           method: payment.method,
           amount: payment.amount,
-          status: 'paid',
+          status: 'success',
         };
       },
     };
@@ -163,7 +163,7 @@ describe('payment verifier registry', () => {
     expect(error.message).toBe('Prices changed — review your pit stop.');
     await expect(
       verifyPayment({ ...payment, amount: 1497 }, context(), registry),
-    ).resolves.toMatchObject({ provider: 'razorpay', status: 'paid' });
+    ).resolves.toMatchObject({ provider: 'razorpay', status: 'success' });
   });
 
   it('ignores a verifier registered under the wrong provider id', async () => {

@@ -1,6 +1,5 @@
-import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { getFriendlyErrorMessage } from '@/lib/errors';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 export interface ErrorBoundaryFallbackProps {
   error: Error;
@@ -63,26 +62,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (fallback !== undefined) return fallback;
 
     return (
-      <div
-        role="alert"
-        className="flex flex-col items-start gap-4 rounded-lg border border-line bg-card p-6 text-left sm:flex-row sm:items-center"
-      >
-        <AlertTriangle aria-hidden="true" className="h-6 w-6 shrink-0 text-danger-ink" />
-        <div className="flex-1">
-          <p className="font-semibold text-fg">
-            {label ? `${label} stalled` : 'This section stalled'}
-          </p>
-          <p className="mt-1 text-sm text-muted">{getFriendlyErrorMessage(error)}</p>
-        </div>
-        <button
-          type="button"
-          onClick={this.reset}
-          className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs font-bold uppercase tracking-hud text-fg transition-colors hover:border-accent hover:text-accent-ink active:scale-[0.98]"
-        >
-          <RotateCcw aria-hidden="true" className="h-4 w-4" />
-          Try again
-        </button>
-      </div>
+      <ErrorState
+        compact
+        title={label ? `${label} stalled` : 'This section stalled'}
+        error={error}
+        onRetry={this.reset}
+        retryLabel="Try again"
+      />
     );
   }
 }

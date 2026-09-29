@@ -100,84 +100,86 @@ export function Tabs<T extends string = string>({
 
   return (
     <LayoutGroup id={idPrefix}>
-      <div
-        role="tablist"
-        aria-label={label}
-        aria-orientation="horizontal"
-        onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setFocusedId(null);
-        }}
-        className={cn(
-          'scrollbar-none flex max-w-full overflow-x-auto',
-          isPill
-            ? 'w-fit gap-1 rounded-full border border-line bg-surface p-1'
-            : 'gap-1 border-b border-line',
-          fullWidth && 'w-full',
-          className,
-        )}
-      >
-        {items.map((item) => {
-          const selected = item.id === value;
-          return (
-            <button
-              key={item.id}
-              ref={(element) => {
-                if (element) tabRefs.current.set(item.id, element);
-                else tabRefs.current.delete(item.id);
-              }}
-              type="button"
-              role="tab"
-              id={tabId(idPrefix, item.id)}
-              aria-selected={selected}
-              aria-controls={tabPanelId(idPrefix, item.id)}
-              tabIndex={item.id === rovingId ? 0 : -1}
-              disabled={item.disabled}
-              onClick={() => onChange(item.id)}
-              onKeyDown={(event) => handleKeyDown(event, item.id)}
-              onFocus={() => {
-                if (activation === 'manual') setFocusedId(item.id);
-              }}
-              className={cn(
-                'group/tab relative inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap font-display font-bold uppercase tracking-display transition-colors duration-200 ease-race focus-visible:outline-offset-[-2px] disabled:cursor-not-allowed disabled:opacity-40',
-                SIZES[variant][size],
-                isPill ? 'rounded-full' : 'rounded-t-md',
-                fullWidth && 'flex-1',
-                selected
-                  ? isPill
-                    ? 'text-on-accent'
-                    : 'text-fg'
-                  : 'text-muted hover:text-fg enabled:hover:bg-fg/[0.04]',
-              )}
-            >
-              {selected ? (
-                <motion.span
-                  layoutId={`${idPrefix}-tab-indicator`}
-                  aria-hidden="true"
-                  transition={SPRING_SNAPPY}
-                  className={
-                    isPill
-                      ? 'absolute inset-0 rounded-full bg-accent shadow-[0_6px_18px_-8px_rgb(var(--accent)/0.8)]'
-                      : 'absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent shadow-[0_0_12px_rgb(var(--accent)/0.65)]'
-                  }
-                />
-              ) : null}
-              {item.icon ? (
-                <span aria-hidden="true" className="relative inline-flex [&_svg]:h-4 [&_svg]:w-4">
-                  {item.icon}
-                </span>
-              ) : null}
-              <span className="relative">{item.label}</span>
-              {item.badge !== undefined && item.badge > 0 ? (
-                <CountBadge
-                  count={item.badge}
-                  size="sm"
-                  tone={selected && !isPill ? 'accent' : 'neutral'}
-                  className="relative ring-0"
-                />
-              ) : null}
-            </button>
-          );
-        })}
+      {/* Scroll wrapper with inline-size containment: a long tab row scrolls horizontally
+          instead of forcing its min-content width onto grid / flex ancestors. */}
+      <div className={cn('scrollbar-none w-full overflow-x-auto [contain:inline-size]', className)}>
+        <div
+          role="tablist"
+          aria-label={label}
+          aria-orientation="horizontal"
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setFocusedId(null);
+          }}
+          className={cn(
+            isPill
+              ? 'inline-flex w-max gap-1 rounded-full border border-line bg-surface p-1'
+              : 'flex w-max min-w-full gap-1 border-b border-line',
+            fullWidth && 'w-full',
+          )}
+        >
+          {items.map((item) => {
+            const selected = item.id === value;
+            return (
+              <button
+                key={item.id}
+                ref={(element) => {
+                  if (element) tabRefs.current.set(item.id, element);
+                  else tabRefs.current.delete(item.id);
+                }}
+                type="button"
+                role="tab"
+                id={tabId(idPrefix, item.id)}
+                aria-selected={selected}
+                aria-controls={tabPanelId(idPrefix, item.id)}
+                tabIndex={item.id === rovingId ? 0 : -1}
+                disabled={item.disabled}
+                onClick={() => onChange(item.id)}
+                onKeyDown={(event) => handleKeyDown(event, item.id)}
+                onFocus={() => {
+                  if (activation === 'manual') setFocusedId(item.id);
+                }}
+                className={cn(
+                  'group/tab relative inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap font-display font-bold uppercase tracking-display transition-colors duration-200 ease-race focus-visible:outline-offset-[-2px] disabled:cursor-not-allowed disabled:opacity-40',
+                  SIZES[variant][size],
+                  isPill ? 'rounded-full' : 'rounded-t-md',
+                  fullWidth && 'flex-1',
+                  selected
+                    ? isPill
+                      ? 'text-on-accent'
+                      : 'text-fg'
+                    : 'text-muted hover:text-fg enabled:hover:bg-fg/[0.04]',
+                )}
+              >
+                {selected ? (
+                  <motion.span
+                    layoutId={`${idPrefix}-tab-indicator`}
+                    aria-hidden="true"
+                    transition={SPRING_SNAPPY}
+                    className={
+                      isPill
+                        ? 'absolute inset-0 rounded-full bg-accent shadow-[0_6px_18px_-8px_rgb(var(--accent)/0.8)]'
+                        : 'absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent shadow-[0_0_12px_rgb(var(--accent)/0.65)]'
+                    }
+                  />
+                ) : null}
+                {item.icon ? (
+                  <span aria-hidden="true" className="relative inline-flex [&_svg]:h-4 [&_svg]:w-4">
+                    {item.icon}
+                  </span>
+                ) : null}
+                <span className="relative">{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 ? (
+                  <CountBadge
+                    count={item.badge}
+                    size="sm"
+                    tone={selected && !isPill ? 'accent' : 'neutral'}
+                    className="relative ring-0"
+                  />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </LayoutGroup>
   );

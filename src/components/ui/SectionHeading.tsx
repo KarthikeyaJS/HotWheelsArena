@@ -61,7 +61,9 @@ export function SectionHeading({
     <div
       className={cn(
         'flex flex-col gap-6',
-        centered ? 'items-center text-center' : action && 'md:flex-row md:items-end md:justify-between',
+        centered
+          ? 'items-center text-center'
+          : action && 'md:flex-row md:items-end md:justify-between',
         className,
       )}
     >
@@ -80,7 +82,10 @@ export function SectionHeading({
             </span>
           </p>
         ) : null}
-        <Heading id={id} className={cn('text-fg', TITLE_SIZES[size ?? DEFAULT_SIZE[Heading]], titleClassName)}>
+        <Heading
+          id={id}
+          className={cn('text-fg', TITLE_SIZES[size ?? DEFAULT_SIZE[Heading]], titleClassName)}
+        >
           {title}
         </Heading>
         {description ? (

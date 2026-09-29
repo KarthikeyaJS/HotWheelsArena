@@ -22,7 +22,12 @@ const SIZES: Readonly<Record<SpinnerSize, string>> = {
  * Racing-wheel spinner: a spinning orange arc around a hub with spokes.
  * With a label it is a polite `status`; with `label=""` it is hidden from assistive tech.
  */
-export function Spinner({ size = 'md', label = 'Loading', tone = 'accent', className }: SpinnerProps) {
+export function Spinner({
+  size = 'md',
+  label = 'Loading',
+  tone = 'accent',
+  className,
+}: SpinnerProps) {
   const decorative = label === '';
   return (
     <span
@@ -34,8 +39,20 @@ export function Spinner({ size = 'md', label = 'Loading', tone = 'accent', class
         className,
       )}
     >
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={cn('animate-spin', SIZES[size])}>
-        <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2.5" />
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+        className={cn('animate-spin', SIZES[size])}
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="9.5"
+          stroke="currentColor"
+          strokeOpacity="0.2"
+          strokeWidth="2.5"
+        />
         <path
           d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5"
           stroke="currentColor"

@@ -48,16 +48,16 @@ It is a React 18 + Vite + TypeScript single-page app on Firebase (Google sign-in
 
 ## Tech stack
 
-| Layer          | Choice                                                                                                            |
-| -------------- | ----------------------------------------------------------------------------------------------------------------- |
-| UI             | React 18.3, TypeScript 5.9 (strict), Vite 5.4, Tailwind CSS 3.4 (CSS-variable tokens, `darkMode: "class"`)        |
-| Motion         | Framer Motion 11 (UI), GSAP 3.13 + ScrollTrigger / MotionPath (hero and scroll track only, lazy-loaded)           |
-| Routing, state | React Router 6.30 (data router, lazy routes), Zustand 5 (cart, UI prefs, garage mirror, toasts)                   |
-| Data           | TanStack Query 5 (every Firestore read and mutation), Zod 3 (shared validation), React Hook Form 7                |
-| Firebase       | Firebase JS SDK 10.14 (modular): Auth (Google only), Firestore, callable Functions, Hosting, optional Analytics    |
-| Backend        | Cloud Functions for Firebase (TypeScript, Node.js 20, region `asia-south1`), firebase-functions 7, firebase-admin 13 |
-| Images, sound  | Cloudinary delivery URLs (`f_auto,q_auto`), local SVG fallbacks, Howler.js (optional engine sounds, off by default) |
-| Tooling        | ESLint 9 (flat config), Prettier 3, Vitest 3, `@firebase/rules-unit-testing`, firebase-tools 15, tsx              |
+| Layer          | Choice                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| UI             | React 18.3, TypeScript 5.9 (strict), Vite 5.4, Tailwind CSS 3.4 (CSS-variable tokens, `darkMode: "class"`)           |
+| Motion         | Framer Motion 11 (UI), GSAP 3.13 + ScrollTrigger / MotionPath (hero and scroll track only, lazy-loaded)              |
+| Routing, state | React Router 6.30 (data router, lazy routes), Zustand 5 (cart, UI prefs, garage mirror, toasts)                      |
+| Data           | TanStack Query 5 (every Firestore read and mutation), Zod 3 (shared validation), React Hook Form 7                   |
+| Firebase       | Firebase JS SDK 10.14 (modular): Auth (Google only), Firestore, callable Functions, Hosting, optional Analytics      |
+| Backend        | Cloud Functions for Firebase (TypeScript, Node.js 22, region `asia-south1`), firebase-functions 7, firebase-admin 13 |
+| Images, sound  | Cloudinary delivery URLs (`f_auto,q_auto`), local SVG fallbacks, Howler.js (optional engine sounds, off by default)  |
+| Tooling        | ESLint 9 (flat config), Prettier 3, Vitest 3, `@firebase/rules-unit-testing`, firebase-tools 15, tsx                 |
 
 ## Architecture
 
@@ -165,22 +165,22 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 
 ## npm scripts
 
-| Script                          | What it does                                                                                            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                   | Vite dev server on <http://localhost:5173>                                                              |
-| `npm run build`                 | `typecheck` + production build into `dist/`                                                             |
-| `npm run preview`               | Serves `dist/` with Vite (does **not** apply the `firebase.json` headers)                               |
-| `npm run typecheck`             | `tsc -b` over the web app, `shared/`, scripts, tests and configs                                         |
-| `npm run lint` / `lint:fix`     | ESLint (flat config)                                                                                    |
-| `npm run format` / `format:check` | Prettier write / check                                                                                |
-| `npm test` / `test:watch`       | Vitest unit tests for `src/` (jsdom) and `shared/` (node)                                               |
-| `npm run test:rules`            | Starts the Firestore emulator and runs `tests/rules/**` (security rules + deploy-config drift checks)   |
-| `npm run emulators`             | Starts every emulator in `firebase.json` for `demo-hotwheelsarena`                                      |
-| `npm run seed`                  | Seeds a **live** project (service account required, see below)                                          |
-| `npm run seed:emulator`         | Seeds the local Firestore emulator                                                                      |
-| `npm run sounds`                | Regenerates the royalty-free placeholder engine sounds in `public/sounds/`                              |
-| `npm run functions:build`       | Compiles `functions/` to `functions/lib/`                                                               |
-| `npm run deploy`                | `build`, then `firebase deploy` (Hosting, Firestore rules and indexes, Functions) to the active project |
+| Script                            | What it does                                                                                            |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | Vite dev server on <http://localhost:5173>                                                              |
+| `npm run build`                   | `typecheck` + production build into `dist/`                                                             |
+| `npm run preview`                 | Serves `dist/` with Vite (does **not** apply the `firebase.json` headers)                               |
+| `npm run typecheck`               | `tsc -b` over the web app, `shared/`, scripts, tests and configs                                        |
+| `npm run lint` / `lint:fix`       | ESLint (flat config)                                                                                    |
+| `npm run format` / `format:check` | Prettier write / check                                                                                  |
+| `npm test` / `test:watch`         | Vitest unit tests for `src/` (jsdom) and `shared/` (node)                                               |
+| `npm run test:rules`              | Starts the Firestore emulator and runs `tests/rules/**` (security rules + deploy-config drift checks)   |
+| `npm run emulators`               | Starts every emulator in `firebase.json` for `demo-hotwheelsarena`                                      |
+| `npm run seed`                    | Seeds a **live** project (service account required, see below)                                          |
+| `npm run seed:emulator`           | Seeds the local Firestore emulator                                                                      |
+| `npm run sounds`                  | Regenerates the royalty-free placeholder engine sounds in `public/sounds/`                              |
+| `npm run functions:build`         | Compiles `functions/` to `functions/lib/`                                                               |
+| `npm run deploy`                  | `build`, then `firebase deploy` (Hosting, Firestore rules and indexes, Functions) to the active project |
 
 Inside `functions/`: `build`, `build:watch`, `typecheck`, `test`, `serve` (build + Auth/Firestore/Functions emulators), `shell`, `deploy`, `logs`.
 
@@ -188,28 +188,28 @@ Inside `functions/`: `build`, `build:watch`, `typecheck`, `test`, `serve` (build
 
 Vite embeds every `VITE_*` value in the client bundle, so **never put secrets in them**. `.env.example` documents all of them. Invalid values fall back to safe defaults instead of crashing the app (`src/config/env.ts`).
 
-| Variable                            | Default when empty                     | Purpose                                                                    |
-| ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| `VITE_FIREBASE_API_KEY`             | `demo-api-key`                         | Web API key (public identifier, not a secret)                              |
-| `VITE_FIREBASE_AUTH_DOMAIN`         | `<projectId>.firebaseapp.com`          | Domain that serves the Auth helper (`/__/auth/*`)                          |
-| `VITE_FIREBASE_PROJECT_ID`          | `demo-hotwheelsarena`                  | Project id. A `demo-*` id turns the emulators on unless overridden         |
-| `VITE_FIREBASE_STORAGE_BUCKET`      | `<projectId>.appspot.com`              | Part of the web config (Firebase Storage itself is not used)               |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `000000000000`                         | Part of the web config                                                     |
-| `VITE_FIREBASE_APP_ID`              | placeholder                            | Web app id                                                                 |
-| `VITE_FIREBASE_MEASUREMENT_ID`      | (none)                                 | `G-…` id, only needed for Analytics                                        |
-| `VITE_USE_EMULATORS`                | `true` for `demo-*` ids, else `false`  | Connect Auth/Firestore/Functions to the local emulators                    |
-| `VITE_EMULATOR_HOST`                | `127.0.0.1`                            | Emulator host (ports are fixed in `shared/constants.ts`)                   |
-| `VITE_FUNCTIONS_REGION`             | `asia-south1`                          | Region of the callable functions                                           |
-| `VITE_CLOUDINARY_CLOUD_NAME`        | (none): local SVG placeholders are used | Cloudinary cloud name                                                     |
-| `VITE_PAYMENT_PROVIDER`             | `dummy`                                | Payment provider id (`razorpay` is reserved)                               |
-| `VITE_ENABLE_ANALYTICS`             | `false`                                | Firebase Analytics (never initialised on the emulators)                    |
-| `VITE_SITE_URL`                     | current origin                         | Absolute URLs for canonical links, Open Graph and JSON-LD (no trailing `/`) |
+| Variable                            | Default when empty                      | Purpose                                                                     |
+| ----------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| `VITE_FIREBASE_API_KEY`             | `demo-api-key`                          | Web API key (public identifier, not a secret)                               |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | `<projectId>.firebaseapp.com`           | Domain that serves the Auth helper (`/__/auth/*`)                           |
+| `VITE_FIREBASE_PROJECT_ID`          | `demo-hotwheelsarena`                   | Project id. A `demo-*` id turns the emulators on unless overridden          |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | `<projectId>.appspot.com`               | Part of the web config (Firebase Storage itself is not used)                |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `000000000000`                          | Part of the web config                                                      |
+| `VITE_FIREBASE_APP_ID`              | placeholder                             | Web app id                                                                  |
+| `VITE_FIREBASE_MEASUREMENT_ID`      | (none)                                  | `G-…` id, only needed for Analytics                                         |
+| `VITE_USE_EMULATORS`                | `true` for `demo-*` ids, else `false`   | Connect Auth/Firestore/Functions to the local emulators                     |
+| `VITE_EMULATOR_HOST`                | `127.0.0.1`                             | Emulator host (ports are fixed in `shared/constants.ts`)                    |
+| `VITE_FUNCTIONS_REGION`             | `asia-south1`                           | Region of the callable functions                                            |
+| `VITE_CLOUDINARY_CLOUD_NAME`        | (none): local SVG placeholders are used | Cloudinary cloud name                                                       |
+| `VITE_PAYMENT_PROVIDER`             | `dummy`                                 | Payment provider id (`razorpay` is reserved)                                |
+| `VITE_ENABLE_ANALYTICS`             | `false`                                 | Firebase Analytics (never initialised on the emulators)                     |
+| `VITE_SITE_URL`                     | current origin                          | Absolute URLs for canonical links, Open Graph and JSON-LD (no trailing `/`) |
 
 Cloud Functions read one runtime flag from `functions/.env` or `functions/.env.<projectId>` (standard Firebase dotenv files):
 
-| Variable              | Default | Purpose                                                                                       |
-| --------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| `ALLOW_TEST_PAYMENTS` | `true`  | Accept dummy/test-mode payments. Set to `false` once a live gateway verifier is in place.     |
+| Variable              | Default | Purpose                                                                                   |
+| --------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `ALLOW_TEST_PAYMENTS` | `true`  | Accept dummy/test-mode payments. Set to `false` once a live gateway verifier is in place. |
 
 **Which env file wins?** Vite loads `.env` < `.env.local` < `.env.[mode]` < `.env.[mode].local`, and real environment variables override all of them. `npm run build` runs in `production` mode, so put the real project config in **`.env.production.local`**. Your emulator `.env.local` keeps working for `npm run dev`, and production builds never point at the emulators by accident.
 
@@ -334,12 +334,15 @@ The seed script writes the catalogue with the Admin SDK, so it needs a service-a
    # Windows PowerShell
    $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\keys\hwa-admin.json"
 
-   npm run seed -- --project <project-id>             # upsert categories, series, 36 cars, reviews, settings/site
-   npm run seed -- --project <project-id> --dry-run   # print what would be written, write nothing
-   npm run seed -- --project <project-id> --reset     # delete the seeded collections first, then seed
+   npm run seed -- --dry-run                                # validate the catalogue and print the plan (no Firebase connection)
+   npm run seed -- --project <project-id>                   # write 6 categories, 6 series, 36 cars + reviews, settings/site
+   npm run seed -- --project <project-id> --reset --yes     # delete the seeded collections first, then seed
+   npm run seed -- --help                                   # every flag
    ```
 
-`npm run seed:emulator` runs the same script against the local emulator (`--emulator`). The seed never creates users, orders or garages; those come from real sign-ins and checkouts.
+Document ids are deterministic, so re-running the seed is idempotent. Every catalogue invariant is validated before the first write. `--reset` deletes only the seeded collections (products with their reviews, categories, series, settings) and, against a live project, refuses to run without `--yes`.
+
+`npm run seed:emulator` runs the same script with `--emulator` (the emulator at `FIRESTORE_EMULATOR_HOST`, else `127.0.0.1:8080`, project `demo-hotwheelsarena`). Use `npm run seed -- --emulator --reset` to start over locally. The seed never touches users or orders; those come from real sign-ins and checkouts.
 
 ## Granting the admin custom claim
 
@@ -347,11 +350,13 @@ Admin rights come from a custom claim, `admin: true`, never from a Firestore fie
 
 ```bash
 # live project (uses GOOGLE_APPLICATION_CREDENTIALS, as for seeding)
-npm exec tsx scripts/set-admin.ts -- --email you@example.com --project <project-id>
+npm exec tsx scripts/set-admin.ts -- --email you@example.com
 
 # local Auth emulator (sign in once first so the account exists)
 npm exec tsx scripts/set-admin.ts -- --email you@example.com --emulator
 ```
+
+The `--` matters: it stops npm from treating `--email` / `--emulator` as its own options. See the script header for any additional flags.
 
 The claim reaches the browser with the next ID token. **Sign out and back in** (or wait up to an hour). The storefront has no admin UI; the claim exists for the future admin site that will share this project.
 
@@ -429,9 +434,9 @@ processedPayments/{provider_txn}     functions only: payment idempotency markers
 
 **Indexes** (`firestore.indexes.json`, derived from the real queries in `src/services/firestore/*` and `functions/src/**`):
 
-| Index                                      | Why                                                                                                           |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `orders`: `uid ASC, createdAt DESC`        | "My orders": `where('uid', '==', me).orderBy('createdAt', 'desc')` in `fetchOrders()`                         |
+| Index                                       | Why                                                                                                                                 |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `orders`: `uid ASC, createdAt DESC`         | "My orders": `where('uid', '==', me).orderBy('createdAt', 'desc')` in `fetchOrders()`                                               |
 | TTL on `rateLimits.expiresAt` (not indexed) | Firestore deletes expired rate-limit counters automatically. The field is excluded from indexing, as recommended for TTL timestamps |
 
 Every other query uses equality filters only (`isActive == true`, `slug ==` + `isActive ==`, `uid ==` + `limit` in `submitReview`) or a single-field `orderBy` (reviews by `createdAt`). Firestore's automatic single-field indexes serve those.
@@ -442,16 +447,16 @@ Every other query uses equality filters only (`isActive == true`, `slug ==` + `i
 - **Identity**: `isSignedIn()`, `isOwner(uid)`, and `isAdmin()` (`request.auth.token.admin == true`, a custom claim; a `role` field in a document grants nothing).
 - **Validated client writes**: exact key sets, types, sizes, server timestamps (`== request.time`) and immutable fields, mirroring the write shapes in `src/services/firestore/*.ts` and the zod `AddressSchema`.
 
-| Path                                          | Client access                                                                                                                                                                              |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `products`, `categories`, `series`, `settings` | Public read (including inactive products, which garage views fetch by id). Write: admin claim only                                                                                        |
-| `products/{id}/reviews`                       | Public read. No client writes: `submitReview` writes reviews and keeps rating aggregates exact                                                                                             |
-| `users/{uid}`                                 | Owner (and admin) read. No client create or delete. Owner may update only `displayName` (1–80 chars), `photoURL` (https or null) and `updatedAt`; `xp`, `level`, `badges`, `stats`, `role`, `email` are function-owned |
-| `users/{uid}/addresses`                       | Owner CRUD with Indian-format validation: phone `^[6-9]\d{9}$`, PIN `^[1-9]\d{5}$`, one of 36 states/UTs, size limits, server timestamps, `createdAt` immutable                          |
-| `users/{uid}/garage/{productId}`              | Owner read and delete. Create only `{ productId == doc id, addedAt == request.time, source: 'manual', isFavorite, quantity 1–99 }` for an existing product. Update only `isFavorite` and `quantity` |
-| `users/{uid}/wishlist/{productId}`            | Owner read and delete. Create only `{ productId == doc id, addedAt == request.time }` for an existing product. No updates                                                                   |
-| `orders`                                      | Owner get and list (queries must filter `uid == me`), admin read. No client create or delete. Admin may change only `status` (+ `updatedAt`)                                             |
-| `newsletter`, `rateLimits`, `processedPayments`, anything else | No client access                                                                                                                                         |
+| Path                                                           | Client access                                                                                                                                                                                                          |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `products`, `categories`, `series`, `settings`                 | Public read (including inactive products, which garage views fetch by id). Write: admin claim only                                                                                                                     |
+| `products/{id}/reviews`                                        | Public read. No client writes: `submitReview` writes reviews and keeps rating aggregates exact                                                                                                                         |
+| `users/{uid}`                                                  | Owner (and admin) read. No client create or delete. Owner may update only `displayName` (1–80 chars), `photoURL` (https or null) and `updatedAt`; `xp`, `level`, `badges`, `stats`, `role`, `email` are function-owned |
+| `users/{uid}/addresses`                                        | Owner CRUD with Indian-format validation: phone `^[6-9]\d{9}$`, PIN `^[1-9]\d{5}$`, one of 36 states/UTs, size limits, server timestamps, `createdAt` immutable                                                        |
+| `users/{uid}/garage/{productId}`                               | Owner read and delete. Create only `{ productId == doc id, addedAt == request.time, source: 'manual', isFavorite, quantity 1–99 }` for an existing product. Update only `isFavorite` and `quantity`                    |
+| `users/{uid}/wishlist/{productId}`                             | Owner read and delete. Create only `{ productId == doc id, addedAt == request.time }` for an existing product. No updates                                                                                              |
+| `orders`                                                       | Owner get and list (queries must filter `uid == me`), admin read. No client create or delete. Admin may change only `status` (+ `updatedAt`)                                                                           |
+| `newsletter`, `rateLimits`, `processedPayments`, anything else | No client access                                                                                                                                                                                                       |
 
 - **Server-side authority**: `placeOrder` validates the cart against Firestore prices, `isActive` and stock (stock is checked, never decremented), recomputes totals, verifies the payment amount, and writes the order, purchased garage entries, XP, badges and stats in **one transaction**, idempotent per payment. `submitReview` requires sign-in and sets `verifiedBuyer` from the collector's own non-cancelled orders. `subscribeNewsletter` normalises and deduplicates emails (document id = SHA-256 of the email) and rate-limits by salted IP hash (5 attempts per 10 minutes).
 - **Design note (garage-based badges)**: the garage doubles as a collection tracker, so collectors may park cars they own offline (`source: 'manual'`). `onGarageWrite` computes stats from the whole garage, which means Speed Demon, Treasure Hunter, Garage Builder and Master Collector (and their one-time XP) can be earned from manual entries. First Ride and order XP require a real `placeOrder`. If badges should reflect purchases only, compute stats from `source == 'purchase'` entries in `onGarageWrite`.
@@ -466,13 +471,13 @@ All rules live in `shared/gamification.ts` and are pure functions, shared by the
 - **Order XP** (awarded by `placeOrder`): 100 per order, plus 25 per car unit, plus a rarity bonus per unit (common 0, rare 25, super-rare 50, limited 100).
 - **Badges** (each badge's XP is awarded exactly once):
 
-| Badge                 | Requirement                                  | XP  |
-| --------------------- | -------------------------------------------- | --- |
-| 🔥 FIRST RIDE         | Place your first order (`ordersPlaced ≥ 1`)  | 100 |
-| 🏁 SPEED DEMON        | Own 10 racing cars (`racingCars ≥ 10`)       | 250 |
-| 💎 TREASURE HUNTER    | Own a rare, super-rare or limited car        | 150 |
-| 🏎️ GARAGE BUILDER     | Own 25 cars (`carsOwned ≥ 25`, duplicates count) | 300 |
-| 👑 MASTER COLLECTOR   | Complete a series (own every car in it)      | 500 |
+| Badge               | Requirement                                      | XP  |
+| ------------------- | ------------------------------------------------ | --- |
+| 🔥 FIRST RIDE       | Place your first order (`ordersPlaced ≥ 1`)      | 100 |
+| 🏁 SPEED DEMON      | Own 10 racing cars (`racingCars ≥ 10`)           | 250 |
+| 💎 TREASURE HUNTER  | Own a rare, super-rare or limited car            | 150 |
+| 🏎️ GARAGE BUILDER   | Own 25 cars (`carsOwned ≥ 25`, duplicates count) | 300 |
+| 👑 MASTER COLLECTOR | Complete a series (own every car in it)          | 500 |
 
 - **Where it happens**: `placeOrder` awards order XP and any badges the purchase unlocks in its transaction. `onGarageWrite` recomputes stats from the full garage and the active series whenever a car is added, removed or its quantity changes, then unlocks badges idempotently. The client diffs the live profile (`BadgeWatcher`) to show unlock toasts, the badge modal and level-up toasts.
 
@@ -480,29 +485,29 @@ All rules live in `shared/gamification.ts` and are pure functions, shared by the
 
 `firebase.json` serves `dist/` as a single-page app (`**` → `/index.html`) with these headers:
 
-| Paths                                                         | Headers                                                                                             |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Paths                                                         | Headers                                                                                                                                                                                                                 |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | all                                                           | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `Permissions-Policy: camera=(), microphone=(), geolocation=()` |
-| all except Firebase's reserved `/__/*` URLs                   | `Content-Security-Policy` (below), `X-Frame-Options: DENY`                                          |
-| `/assets/**` (content-hashed JS/CSS)                          | `Cache-Control: public, max-age=31536000, immutable`                                               |
-| `/sounds/**`, `/placeholders/**`                              | `Cache-Control: public, max-age=86400`                                                              |
-| `/index.html`, `/site.webmanifest`, extension-less app routes | `Cache-Control: no-cache` (always revalidate, so a deploy is picked up immediately)                 |
+| all except Firebase's reserved `/__/*` URLs                   | `Content-Security-Policy` (below), `X-Frame-Options: DENY`                                                                                                                                                              |
+| `/assets/**` (content-hashed JS/CSS)                          | `Cache-Control: public, max-age=31536000, immutable`                                                                                                                                                                    |
+| `/sounds/**`, `/placeholders/**`                              | `Cache-Control: public, max-age=86400`                                                                                                                                                                                  |
+| `/index.html`, `/site.webmanifest`, extension-less app routes | `Cache-Control: no-cache` (always revalidate, so a deploy is picked up immediately)                                                                                                                                     |
 
 **Why `/__/*` is excluded**: Firebase Auth's popup and redirect flows load the helper page `https://<authDomain>/__/auth/iframe` in an iframe, and `<authDomain>` is served by your own Hosting site. `X-Frame-Options: DENY` or this app's CSP on those pages would break sign-in, so the rule uses an RE2 regex, `^/(?:[^_].*|_(?:[^_].*)?|__(?:[^/].*)?)?$` (every path whose first segment is not `__`). The `no-cache` rule for app routes uses the same idea.
 
 **Content-Security-Policy**, directive by directive:
 
-| Directive         | Sources and reasons                                                                                                                                                                            |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `default-src`     | `'self'`                                                                                                                                                                                       |
-| `script-src`      | `'self'`, the **sha256 hash of the inline theme script**, `https://apis.google.com` (the Auth popup/redirect loads `gapi`), `https://www.googletagmanager.com` (optional Analytics). No `'unsafe-inline'`, no `'unsafe-eval'` |
-| `style-src`       | `'self'`, `'unsafe-inline'`, `https://fonts.googleapis.com`. `'unsafe-inline'` is needed because Framer Motion and a few libraries inject `<style>` elements, and a static host cannot issue per-request nonces. Style injection cannot execute script, and script-src stays strict |
-| `font-src`        | `'self'`, `https://fonts.gstatic.com`                                                                                                                                                          |
-| `img-src`         | `'self'`, `data:`, `blob:`, `https://res.cloudinary.com`, Google avatars (`https://lh3.googleusercontent.com`, `https://*.googleusercontent.com`), Analytics pixels                            |
-| `connect-src`     | `'self'`, `https://*.googleapis.com` (Firestore, Identity Toolkit, Secure Token, Installations), `https://*.cloudfunctions.net` and `https://*.a.run.app` (callables), Analytics endpoints, and the **local emulator ports** (`http://127.0.0.1:9099/8080/5001`, `http://localhost:…`) |
-| `frame-src`       | `'self'`, `https://*.firebaseapp.com`, `https://accounts.google.com`, `https://apis.google.com` (Auth helper iframe), plus the Auth emulator (`http://127.0.0.1:9099`, `http://localhost:9099`) |
-| `media-src`       | `'self'`, `blob:`, `data:` (engine sounds)                                                                                                                                                     |
-| others            | `manifest-src 'self'`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`                                                       |
+| Directive     | Sources and reasons                                                                                                                                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default-src` | `'self'`                                                                                                                                                                                                                                                                               |
+| `script-src`  | `'self'`, the **sha256 hash of the inline theme script**, `https://apis.google.com` (the Auth popup/redirect loads `gapi`), `https://www.googletagmanager.com` (optional Analytics). No `'unsafe-inline'`, no `'unsafe-eval'`                                                          |
+| `style-src`   | `'self'`, `'unsafe-inline'`, `https://fonts.googleapis.com`. `'unsafe-inline'` is needed because Framer Motion and a few libraries inject `<style>` elements, and a static host cannot issue per-request nonces. Style injection cannot execute script, and script-src stays strict    |
+| `font-src`    | `'self'`, `https://fonts.gstatic.com`                                                                                                                                                                                                                                                  |
+| `img-src`     | `'self'`, `data:`, `blob:`, `https://res.cloudinary.com`, Google avatars (`https://lh3.googleusercontent.com`, `https://*.googleusercontent.com`), Analytics pixels                                                                                                                    |
+| `connect-src` | `'self'`, `https://*.googleapis.com` (Firestore, Identity Toolkit, Secure Token, Installations), `https://*.cloudfunctions.net` and `https://*.a.run.app` (callables), Analytics endpoints, and the **local emulator ports** (`http://127.0.0.1:9099/8080/5001`, `http://localhost:…`) |
+| `frame-src`   | `'self'`, `https://*.firebaseapp.com`, `https://accounts.google.com`, `https://apis.google.com` (Auth helper iframe), plus the Auth emulator (`http://127.0.0.1:9099`, `http://localhost:9099`)                                                                                        |
+| `media-src`   | `'self'`, `blob:`, `data:` (engine sounds)                                                                                                                                                                                                                                             |
+| others        | `manifest-src 'self'`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`                                                                                                                                               |
 
 Notes:
 
@@ -513,6 +518,7 @@ Notes:
   ```
 
   Put the value in `script-src` in `firebase.json`. The current hash is `'sha256-aIqL7EE1q9wXoi4hpRs7G1lGkyaiOE5b1BnhqFG3LaY='`.
+
 - **Loopback emulator origins** are allowed so a local production build served by the Hosting emulator can reach the local Auth/Firestore/Functions emulators. They only reach the visitor's own machine, so they add no data-exfiltration channel. If you want a stricter policy for production, remove them (the local Hosting emulator then only works with builds that use a real project).
 - `upgrade-insecure-requests` is intentionally omitted. Firebase Hosting is HTTPS-only with HSTS and every allowed host is `https://`, so it adds nothing in production, and it could break plain-http local serving.
 - **Adding a host** (a new CDN, Razorpay, other analytics): extend the matching directive in `firebase.json`, then check the browser console for `Refused to …` CSP errors on a preview channel.
@@ -521,12 +527,12 @@ Notes:
 
 ## Testing
 
-| Command                          | What it covers                                                                                                     |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `npm test`                       | Vitest unit tests: `shared/` (gamification, commerce totals, schemas) and `src/` (formatters, product helpers, errors, stores) |
-| `npm --prefix functions test`    | Functions unit tests (pricing, order planning, stats, profiles, rate limits, email, env)                           |
-| `npm run test:rules`             | Boots the Firestore emulator (Java 21) and runs `tests/rules/**`                                                   |
-| `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                           |
+| Command                                                     | What it covers                                                                                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm test`                                                  | Vitest unit tests: `shared/` (gamification, commerce totals, schemas) and `src/` (formatters, product helpers, errors, stores) |
+| `npm --prefix functions test`                               | Functions unit tests (pricing, order planning, stats, profiles, rate limits, email, env)                                       |
+| `npm run test:rules`                                        | Boots the Firestore emulator (Java 21) and runs `tests/rules/**`                                                               |
+| `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                                                                  |
 
 `tests/rules/` covers:
 
@@ -549,20 +555,20 @@ For automation, dev builds on the emulators expose `window.__hwaTest.signIn({ em
 
 ## CI/CD (GitHub Actions)
 
-| Workflow                                                   | Trigger                             | What it does                                                                                                                                                                                                 |
-| ---------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.github/workflows/firebase-hosting-pull-request.yml`      | every pull request                  | `npm ci` (web + functions), format check, lint, typecheck, unit tests, functions typecheck and tests, rules tests, build, functions build. Then, for branches of this repository, deploys `dist/` to a **preview channel** (expires after 7 days) and comments the URL on the PR |
-| `.github/workflows/firebase-hosting-merge.yml`             | push to `main`, manual run          | Same checks, then deploys **Firestore rules + indexes → Cloud Functions (optional) → Hosting live**                                                                                                         |
+| Workflow                                              | Trigger                    | What it does                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/firebase-hosting-pull-request.yml` | every pull request         | `npm ci` (web + functions), format check, lint, typecheck, unit tests, functions typecheck and tests, rules tests, build, functions build. Then, for branches of this repository, deploys `dist/` to a **preview channel** (expires after 7 days) and comments the URL on the PR |
+| `.github/workflows/firebase-hosting-merge.yml`        | push to `main`, manual run | Same checks, then deploys **Firestore rules + indexes → Cloud Functions (optional) → Hosting live**                                                                                                                                                                              |
 
 **Repository configuration** (Settings → Secrets and variables → Actions):
 
-| Name                                  | Kind              | Notes                                                                                                                  |
-| ------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `FIREBASE_PROJECT_ID`                 | variable          | Your project id. **Deploys are skipped while it is unset**, but the checks still run                                   |
-| `FIREBASE_SERVICE_ACCOUNT`            | secret            | JSON key of the deploy service account (below)                                                                         |
-| `VITE_FIREBASE_*` (7 keys)            | variable or secret | The web app config from step 5. These values are public, but storing them as secrets is fine                          |
-| `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_SITE_URL`, `VITE_ENABLE_ANALYTICS`, `VITE_PAYMENT_PROVIDER`, `VITE_FUNCTIONS_REGION` | variables (optional) | Defaults: none, current origin, `false`, `dummy`, `asia-south1` |
-| `DEPLOY_FUNCTIONS`                    | variable (optional) | `true` deploys Cloud Functions on every push to `main`. You can also run the workflow manually with "Also deploy Cloud Functions" |
+| Name                                                                                                                     | Kind                 | Notes                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `FIREBASE_PROJECT_ID`                                                                                                    | variable             | Your project id. **Deploys are skipped while it is unset**, but the checks still run                                              |
+| `FIREBASE_SERVICE_ACCOUNT`                                                                                               | secret               | JSON key of the deploy service account (below)                                                                                    |
+| `VITE_FIREBASE_*` (7 keys)                                                                                               | variable or secret   | The web app config from step 5. These values are public, but storing them as secrets is fine                                      |
+| `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_SITE_URL`, `VITE_ENABLE_ANALYTICS`, `VITE_PAYMENT_PROVIDER`, `VITE_FUNCTIONS_REGION` | variables (optional) | Defaults: none, current origin, `false`, `dummy`, `asia-south1`                                                                   |
+| `DEPLOY_FUNCTIONS`                                                                                                       | variable (optional)  | `true` deploys Cloud Functions on every push to `main`. You can also run the workflow manually with "Also deploy Cloud Functions" |
 
 **Deploy service account**: in Google Cloud Console → **IAM & Admin → Service Accounts**, create `github-deployer` and grant it:
 
@@ -597,9 +603,9 @@ Deliberately not built, with clean seams for later:
 - **Live inventory**: `stock` is a static counter that `placeOrder` validates but never decrements. Decrement it inside the `placeOrder` transaction when inventory goes live.
 - **3D models**: `<CarImage>` is structured so a `.glb` viewer can replace the `<img>`.
 - **Email/SMS notifications, multi-currency, other sign-in providers.**
-- **Functions runtime**: Node.js 20 reached upstream end-of-life in April 2026. Check the Cloud Functions runtime support schedule and move `engines.node` in `functions/package.json` to `22` when you are ready.
+- **Functions runtime**: Cloud Functions run on **Node.js 22**. The original spec asked for Node 20, but Node 20 reached upstream end-of-life in April 2026 and the `nodejs20` Cloud Functions runtime is deprecated (decommissioned 2026-10-30), so new projects may not be able to deploy it. `nodejs22` is supported until 2027-04-30.
 
 ## Disclaimer
 
 HotWheelsArena is an independent fan and collector project. It is **not affiliated with, endorsed by or sponsored by Mattel, Inc.** Hot Wheels® is a trademark of Mattel, Inc. All brand strings live in `src/config/brand.ts` so the naming can be changed in one place. Product data, "Meet the Machine" statistics and images are placeholders; the themed vehicle specifications are not claims about the toys. Payments run in test mode only.
-"# HotWheelsArena" 
+"# HotWheelsArena"

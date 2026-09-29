@@ -62,7 +62,10 @@ export function RadioGroup<T extends string = string>({
 }: RadioGroupProps<T>) {
   const baseId = `radio-${useId()}`;
   const isInvalid = invalid || Boolean(error);
-  const describedBy = joinIds(hint ? fieldHintId(baseId) : null, error ? fieldErrorId(baseId) : null);
+  const describedBy = joinIds(
+    hint ? fieldHintId(baseId) : null,
+    error ? fieldErrorId(baseId) : null,
+  );
   const isCard = variant === 'card';
 
   return (

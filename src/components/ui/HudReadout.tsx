@@ -50,7 +50,7 @@ export function HudReadout({
       <span className="hud text-muted">{label}</span>
       <span
         className={cn(
-          'font-mono font-bold leading-none tabular-nums tracking-tight',
+          'font-mono font-bold tabular-nums leading-none tracking-tight',
           TONES[tone],
           VALUE_SIZES[size],
         )}

@@ -42,13 +42,15 @@ export function PriceTag({
 
   return (
     <span className={cn('inline-flex flex-wrap items-baseline gap-x-2 gap-y-1', className)}>
-      <span className={cn('font-mono font-bold leading-none tabular-nums text-fg', PRICE_SIZES[size])}>
+      <span
+        className={cn('font-mono font-bold tabular-nums leading-none text-fg', PRICE_SIZES[size])}
+      >
         {onSale ? <span className="sr-only">Now </span> : null}
         {formatINR(price)}
       </span>
       {onSale ? (
         <>
-          <s className={cn('font-mono leading-none tabular-nums text-muted', COMPARE_SIZES[size])}>
+          <s className={cn('font-mono tabular-nums leading-none text-muted', COMPARE_SIZES[size])}>
             <span className="sr-only">, was </span>
             {formatINR(compareAtPrice)}
           </s>

@@ -35,7 +35,11 @@ export function Skeleton({ variant = 'block', lines = 1, className, style }: Ske
   if (variant === 'text') {
     const count = Math.max(1, Math.floor(lines));
     return (
-      <span aria-hidden="true" className={cn('flex w-full flex-col gap-2.5', className)} style={style}>
+      <span
+        aria-hidden="true"
+        className={cn('flex w-full flex-col gap-2.5', className)}
+        style={style}
+      >
         {Array.from({ length: count }, (_, index) => (
           <span
             key={index}

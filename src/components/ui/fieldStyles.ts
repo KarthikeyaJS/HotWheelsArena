@@ -24,7 +24,11 @@ export interface FieldClassOptions {
 }
 
 /** Class string for a text field (`<input>`, `<textarea>`, `<select>`). */
-export function fieldClasses({ size = 'md', multiline = false, className }: FieldClassOptions = {}): string {
+export function fieldClasses({
+  size = 'md',
+  multiline = false,
+  className,
+}: FieldClassOptions = {}): string {
   return cn(FIELD_BASE, multiline ? MULTILINE : FIELD_SIZES[size], className);
 }
 

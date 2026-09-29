@@ -165,7 +165,7 @@ describe('buildOrderPlan — first order of a new collector', () => {
       status: 'placed',
       payment: {
         provider: 'dummy',
-        status: 'paid',
+        status: 'success',
         transactionId: TXN_ID,
         mode: 'test',
         method: 'card',
@@ -348,16 +348,16 @@ describe('buildOrderPlan — returning collector', () => {
 });
 
 describe('buildOrderPlan — edge cases', () => {
-  it('records cash on delivery as a pending payment', () => {
+  it('records cash on delivery with the shared success status and method cod', () => {
     const priced = priceOrder([{ productId: 'rare', qty: 1 }], catalogue, settings());
     const plan = buildOrderPlan(
       planInput(priced, {
-        payment: verifiedPayment({ amount: priced.totals.total, method: 'cod', status: 'pending' }),
+        payment: verifiedPayment({ amount: priced.totals.total, method: 'cod' }),
       }),
     );
     expect(plan.order.payment).toEqual({
       provider: 'dummy',
-      status: 'pending',
+      status: 'success',
       transactionId: TXN_ID,
       mode: 'test',
       method: 'cod',

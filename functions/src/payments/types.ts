@@ -11,10 +11,15 @@ import type {
   PaymentMode,
   PaymentProviderId,
   PaymentResult,
+  PaymentStatus,
 } from '../../../shared/index.js';
 
-/** Payment state stored on the order: captured online, or collected on delivery (COD). */
-export type OrderPaymentStatus = 'paid' | 'pending';
+/**
+ * Status of a payment that passed verification — always the shared `'success'` (declined
+ * payments are rejected before an order exists). Cash on delivery is also `'success'`: the
+ * order's `paymentMethod: 'cod'` tells the admin site the cash is collected on delivery.
+ */
+export type VerifiedPaymentStatus = Extract<PaymentStatus, 'success'>;
 
 export interface PaymentVerificationContext {
   /** Server-computed order total in rupees (shared `computeOrderTotals`). */
@@ -33,7 +38,7 @@ export interface VerifiedPayment {
   method: PaymentMethod;
   /** Amount confirmed by the provider (₹). */
   amount: number;
-  status: OrderPaymentStatus;
+  status: VerifiedPaymentStatus;
 }
 
 export interface PaymentVerifier {

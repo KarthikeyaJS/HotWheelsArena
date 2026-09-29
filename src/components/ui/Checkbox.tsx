@@ -12,7 +12,10 @@ import { cn } from '@/lib/cn';
 import { joinIds } from './formFieldIds';
 import { mergeRefs } from './mergeRefs';
 
-export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
+export interface CheckboxProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'type' | 'size'
+> {
   label: ReactNode;
   description?: ReactNode;
   invalid?: boolean;
@@ -71,7 +74,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           aria-invalid={invalid || ariaInvalid || undefined}
           aria-describedby={joinIds(descriptionId, ariaDescribedBy)}
           className={cn(
-            'peer h-5 w-5 cursor-[inherit] appearance-none rounded-[5px] border-2 border-fg/30 bg-surface transition-[background-color,border-color] duration-150 ease-race group-hover/checkbox:border-fg/55 checked:!border-accent checked:!bg-accent indeterminate:!border-accent indeterminate:!bg-accent aria-[invalid=true]:border-danger',
+            'peer h-5 w-5 cursor-[inherit] appearance-none rounded-[5px] border-2 border-fg/30 bg-surface transition-[background-color,border-color] duration-150 ease-race checked:!border-accent checked:!bg-accent indeterminate:!border-accent indeterminate:!bg-accent group-hover/checkbox:border-fg/55 aria-[invalid=true]:border-danger',
             className,
           )}
         />

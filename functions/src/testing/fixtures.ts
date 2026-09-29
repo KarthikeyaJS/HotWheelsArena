@@ -91,7 +91,7 @@ export function verifiedPayment(overrides: Partial<VerifiedPayment> = {}): Verif
     mode: 'test',
     method: 'card',
     amount: 0,
-    status: 'paid',
+    status: 'success',
     ...overrides,
   };
 }

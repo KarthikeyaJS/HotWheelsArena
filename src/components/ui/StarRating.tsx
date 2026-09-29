@@ -30,7 +30,13 @@ const TEXT_SIZES: Readonly<Record<StarRatingSize, string>> = {
 const STARS = [0, 1, 2, 3, 4] as const;
 
 /** Read-only star rating (`role="img"`, e.g. "Rated 4.5 out of 5, 23 ratings"). */
-export function StarRating({ value, count, size = 'md', showValue = false, className }: StarRatingProps) {
+export function StarRating({
+  value,
+  count,
+  size = 'md',
+  showValue = false,
+  className,
+}: StarRatingProps) {
   const safe = Number.isFinite(value) ? Math.min(5, Math.max(0, value)) : 0;
   const halves = Math.round(safe * 2) / 2;
   const display = safe.toFixed(1);
@@ -40,7 +46,11 @@ export function StarRating({ value, count, size = 'md', showValue = false, class
   }`;
 
   return (
-    <span role="img" aria-label={label} className={cn('inline-flex items-center gap-1.5', className)}>
+    <span
+      role="img"
+      aria-label={label}
+      className={cn('inline-flex items-center gap-1.5', className)}
+    >
       <span className="inline-flex items-center gap-0.5">
         {STARS.map((index) => {
           const fill = Math.min(1, Math.max(0, halves - index));

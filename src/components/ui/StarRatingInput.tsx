@@ -1,11 +1,4 @@
-import {
-  forwardRef,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type Ref,
-} from 'react';
+import { forwardRef, useId, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { cn } from '@/lib/cn';
 import { StarShape } from './StarShape';
 

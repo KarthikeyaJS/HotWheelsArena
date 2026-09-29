@@ -22,7 +22,12 @@
     "emulators": "firebase emulators:start --project demo-hotwheelsarena",
     "seed": "tsx scripts/seed.ts",
     "seed:emulator": "tsx scripts/seed.ts --emulator",
+    "seed:verify": "tsx scripts/verify-seed.ts",
+    "set-admin": "tsx scripts/set-admin.ts",
     "sounds": "node scripts/generate-sounds.mjs",
+    "images": "tsx scripts/generate-images.ts",
+    "images:check": "tsx scripts/generate-images.ts --check",
+    "snap": "node scripts/dev/snap.mjs",
     "functions:build": "npm --prefix functions run build",
     "deploy": "npm run build && firebase deploy"
   },
@@ -46,6 +51,7 @@
   "devDependencies": {
     "@eslint/js": "~9.39.5",
     "@firebase/rules-unit-testing": "~3.0.4",
+    "@playwright/test": "^1.63.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.10.0",
     "@testing-library/react": "^16.3.3",

@@ -112,8 +112,10 @@ export function validateCatalog(
   if (categories.length !== R.categoryCount) {
     error(`expected ${R.categoryCount} categories, found ${categories.length}`);
   }
-  for (const dupe of duplicates(categories.map((c) => c.id))) error(`duplicate category id "${dupe}"`);
-  for (const dupe of duplicates(categories.map((c) => c.order))) error(`duplicate category order ${dupe}`);
+  for (const dupe of duplicates(categories.map((c) => c.id)))
+    error(`duplicate category id "${dupe}"`);
+  for (const dupe of duplicates(categories.map((c) => c.order)))
+    error(`duplicate category order ${dupe}`);
   const categoryIds = new Set(categories.map((c) => c.id));
   for (const slug of CATEGORY_SLUGS) {
     if (!categoryIds.has(slug)) error(`category "${slug}" is missing`);
@@ -125,15 +127,18 @@ export function validateCatalog(
       error(`${label}: slug is not one of ${CATEGORY_SLUGS.join(', ')}`);
     }
     if (!category.name.trim()) error(`${label}: name is empty`);
-    if (!/^[A-Z][A-Za-z0-9]+$/.test(category.icon)) error(`${label}: icon must be a lucide icon name`);
-    if (!isInt(category.order) || category.order < 1) error(`${label}: order must be a positive integer`);
+    if (!/^[A-Z][A-Za-z0-9]+$/.test(category.icon))
+      error(`${label}: icon must be a lucide icon name`);
+    if (!isInt(category.order) || category.order < 1)
+      error(`${label}: order must be a positive integer`);
     if (!category.description.trim()) error(`${label}: description is empty`);
     if (!category.isActive) error(`${label}: must be active`);
     checkDates(label, category.createdAt, category.updatedAt);
   }
 
   /* --------------------------------- series --------------------------------- */
-  if (series.length !== R.seriesCount) error(`expected ${R.seriesCount} series, found ${series.length}`);
+  if (series.length !== R.seriesCount)
+    error(`expected ${R.seriesCount} series, found ${series.length}`);
   for (const dupe of duplicates(series.map((s) => s.id))) error(`duplicate series id "${dupe}"`);
   const productsById = new Map(products.map((p) => [p.id, p]));
   const seriesById = new Map(series.map((s) => [s.id, s]));
@@ -147,7 +152,8 @@ export function validateCatalog(
       error(`${label}: year ${entry.year} is outside ${R.yearMin}–${R.yearMax}`);
     }
     if (entry.carIds.length === 0) error(`${label}: carIds is empty`);
-    if (entry.totalCars !== entry.carIds.length) error(`${label}: totalCars must equal carIds.length`);
+    if (entry.totalCars !== entry.carIds.length)
+      error(`${label}: totalCars must equal carIds.length`);
     for (const dupe of duplicates(entry.carIds)) error(`${label}: car "${dupe}" is listed twice`);
     entry.carIds.forEach((carId, index) => {
       const product = productsById.get(carId);
@@ -159,7 +165,9 @@ export function validateCatalog(
         error(`${label}: lists "${carId}" but that product's series is "${product.series}"`);
       }
       if (product.seriesNumber !== index + 1) {
-        error(`${label}: "${carId}" is at position ${index + 1} but has seriesNumber ${product.seriesNumber}`);
+        error(
+          `${label}: "${carId}" is at position ${index + 1} but has seriesNumber ${product.seriesNumber}`,
+        );
       }
     });
     if (!entry.isActive) error(`${label}: must be active`);
@@ -178,7 +186,8 @@ export function validateCatalog(
     error(`expected exactly ${R.productCount} products, found ${products.length}`);
   }
   for (const dupe of duplicates(products.map((p) => p.id))) error(`duplicate product id "${dupe}"`);
-  for (const dupe of duplicates(products.map((p) => p.slug))) error(`duplicate product slug "${dupe}"`);
+  for (const dupe of duplicates(products.map((p) => p.slug)))
+    error(`duplicate product slug "${dupe}"`);
   for (const dupe of duplicates(products.map((p) => p.collectionNumber))) {
     error(`duplicate collectionNumber #${dupe}`);
   }
@@ -205,24 +214,28 @@ export function validateCatalog(
     ] as const) {
       if (!value.trim()) error(`${label}: ${field} is empty`);
     }
-    if (product.description.length > 320) warn(`${label}: description is long (${product.description.length} chars)`);
+    if (product.description.length > 320)
+      warn(`${label}: description is long (${product.description.length} chars)`);
 
     const owner = seriesById.get(product.series);
     if (!owner) {
       error(`${label}: unknown series "${product.series}"`);
     } else {
-      if (!owner.carIds.includes(product.id)) error(`${label}: not listed in series "${owner.id}" carIds`);
+      if (!owner.carIds.includes(product.id))
+        error(`${label}: not listed in series "${owner.id}" carIds`);
       if (product.seriesName !== owner.name) error(`${label}: seriesName must be "${owner.name}"`);
       if (product.year !== owner.year) error(`${label}: year must match series year ${owner.year}`);
     }
-    if (!isInt(product.seriesNumber) || product.seriesNumber < 1) error(`${label}: invalid seriesNumber`);
+    if (!isInt(product.seriesNumber) || product.seriesNumber < 1)
+      error(`${label}: invalid seriesNumber`);
     if (!isInt(product.collectionNumber) || product.collectionNumber < 1) {
       error(`${label}: collectionNumber must be a positive integer`);
     }
     if (!isInt(product.year) || product.year < R.yearMin || product.year > R.yearMax) {
       error(`${label}: year ${product.year} is outside ${R.yearMin}–${R.yearMax}`);
     }
-    if (!/^1:\d{1,3}$/.test(product.scale)) error(`${label}: scale "${product.scale}" is not like 1:64`);
+    if (!/^1:\d{1,3}$/.test(product.scale))
+      error(`${label}: scale "${product.scale}" is not like 1:64`);
     if (!(CATEGORY_SLUGS as readonly string[]).includes(product.category)) {
       error(`${label}: unknown category "${product.category}"`);
     }
@@ -234,14 +247,19 @@ export function validateCatalog(
         ['rarityScore', product.rarityScore],
         ['collectorScore', product.collectorScore],
       ] as const) {
-        if (!isInt(value) || value < 1 || value > 10) error(`${label}: ${field} must be an integer 1–10`);
+        if (!isInt(value) || value < 1 || value > 10)
+          error(`${label}: ${field} must be an integer 1–10`);
         else if (!inRange(value, band)) {
-          error(`${label}: ${field} ${value} is incoherent with rarity "${product.rarity}" (${band[0]}–${band[1]})`);
+          error(
+            `${label}: ${field} ${value} is incoherent with rarity "${product.rarity}" (${band[0]}–${band[1]})`,
+          );
         }
       }
       const priceBand = PRICE_BANDS[product.rarity];
       if (!inRange(product.price, priceBand)) {
-        error(`${label}: price ₹${product.price} is incoherent with rarity "${product.rarity}" (₹${priceBand[0]}–₹${priceBand[1]})`);
+        error(
+          `${label}: price ₹${product.price} is incoherent with rarity "${product.rarity}" (₹${priceBand[0]}–₹${priceBand[1]})`,
+        );
       }
     }
     if (!(product.themedStats.topSpeedKmh > 0) || !(product.themedStats.powerHp > 0)) {
@@ -256,22 +274,31 @@ export function validateCatalog(
       }
     }
     if (product.currency !== 'INR') error(`${label}: currency must be INR`);
-    if (!isInt(product.stock) || product.stock < 0) error(`${label}: stock must be a non-negative integer`);
+    if (!isInt(product.stock) || product.stock < 0)
+      error(`${label}: stock must be a non-negative integer`);
 
     const edition = product.limitedEdition;
     if (edition) {
-      if (!isInt(edition.editionSize) || edition.editionSize < 1) error(`${label}: invalid editionSize`);
-      if (!isInt(edition.editionNumber) || edition.editionNumber < 1 || edition.editionNumber > edition.editionSize) {
+      if (!isInt(edition.editionSize) || edition.editionSize < 1)
+        error(`${label}: invalid editionSize`);
+      if (
+        !isInt(edition.editionNumber) ||
+        edition.editionNumber < 1 ||
+        edition.editionNumber > edition.editionSize
+      ) {
         error(`${label}: editionNumber must be 1…editionSize`);
       }
       if (product.stock > edition.editionSize) error(`${label}: stock exceeds the edition size`);
     }
     if (product.isVault) {
-      if (!edition) error(`${label}: vault cars need a limitedEdition { editionNumber, editionSize }`);
+      if (!edition)
+        error(`${label}: vault cars need a limitedEdition { editionNumber, editionSize }`);
       if (product.rarity !== 'limited') error(`${label}: vault cars must have rarity "limited"`);
-      if (product.stock > R.maxVaultStock) error(`${label}: vault stock ${product.stock} is not low (≤ ${R.maxVaultStock})`);
+      if (product.stock > R.maxVaultStock)
+        error(`${label}: vault stock ${product.stock} is not low (≤ ${R.maxVaultStock})`);
     }
-    if (product.rarity === 'limited' && !product.isVault) warn(`${label}: limited rarity but not in the vault`);
+    if (product.rarity === 'limited' && !product.isVault)
+      warn(`${label}: limited rarity but not in the vault`);
     if ((product.category === 'limited') !== (product.rarity === 'limited')) {
       warn(`${label}: category "limited" and rarity "limited" should go together`);
     }
@@ -284,25 +311,31 @@ export function validateCatalog(
     }
     product.images.forEach((image, index) => {
       const expectedId = `${CLOUDINARY_CAR_FOLDER}/${product.slug}${index === 0 ? '' : `-${index + 1}`}`;
-      if (image.publicId !== expectedId) error(`${label}: image ${index + 1} publicId must be "${expectedId}"`);
+      if (image.publicId !== expectedId)
+        error(`${label}: image ${index + 1} publicId must be "${expectedId}"`);
       if (!image.url.startsWith(PLACEHOLDER_URL_PREFIX) || !image.url.endsWith('.svg')) {
         error(`${label}: image url "${image.url}" must be a local /placeholders/*.svg fallback`);
       }
       if (!image.alt.trim()) error(`${label}: image ${index + 1} needs alt text`);
     });
-    if (product.primaryImage !== product.images[0]?.url) error(`${label}: primaryImage must equal images[0].url`);
+    if (product.primaryImage !== product.images[0]?.url)
+      error(`${label}: primaryImage must equal images[0].url`);
 
     for (const dupe of duplicates(product.tags)) error(`${label}: duplicate tag "${dupe}"`);
-    for (const tag of product.tags) if (!KEBAB.test(tag)) error(`${label}: tag "${tag}" must be kebab-case`);
+    for (const tag of product.tags)
+      if (!KEBAB.test(tag)) error(`${label}: tag "${tag}" must be kebab-case`);
     const isPremium = product.isVault || product.scale !== '1:64';
-    if (isPremium && !product.tags.includes('premium')) error(`${label}: premium items must be tagged "premium"`);
+    if (isPremium && !product.tags.includes('premium'))
+      error(`${label}: premium items must be tagged "premium"`);
 
     if (!product.isActive) error(`${label}: must be active`);
     checkDates(label, product.createdAt, product.updatedAt);
 
     const expected = aggregateRatings(reviewsByProduct.get(product.id) ?? []);
     if (product.ratingAvg !== expected.ratingAvg || product.ratingCount !== expected.ratingCount) {
-      error(`${label}: rating ${product.ratingAvg}/${product.ratingCount} does not match its reviews (${expected.ratingAvg}/${expected.ratingCount})`);
+      error(
+        `${label}: rating ${product.ratingAvg}/${product.ratingCount} does not match its reviews (${expected.ratingAvg}/${expected.ratingCount})`,
+      );
     }
   }
 
@@ -311,18 +344,22 @@ export function validateCatalog(
   const newCount = countBy((p) => p.isNew);
   const featuredCount = countBy((p) => p.isFeatured);
   const vaultCount = countBy((p) => p.isVault);
-  if (newCount !== R.newCount) error(`expected exactly ${R.newCount} isNew products, found ${newCount}`);
+  if (newCount !== R.newCount)
+    error(`expected exactly ${R.newCount} isNew products, found ${newCount}`);
   if (featuredCount !== R.featuredCount) {
     error(`expected exactly ${R.featuredCount} isFeatured products, found ${featuredCount}`);
   }
-  if (vaultCount < R.minVault) error(`expected at least ${R.minVault} isVault products, found ${vaultCount}`);
+  if (vaultCount < R.minVault)
+    error(`expected at least ${R.minVault} isVault products, found ${vaultCount}`);
 
   if (products.every((p) => isValidDate(p.createdAt))) {
     const newest = [...products].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     const newestIds = new Set(newest.slice(0, R.newCount).map((p) => p.id));
     for (const product of products) {
       if (product.isNew !== newestIds.has(product.id)) {
-        error(`product "${product.id}": isNew must be set on exactly the ${R.newCount} newest products (by createdAt)`);
+        error(
+          `product "${product.id}": isNew must be set on exactly the ${R.newCount} newest products (by createdAt)`,
+        );
       }
     }
     const last = newest[R.newCount - 1];
@@ -343,7 +380,9 @@ export function validateCatalog(
     const count = countBy((p) => p.rarity === rarity);
     if (count === 0) error(`no "${rarity}" products`);
     else if (count !== COMPOSITION_TARGETS.rarity[rarity]) {
-      warn(`rarity "${rarity}": ${count} products (target ≈ ${COMPOSITION_TARGETS.rarity[rarity]})`);
+      warn(
+        `rarity "${rarity}": ${count} products (target ≈ ${COMPOSITION_TARGETS.rarity[rarity]})`,
+      );
     }
   }
   const soldOut = countBy((p) => p.stock === 0);
@@ -356,7 +395,10 @@ export function validateCatalog(
     if (!existsSync(dir)) {
       warn(`placeholder directory not found (${dir}) — image files were not checked`);
     } else {
-      const urls = new Set([GENERIC_CAR_URL, ...products.flatMap((p) => p.images.map((i) => i.url))]);
+      const urls = new Set([
+        GENERIC_CAR_URL,
+        ...products.flatMap((p) => p.images.map((i) => i.url)),
+      ]);
       for (const url of urls) {
         if (url.startsWith(PLACEHOLDER_URL_PREFIX)) {
           const file = url.slice(PLACEHOLDER_URL_PREFIX.length);
@@ -380,20 +422,29 @@ export function validateCatalog(
       warn(`${label}: seed reviewer uids should start with "${SEED_REVIEWER_UID_PREFIX}"`);
     }
     if (!review.displayName.trim()) error(`${label}: displayName is empty`);
-    if (!isInt(review.rating) || review.rating < 1 || review.rating > 5) error(`${label}: rating must be 1–5`);
+    if (!isInt(review.rating) || review.rating < 1 || review.rating > 5)
+      error(`${label}: rating must be 1–5`);
     const length = review.text.trim().length;
     if (length < REVIEW_TEXT_MIN || length > REVIEW_TEXT_MAX) {
-      error(`${label}: text must be ${REVIEW_TEXT_MIN}–${REVIEW_TEXT_MAX} characters (has ${length})`);
+      error(
+        `${label}: text must be ${REVIEW_TEXT_MIN}–${REVIEW_TEXT_MAX} characters (has ${length})`,
+      );
     }
     checkDates(label, review.createdAt, review.updatedAt);
-    if (product && isValidDate(review.createdAt) && review.createdAt.getTime() < product.createdAt.getTime()) {
+    if (
+      product &&
+      isValidDate(review.createdAt) &&
+      review.createdAt.getTime() < product.createdAt.getTime()
+    ) {
       error(`${label}: written before the product was listed`);
     }
   }
   const [minReviews, maxReviews] = COMPOSITION_TARGETS.reviewsPerProduct;
   for (const [productId, ratings] of reviewsByProduct) {
     if (ratings.length < minReviews || ratings.length > maxReviews) {
-      warn(`product "${productId}" has ${ratings.length} reviews (target ${minReviews}–${maxReviews})`);
+      warn(
+        `product "${productId}" has ${ratings.length} reviews (target ${minReviews}–${maxReviews})`,
+      );
     }
   }
 
@@ -408,7 +459,9 @@ export function validateCatalog(
     'maxQtyPerItem',
   ] as const) {
     if (settings[key] !== DEFAULT_SITE_SETTINGS[key]) {
-      error(`settings/${catalog.settingsDocId}: ${key} must equal DEFAULT_SITE_SETTINGS.${key} (${String(DEFAULT_SITE_SETTINGS[key])})`);
+      error(
+        `settings/${catalog.settingsDocId}: ${key} must equal DEFAULT_SITE_SETTINGS.${key} (${String(DEFAULT_SITE_SETTINGS[key])})`,
+      );
     }
   }
   checkDates(`settings/${catalog.settingsDocId}`, settings.createdAt, settings.updatedAt);

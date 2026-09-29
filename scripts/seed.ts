@@ -280,7 +280,11 @@ function planWrites(
   };
 
   for (const category of catalog.categories) {
-    add(COLLECTIONS.categories, db.collection(COLLECTIONS.categories).doc(category.id), toStoredDoc(category));
+    add(
+      COLLECTIONS.categories,
+      db.collection(COLLECTIONS.categories).doc(category.id),
+      toStoredDoc(category),
+    );
   }
   for (const entry of catalog.series) {
     add(COLLECTIONS.series, db.collection(COLLECTIONS.series).doc(entry.id), toStoredDoc(entry));
@@ -362,7 +366,11 @@ async function main(): Promise<number> {
 
   if (options.dryRun) {
     const docCount =
-      catalog.categories.length + catalog.series.length + catalog.products.length + catalog.reviews.length + 1;
+      catalog.categories.length +
+      catalog.series.length +
+      catalog.products.length +
+      catalog.reviews.length +
+      1;
     console.log(
       `\n✔ Dry run — nothing written. A real run would ${options.reset ? `delete ${SEEDED_COLLECTIONS.join(', ')} (with reviews) and then ` : ''}write ${docCount} documents.`,
     );
@@ -371,7 +379,11 @@ async function main(): Promise<number> {
 
   let target: Target | null = null;
   try {
-    target = resolveTarget({ service: 'firestore', emulator: options.emulator, project: options.project });
+    target = resolveTarget({
+      service: 'firestore',
+      emulator: options.emulator,
+      project: options.project,
+    });
   } catch (error) {
     if (error instanceof TargetError) {
       console.error(`\n✖ ${error.message}`);
@@ -386,7 +398,9 @@ async function main(): Promise<number> {
     );
     return 1;
   }
-  console.log(`\n→ Target: ${target.label}${target.mode === 'live' ? '  (writing to a real project)' : ''}`);
+  console.log(
+    `\n→ Target: ${target.label}${target.mode === 'live' ? '  (writing to a real project)' : ''}`,
+  );
 
   const app = initAdminApp(target, `seed-${Date.now()}`);
   try {
@@ -400,10 +414,15 @@ async function main(): Promise<number> {
 
     const existingRatings = resetCounts
       ? new Map<string, Map<string, number>>()
-      : await readExistingRatings(db, catalog.products.map((product) => product.id));
+      : await readExistingRatings(
+          db,
+          catalog.products.map((product) => product.id),
+        );
     const plan = planWrites(db, catalog, existingRatings);
     const batchCount = Math.ceil(plan.ops.length / MAX_BATCH_OPS);
-    console.log(`→ Writing ${plan.ops.length} documents in ${batchCount} batch(es) of ≤ ${MAX_BATCH_OPS}…`);
+    console.log(
+      `→ Writing ${plan.ops.length} documents in ${batchCount} batch(es) of ≤ ${MAX_BATCH_OPS}…`,
+    );
     await commitInBatches(db, plan.ops);
 
     const deletedFor = (label: string): Cell => {
@@ -416,7 +435,11 @@ async function main(): Promise<number> {
     };
     const labels = Object.keys(plan.counts);
     const totalDeleted = resetCounts
-      ? resetCounts.products + resetCounts.categories + resetCounts.series + resetCounts.settings + resetCounts.reviews
+      ? resetCounts.products +
+        resetCounts.categories +
+        resetCounts.series +
+        resetCounts.settings +
+        resetCounts.reviews
       : '-';
     console.log(
       `\n${renderTable(

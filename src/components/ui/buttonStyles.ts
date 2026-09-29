@@ -31,8 +31,7 @@ const VARIANT_BASE: Readonly<Record<ButtonVariant, string>> = {
 const VARIANT_INTERACTIVE: Readonly<Record<ButtonVariant, string>> = {
   primary:
     'hover:drop-shadow-[0_8px_18px_rgb(var(--accent)/0.38)] active:translate-y-px active:scale-[0.98]',
-  secondary:
-    'hover:border-metal/70 hover:bg-card-hover active:translate-y-px active:scale-[0.98]',
+  secondary: 'hover:border-metal/70 hover:bg-card-hover active:translate-y-px active:scale-[0.98]',
   ghost: 'hover:bg-fg/[0.07] active:scale-[0.98] active:bg-fg/10',
   outline: 'hover:border-accent hover:text-accent-ink active:translate-y-px active:scale-[0.98]',
   danger:

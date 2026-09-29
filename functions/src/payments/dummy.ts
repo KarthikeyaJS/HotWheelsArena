@@ -3,8 +3,8 @@
  *
  * Accepts a payment only when test payments are allowed (`ALLOW_TEST_PAYMENTS`, default true),
  * it succeeded, it is in `test` mode, its transaction id has the dummy format
- * (`test_` + 20 lowercase hex) and the charged amount equals the server total. Cash on delivery
- * is recorded as `pending`; card / UPI as `paid`.
+ * (`test_` + 20 lowercase hex) and the charged amount equals the server total. Every accepted
+ * payment — card, UPI or cash on delivery — is recorded with the shared status `success`.
  */
 import { DUMMY_TRANSACTION_ID_REGEX } from '../../../shared/index.js';
 import { AppError } from '../lib/errors.js';
@@ -55,7 +55,7 @@ export const dummyPaymentVerifier: PaymentVerifier = {
       mode: 'test',
       method: payment.method,
       amount: context.expectedAmount,
-      status: payment.method === 'cod' ? 'pending' : 'paid',
+      status: 'success',
     };
   },
 };

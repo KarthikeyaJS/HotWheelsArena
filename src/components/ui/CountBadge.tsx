@@ -63,7 +63,7 @@ export function CountBadge({
       transition={SPRING_SNAPPY}
       aria-hidden={decorative || undefined}
       className={cn(
-        'inline-flex select-none items-center justify-center rounded-full font-mono font-bold leading-none tabular-nums ring-2 ring-bg',
+        'inline-flex select-none items-center justify-center rounded-full font-mono font-bold tabular-nums leading-none ring-2 ring-bg',
         TONES[tone],
         SIZES[size],
         className,

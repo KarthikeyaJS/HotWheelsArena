@@ -1,0 +1,9 @@
+# Crawl everything. Private pages (cart, checkout, orders, garage, wishlist) are not blocked here
+# on purpose: they send <meta name="robots" content="noindex"> via useDocumentMeta, and crawlers
+# must be able to fetch a page to see that tag.
+User-agent: *
+Allow: /
+
+# Sitemap: once a sitemap is generated at deploy time, uncomment and point this at the
+# production origin (the same value as VITE_SITE_URL), e.g.
+# Sitemap: https://www.example.com/sitemap.xml
