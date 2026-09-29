@@ -29,6 +29,8 @@
     "images:check": "tsx scripts/generate-images.ts --check",
     "snap": "node scripts/dev/snap.mjs",
     "functions:build": "npm --prefix functions run build",
+    "presmoke": "npm run functions:build",
+    "smoke": "firebase emulators:exec --only auth,firestore,functions --project demo-hotwheelsarena \"npm run seed:emulator && node scripts/smoke-e2e.mjs\"",
     "deploy": "npm run build && firebase deploy"
   },
   "dependencies": {

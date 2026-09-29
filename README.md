@@ -95,7 +95,7 @@ The binding contract (every export, token, hook, store, write shape and componen
 │     ├─ lib/                pure domain logic (pricing, orders, stats, reviews, rate limits) + unit tests
 │     └─ index.ts            the six deployed functions
 ├─ public/                   static files copied verbatim (placeholders/, sounds/, favicon, OG image)
-├─ scripts/                  seed script + seed data, set-admin, sound generator
+├─ scripts/                  seed + verify-seed, set-admin, e2e smoke test, image/sound generators, dev/snap.mjs (see scripts/README.md)
 ├─ shared/                   pure TS shared by web + functions (types, schemas, gamification, commerce, india)
 ├─ src/
 │  ├─ components/            ui/, layout/, product/, gamification/, common/ and feature folders
@@ -120,7 +120,7 @@ The binding contract (every export, token, hook, store, write shape and componen
 
 ## Prerequisites
 
-- **Node.js 20 or newer** (22 LTS recommended) and npm 10.
+- **Node.js 22 LTS** (recommended: it matches the Cloud Functions runtime, and the Functions emulator runs your functions on the host's Node) and npm 10. The web tooling alone also runs on Node 20.
 - **Java 21 or newer** (a JDK, e.g. Temurin 21). The Firestore emulator needs it, both for `npm run emulators` and for `npm run test:rules`.
 - **firebase-tools**: already a devDependency, so use `npx firebase …`. A global `npm i -g firebase-tools` works too.
 - A Google account. For production you also need a Firebase project on the **Blaze** plan (Cloud Functions requirement) and optionally a Cloudinary account.
@@ -131,8 +131,8 @@ The Emulator Suite runs Auth, Firestore, Functions and Hosting locally under the
 
 ```bash
 # 1. Install dependencies (web app + Cloud Functions)
-npm install
-npm --prefix functions install
+npm install --include=dev
+npm --prefix functions ci --include=dev
 
 # 2. Compile the functions once (the emulator loads functions/lib)
 npm run functions:build
@@ -161,7 +161,9 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 - Emulator UI: <http://127.0.0.1:4000> (browse Firestore data, Auth users and function logs).
 - Emulator data is wiped when the emulators stop. To keep it between runs, start them with `npx firebase emulators:start --project demo-hotwheelsarena --import=./emulator-data --export-on-exit` (`emulator-data/` is gitignored).
 - Editing functions? Run `npm --prefix functions run build:watch` in another terminal; the emulator reloads the compiled code.
-- If this machine exports `NODE_ENV=production`, npm silently skips devDependencies. Use `npm install --include=dev` and `npm --prefix functions install --include=dev`.
+- If this machine exports `NODE_ENV=production`, npm silently skips devDependencies, which is why the commands above pass `--include=dev` (harmless elsewhere).
+- **Don't run `npm --prefix functions install` without a package name.** npm 10 then installs the _root_ package into `functions/` as a `"hotwheelsarena": "file:.."` dependency (plus a junction/symlink back to the repo). Use `npm --prefix functions ci --include=dev`, or run `npm install --include=dev` from inside `functions/`.
+- Want the whole backend checked in one go? `npm run smoke` builds the functions, boots the Auth, Firestore and Functions emulators, seeds them and runs the end-to-end smoke test (see [Testing](#testing)).
 
 ## npm scripts
 
@@ -178,11 +180,18 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 | `npm run emulators`               | Starts every emulator in `firebase.json` for `demo-hotwheelsarena`                                      |
 | `npm run seed`                    | Seeds a **live** project (service account required, see below)                                          |
 | `npm run seed:emulator`           | Seeds the local Firestore emulator                                                                      |
+| `npm run seed:verify`             | Reads a seeded database back and checks it against the catalogue (`-- --emulator` or `-- --project <id>`) |
+| `npm run set-admin`               | Grants/revokes/checks the `admin` custom claim (`-- --email you@example.com [--emulator] [--revoke]`)    |
 | `npm run sounds`                  | Regenerates the royalty-free placeholder engine sounds in `public/sounds/`                              |
+| `npm run images` / `images:check` | Regenerates the placeholder SVGs, favicon and OG card / fails if any is missing or stale                |
+| `npm run snap`                    | Playwright screenshot of a dev-server route + console errors and 375px overflow (`-- --help`)            |
 | `npm run functions:build`         | Compiles `functions/` to `functions/lib/`                                                               |
+| `npm run smoke`                   | End-to-end smoke test: builds functions (`presmoke`), boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` |
 | `npm run deploy`                  | `build`, then `firebase deploy` (Hosting, Firestore rules and indexes, Functions) to the active project |
 
 Inside `functions/`: `build`, `build:watch`, `typecheck`, `test`, `serve` (build + Auth/Firestore/Functions emulators), `shell`, `deploy`, `logs`.
+
+Seeding, admin claims, the smoke test, screenshots and asset generation are documented in detail in [`scripts/README.md`](scripts/README.md); the Cloud Functions in [`functions/README.md`](functions/README.md); the frontend contract in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Environment variables
 
@@ -350,13 +359,17 @@ Admin rights come from a custom claim, `admin: true`, never from a Firestore fie
 
 ```bash
 # live project (uses GOOGLE_APPLICATION_CREDENTIALS, as for seeding)
-npm exec tsx scripts/set-admin.ts -- --email you@example.com
+npm run set-admin -- --email you@example.com --project <project-id>
 
 # local Auth emulator (sign in once first so the account exists)
-npm exec tsx scripts/set-admin.ts -- --email you@example.com --emulator
+npm run set-admin -- --email you@example.com --emulator
+
+# remove it again / only print the current claims
+npm run set-admin -- --email you@example.com --emulator --revoke
+npm run set-admin -- --email you@example.com --emulator --check
 ```
 
-The `--` matters: it stops npm from treating `--email` / `--emulator` as its own options. See the script header for any additional flags.
+The `--` matters: it stops npm from treating `--email` / `--emulator` as its own options. `npm run set-admin -- --help` lists every flag (see also [`scripts/README.md`](scripts/README.md)).
 
 The claim reaches the browser with the next ID token. **Sign out and back in** (or wait up to an hour). The storefront has no admin UI; the claim exists for the future admin site that will share this project.
 

@@ -1,64 +1,44 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BRAND_LOGO_TEXT, COPYRIGHT_OWNER, FOOTER_DISCLAIMER } from '@/config/brand';
-import { NAV_LINKS, isNavLinkActive } from '@/config/nav';
-import { cn } from '@/lib/cn';
+import { Suspense } from 'react';
+import { Outlet } from 'react-router-dom';
+import { SignInPrompt } from '@/components/auth/SignInPrompt';
+import { RouteFallback } from '@/components/common/RouteFallback';
+import { ScanlinesOverlay } from '@/components/effects/ScanlinesOverlay';
+import { BadgeWatcher } from '@/components/gamification/BadgeWatcher';
+import { CommandPalette } from '@/components/search/CommandPalette';
+import { Toaster } from '@/components/ui/Toaster';
+import { Footer } from './Footer';
+import { MobileDrawer } from './MobileDrawer';
+import { Navbar } from './Navbar';
+import { PageBackdrop } from './PageBackdrop';
+import { SkipLink } from './SkipLink';
 
 /**
- * MINIMAL placeholder layout written by core. The layout agent replaces this file with the real
- * shell (Navbar, MobileDrawer, Footer, ScrollProgress, SkipLink, ScanlinesOverlay,
- * CommandPalette, SignInPrompt, Toaster, BadgeWatcher). Keep the export name `AppLayout`,
- * the `#main-content` target and the `<Outlet />`.
+ * The app shell (root route element via core's RootLayout): skip link → sticky Navbar (with the
+ * scroll-progress line) → `<main id="main-content">` + routed page → Footer, over a faint garage
+ * backdrop. Global overlays are mounted exactly once here: MobileDrawer, CommandPalette,
+ * SignInPrompt, Toaster, BadgeWatcher and the CRT ScanlinesOverlay.
  */
 export function AppLayout() {
-  const location = useLocation();
-
   return (
-    <div className="flex min-h-screen flex-col bg-bg text-fg">
-      <a href="#main-content" className="skip-link">
-        Skip to content
-      </a>
+    <div className="relative isolate flex min-h-screen flex-col bg-bg text-fg">
+      <PageBackdrop />
+      <SkipLink />
+      <Navbar />
 
-      <header className="glass sticky top-0 z-header border-b border-line">
-        <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/" className="font-display text-sm font-black tracking-display text-fg">
-            {BRAND_LOGO_TEXT}
-          </Link>
-          <nav aria-label="Primary">
-            <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              {NAV_LINKS.map((link) => {
-                const active = isNavLinkActive(link, location);
-                return (
-                  <li key={link.id}>
-                    <NavLink
-                      to={link.to}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'font-mono text-xs font-bold uppercase tracking-hud transition-colors hover:text-fg',
-                        active ? 'text-accent-ink' : 'text-muted',
-                      )}
-                    >
-                      {link.label}
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </div>
-      </header>
-
-      <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
-        <Outlet />
+      <main id="main-content" tabIndex={-1} className="relative flex-1 focus:outline-none">
+        <Suspense fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
 
-      <footer className="border-t border-line bg-surface">
-        <div className="mx-auto flex max-w-content flex-col gap-3 px-4 py-8 text-sm text-muted sm:px-6 lg:px-8">
-          <p>{FOOTER_DISCLAIMER}</p>
-          <p className="hud">
-            © {new Date().getFullYear()} {COPYRIGHT_OWNER}
-          </p>
-        </div>
-      </footer>
+      <Footer />
+
+      <MobileDrawer />
+      <CommandPalette />
+      <SignInPrompt />
+      <Toaster />
+      <BadgeWatcher />
+      <ScanlinesOverlay />
     </div>
   );
 }

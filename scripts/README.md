@@ -4,14 +4,16 @@ Node tooling for data seeding, admin access and generated assets. Run TypeScript
 `npx tsx <file>` (tsx is a root devDependency). They import `shared/` with relative paths,
 because tsx does not resolve the `@shared` alias.
 
-| Script                | npm                                      | What it does                                                                    |
-| --------------------- | ---------------------------------------- | ------------------------------------------------------------------------------- |
-| `seed.ts`             | `npm run seed` / `npm run seed:emulator` | Validates and writes the launch catalogue to Firestore                          |
-| `verify-seed.ts`      | —                                        | Reads the seeded data back and checks it against the catalogue                  |
-| `set-admin.ts`        | —                                        | Grants or revokes the `admin` custom claim for a user                           |
-| `generate-images.ts`  | —                                        | Generates every SVG in `public/placeholders/`, plus the favicon and social card |
-| `rasterize-images.ts` | —                                        | Renders `og-image.png` and `apple-touch-icon.png` from their SVGs               |
-| `generate-sounds.mjs` | `npm run sounds`                         | Generates the engine sound effects in `public/sounds/`                          |
+| Script                | npm                                              | What it does                                                                                        |
+| --------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `seed.ts`             | `npm run seed` / `npm run seed:emulator`         | Validates and writes the launch catalogue to Firestore                                              |
+| `verify-seed.ts`      | `npm run seed:verify`                            | Reads the seeded data back and checks it against the catalogue                                      |
+| `set-admin.ts`        | `npm run set-admin`                              | Grants or revokes the `admin` custom claim for a user                                               |
+| `generate-images.ts`  | `npm run images` / `npm run images:check`        | Generates every SVG in `public/placeholders/`, plus the favicon and social card                     |
+| `rasterize-images.ts` | —                                                | Renders `og-image.png` and `apple-touch-icon.png` from their SVGs                                   |
+| `generate-sounds.mjs` | `npm run sounds`                                 | Generates the engine sound effects in `public/sounds/`                                              |
+| `smoke-e2e.mjs`       | `npm run smoke`                                  | End-to-end smoke test of the Cloud Functions, rules and seed on the Emulator Suite (see below)      |
+| `dev/snap.mjs`        | `npm run snap`                                   | Playwright screenshot of a route (dev server) + console/page errors and 375px overflow (`--help`)   |
 
 Pass flags to npm scripts after `--`, for example `npm run seed -- --dry-run`.
 
@@ -126,6 +128,44 @@ npx tsx scripts/set-admin.ts --email you@example.com --emulator --check  # print
 1. Sign in to the app once with that Google account, so the user exists.
 2. Run the script. Other custom claims on the user are kept.
 3. Sign out and back in (or refresh the ID token) so the browser picks up the new claim.
+
+---
+
+## End-to-end smoke test — `smoke-e2e.mjs`
+
+```bash
+npm run smoke                  # presmoke builds functions/, then emulators:exec runs seed + smoke
+node scripts/smoke-e2e.mjs     # against emulators you already started and seeded
+```
+
+`npm run smoke` = `firebase emulators:exec --only auth,firestore,functions --project demo-hotwheelsarena "npm run seed:emulator && node scripts/smoke-e2e.mjs"`
+(its `presmoke` hook runs `npm run functions:build` first, because the emulator loads `functions/lib`). It needs Java 21 and
+free ports 9099 / 8080 / 5001 (plus the emulator hub/logging ports 4400 / 4500), and leaves nothing running.
+
+The script uses only Node 22's `fetch`. It signs up a collector through the Auth emulator REST API and calls the callables over
+the `onCall` HTTP protocol with that ID token, reading results back through the Firestore emulator REST API (`Bearer owner`).
+It checks:
+
+- `ensureUserProfile` creates `users/{uid}` and is idempotent;
+- `placeOrder` for two in-stock cars, charging exactly the total computed from seeded prices + `settings/site` with the
+  `computeOrderTotals` rules: order document, garage entries with `source: 'purchase'`, XP, the FIRST RIDE badge and stats;
+- the same transaction id replayed returns the same order (still one order); a tampered amount, a sold-out car and an
+  unauthenticated call are rejected with the right error codes;
+- `submitReview` raises `ratingCount` and flags the verified buyer;
+- `subscribeNewsletter` returns `subscribed`, then `already-subscribed`, and the 6th sign-up from one IP is rate limited
+  (the emulator exposes no client IP, so the script sends `X-Forwarded-For`);
+- the security rules deny a client-forged `source: 'purchase'` garage entry but accept a manual one written as the user,
+  after which `onGarageWrite` recomputes the stats and awards TREASURE HUNTER.
+
+It prints a PASS/FAIL table and exits with code 1 if any check fails. Override hosts with `FIREBASE_AUTH_EMULATOR_HOST`,
+`FIRESTORE_EMULATOR_HOST`, `SMOKE_FUNCTIONS_HOST` and the project with `SMOKE_PROJECT_ID`.
+
+## Screenshots — `dev/snap.mjs`
+
+`npm run snap -- --path /shop --out shots/shop.png [--width 375] [--theme light] [--full] [--signin]` opens the running dev
+server (`http://localhost:5173`) in headless Chromium (`@playwright/test`), takes a screenshot and reports console errors,
+page errors and horizontal overflow. `--signin` uses the dev-only emulator hook in `src/dev/testHooks.ts`. Run with `--help`
+for every option.
 
 ---
 

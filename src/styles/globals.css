@@ -317,7 +317,7 @@
 
   /* Skip link: visually hidden until focused. */
   .skip-link {
-    @apply fixed left-4 top-4 z-[100] rounded-md bg-accent px-4 py-2 font-mono text-sm font-bold uppercase text-on-accent shadow-glow-accent;
+    @apply fixed left-4 top-4 z-[100] rounded-md bg-accent px-4 py-2 font-mono text-sm font-bold uppercase text-on-accent;
     letter-spacing: 0.12em;
     transform: translateY(-200%);
     transition: transform 0.2s ease;
@@ -325,6 +325,7 @@
 
   .skip-link:focus,
   .skip-link:focus-visible {
+    @apply shadow-glow-accent;
     transform: translateY(0);
     outline: 2px solid rgb(var(--text));
     outline-offset: 2px;

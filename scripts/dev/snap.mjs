@@ -11,7 +11,9 @@
  *   node scripts/dev/snap.mjs --path /shop --out shots/shop.png
  *   node scripts/dev/snap.mjs --path /garage --signin --theme light --width 375 --full --out g.png
  *   node scripts/dev/snap.mjs --path /product/porsche-911-gt3 --click "[data-testid=buy-now]" --out p.png
+ *   node scripts/dev/snap.mjs --path / --click "[aria-label^=Search]" --type "input[role=combobox]=porsche" --out s.png
  */
+/* global window, document -- used inside page.evaluate / addInitScript callbacks (browser context) */
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -30,15 +32,17 @@ const HELP = `snap.mjs — screenshot a route + report console errors
   --signin              Sign in with an emulator test account first (dev-only hook)
   --email <email>       Test account email for --signin (default collector@hwa.test)
   --name <name>         Display name for --signin (default "Test Collector")
-  --click <selector>    Click an element after load (repeatable, in order)
-  --type <sel>=<text>   Type text into an element after load (repeatable)
+  --click <selector>    Click an element after load (repeatable)
+  --type <sel>=<text>   Fill text into an element after load (repeatable; split on the LAST "=")
+                        --click and --type actions run in the order given on the command line.
   --scroll <px>         Scroll the window to this Y offset before capturing
   --reduced-motion      Emulate prefers-reduced-motion: reduce
   --timeout <ms>        Navigation/wait timeout (default 20000)
   --help                Show this help
 `;
 
-const { values } = parseArgs({
+const { values, tokens } = parseArgs({
+  tokens: true,
   options: {
     path: { type: 'string', default: '/' },
     out: { type: 'string', default: 'snap.png' },
@@ -74,7 +78,9 @@ try {
   try {
     ({ chromium } = await import('@playwright/test'));
   } catch {
-    console.error('Playwright is not installed. Run: npm install -D --include=dev @playwright/test && npx playwright install chromium');
+    console.error(
+      'Playwright is not installed. Run: npm install -D --include=dev @playwright/test && npx playwright install chromium',
+    );
     process.exit(2);
   }
 }
@@ -86,7 +92,9 @@ try {
  */
 function normalizeRoute(raw) {
   let route = String(raw ?? '/').replace(/\\/g, '/');
-  const msys = route.match(/^[A-Za-z]:\/(?:Program Files(?: \(x86\))?\/Git|msys64|msys32|Git)(\/.*)?$/i);
+  const msys = route.match(
+    /^[A-Za-z]:\/(?:Program Files(?: \(x86\))?\/Git|msys64|msys32|Git)(\/.*)?$/i,
+  );
   if (msys) route = msys[1] ?? '/';
   if (!route.startsWith('/')) route = `/${route}`;
   return route;
@@ -141,8 +149,13 @@ try {
   const url = new URL(normalizeRoute(values.path), values.base).toString();
 
   if (values.signin) {
-    await page.goto(new URL('/', values.base).toString(), { waitUntil: 'domcontentloaded', timeout });
-    await page.waitForFunction(() => typeof window.__hwaTest?.signIn === 'function', null, { timeout });
+    await page.goto(new URL('/', values.base).toString(), {
+      waitUntil: 'domcontentloaded',
+      timeout,
+    });
+    await page.waitForFunction(() => typeof window.__hwaTest?.signIn === 'function', null, {
+      timeout,
+    });
     const user = await page.evaluate(
       async ({ email, name }) => window.__hwaTest.signIn({ email, displayName: name }),
       { email: values.email, name: values.name },
@@ -158,29 +171,39 @@ try {
 
   if (values.wait) await page.waitForSelector(values.wait, { timeout });
 
-  for (const spec of values.type) {
-    const idx = spec.indexOf('=');
-    if (idx <= 0) continue;
-    const sel = spec.slice(0, idx);
-    const text = spec.slice(idx + 1);
-    await page.fill(sel, text, { timeout });
-  }
-  for (const sel of values.click) {
-    await page.click(sel, { timeout });
-    await page.waitForTimeout(400);
+  // --click / --type actions, in command-line order.
+  const actions = tokens
+    .filter((t) => t.kind === 'option' && (t.name === 'click' || t.name === 'type'))
+    .map((t) => ({ name: t.name, value: String(t.value ?? '') }));
+  for (const action of actions) {
+    if (action.name === 'click') {
+      await page.click(action.value, { timeout });
+      await page.waitForTimeout(400);
+      continue;
+    }
+    const idx = action.value.lastIndexOf('=');
+    if (idx <= 0) {
+      console.warn(`ignoring --type "${action.value}" (expected <selector>=<text>)`);
+      continue;
+    }
+    await page.fill(action.value.slice(0, idx), action.value.slice(idx + 1), { timeout });
+    await page.waitForTimeout(250);
   }
   if (values.scroll) {
     await page.evaluate((y) => window.scrollTo(0, y), Number(values.scroll));
   }
 
   await page.waitForTimeout(Number(values.delay));
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
   await page.screenshot({ path: outPath, fullPage: values.full });
 
   console.log(`screenshot: ${outPath}`);
   console.log(`url: ${page.url()}  viewport: ${width}x${height}  theme: ${theme}`);
   console.log(`title: ${await page.title()}`);
-  if (overflow > 1) console.log(`HORIZONTAL OVERFLOW: page is ${overflow}px wider than the viewport`);
+  if (overflow > 1)
+    console.log(`HORIZONTAL OVERFLOW: page is ${overflow}px wider than the viewport`);
   const report = (label, arr) => {
     console.log(`${label} (${arr.length})`);
     for (const line of arr.slice(0, 25)) console.log(`  - ${line.slice(0, 500)}`);
