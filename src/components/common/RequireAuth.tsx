@@ -41,7 +41,7 @@ function PitPassRequired({ reason }: { reason?: string }) {
       className="relative isolate flex min-h-[60vh] items-center justify-center overflow-hidden px-4 py-16"
     >
       <div aria-hidden="true" className="bg-grid bg-grid-fade absolute inset-0 -z-10" />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-line bg-card p-6 shadow-card sm:p-10">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-line bg-card p-6 shadow-card sm:p-10">
         <span aria-hidden="true" className="racing-stripe is-active" />
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface">
@@ -55,7 +55,7 @@ function PitPassRequired({ reason }: { reason?: string }) {
         <p className="mt-3 text-muted">
           {reason ?? 'Sign in with Google to open this part of the garage. It takes one click.'}
         </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <GoogleSignInButton variant="primary" size="lg" />
           <Button variant="ghost" to={ROUTES.shop} leftIcon={<ArrowLeft />}>
             Keep browsing

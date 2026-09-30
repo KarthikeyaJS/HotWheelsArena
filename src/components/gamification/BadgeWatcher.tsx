@@ -1,6 +1,8 @@
 import { ChevronsUp } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { matchPath, useLocation } from 'react-router-dom';
 import { getBadge, levelTitle } from '@/config/gamification';
+import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { formatLevel, formatNumber } from '@/lib/format';
 import { toast } from '@/store/toastStore';
@@ -9,15 +11,37 @@ import { BadgeUnlockModal } from './BadgeUnlockModal';
 import { diffBadgeSnapshots, snapshotFromProfile, type BadgeSnapshot } from './badgeSnapshot';
 
 /**
+ * Routes where the unlock MODAL is skipped (toasts still fire): the order-success page is itself
+ * the celebration (it lists the badges the order unlocked), and the checkout route is included
+ * because the live profile snapshot carrying those badges can land a moment before the checkout
+ * navigates to the success page.
+ */
+const MODAL_FREE_ROUTES: readonly string[] = [ROUTES.orderSuccess, ROUTES.checkout];
+
+function isModalFreeRoute(pathname: string): boolean {
+  return MODAL_FREE_ROUTES.some((pattern) => matchPath(pattern, pathname) !== null);
+}
+
+/**
  * Mounted once in AppLayout. Watches the live profile (`useAuth().profile`, pushed by the
  * `onSnapshot` listener) and celebrates badges / level-ups awarded by Cloud Functions:
  * an achievement toast per event plus a queued `BadgeUnlockModal` per badge.
  * Never fires for the first profile load, after a user switch, or after sign-out/in.
+ * On checkout / order-success routes only the toasts fire (no modal).
  */
 export function BadgeWatcher() {
   const { profile, status } = useAuth();
+  const { pathname } = useLocation();
+  const suppressModal = isModalFreeRoute(pathname);
+  const suppressModalRef = useRef(suppressModal);
   const snapshotRef = useRef<BadgeSnapshot | null>(null);
   const [queue, setQueue] = useState<BadgeId[]>([]);
+
+  // Declared before the profile effect so it has already run when both change together.
+  useEffect(() => {
+    suppressModalRef.current = suppressModal;
+    if (suppressModal) setQueue([]);
+  }, [suppressModal]);
 
   useEffect(() => {
     if (!profile) {
@@ -46,7 +70,7 @@ export function BadgeWatcher() {
         badge.emoji,
       );
     }
-    if (diff.unlocked.length > 0) {
+    if (diff.unlocked.length > 0 && !suppressModalRef.current) {
       setQueue((current) => [...current, ...diff.unlocked.filter((id) => !current.includes(id))]);
     }
     if (diff.levelUp !== null) {
@@ -60,7 +84,7 @@ export function BadgeWatcher() {
 
   const showNext = useCallback(() => setQueue((current) => current.slice(1)), []);
   const clearQueue = useCallback(() => setQueue([]), []);
-  const current = queue[0] ?? null;
+  const current = suppressModal ? null : (queue[0] ?? null);
 
   return (
     <BadgeUnlockModal

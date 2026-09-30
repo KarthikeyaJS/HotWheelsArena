@@ -39,6 +39,7 @@ D:\hotwheels
 │  ├─ lib/                        core (except lib/search.ts → layout)
 │  ├─ hooks/                      core (except useSound.ts, useHotkey.ts, useScrollProgress.ts → layout)
 │  ├─ test/setup.ts               core (Vitest jsdom setup)
+│  ├─ dev/testHooks.ts            dev + emulator only: `window.__hwaTest.signIn()` for snap.mjs / e2e (dynamic import in main.tsx, never in prod builds)
 │  ├─ pages/*.tsx                 core STUBS → replaced by WF2 feature agents
 │  └─ components/
 │     ├─ common/                  core (initial) → ui-kit (RootLayout.tsx is core glue: don't change its contract)
@@ -52,6 +53,12 @@ D:\hotwheels
 ├─ scripts/**, public/**          seed-assets
 └─ docs/ARCHITECTURE.md           core;  docs/components/<agent>.md  each WF1 agent
 ```
+
+Component API docs (props tables, states, usage examples):
+[`docs/components/ui-kit.md`](components/ui-kit.md) (ui, gamification, common/DataState) ·
+[`docs/components/layout.md`](components/layout.md) (layout, search, effects, auth, newsletter, layout hooks, `lib/search.ts`) ·
+[`docs/components/product.md`](components/product.md) (product cards, grids, rails, buttons).
+Backend: [`functions/README.md`](../functions/README.md). Tooling: [`scripts/README.md`](../scripts/README.md).
 
 Workflow 1: **core** → **ui-kit** → (**layout** ∥ **product**) ; **functions**, **infra**, **seed-assets** after core. **verify** last.
 Workflow 2 (features): home, shop (`ShopPage`, `SearchPage`, `src/components/shop/**`, `src/config/shop.ts`, `src/hooks/useProductFilters.ts`),
@@ -87,7 +94,13 @@ garage (`GaragePage`, `WishlistPage`, `components/garage/**`), content (Vault, C
 ### npm scripts (exact names)
 
 `dev`, `build` (= `typecheck` + `vite build`), `preview`, `typecheck` (`tsc -b`), `lint` (`eslint .`), `lint:fix`, `format`, `format:check`,
-`test` (`vitest run`), `test:watch`, `test:rules`, `emulators`, `seed`, `seed:emulator`, `sounds`, `functions:build`, `deploy`.
+`test` (`vitest run`), `test:watch`, `test:rules`, `emulators`, `seed`, `seed:emulator`, `seed:verify` (`tsx scripts/verify-seed.ts`),
+`set-admin` (`tsx scripts/set-admin.ts`), `sounds`, `images` / `images:check` (`tsx scripts/generate-images.ts [--check]`),
+`snap` (`node scripts/dev/snap.mjs`, Playwright screenshots), `functions:build`, `presmoke` (= `functions:build`),
+`smoke` (`firebase emulators:exec --only auth,firestore,functions … "npm run seed:emulator && node scripts/smoke-e2e.mjs"`), `deploy`.
+
+Functions package: install with `npm --prefix functions ci --include=dev` or `npm install --include=dev` **inside** `functions/`.
+Never `npm --prefix functions install` without a package name — npm 10 then adds the root package to `functions/` as `file:..`.
 
 ### TypeScript projects
 
@@ -1164,6 +1177,16 @@ All components: named exports, one component per file (`PascalCase.tsx`), `class
 | `VisuallyHidden`    | `children`, `as?`                                                                                                                                                                                                                                                                                                                                                                        |
 | `Container`         | `as?: ElementType`, `size?: 'content'\|'narrow'\|'wide'`, `children` (`mx-auto max-w-content px-4 sm:px-6 lg:px-8`)                                                                                                                                                                                                                                                                      |
 
+**Additive ui-kit APIs (as built — details in [`docs/components/ui-kit.md`](components/ui-kit.md)):**
+
+- `ProgressBar`: `max?` (default 100), `valueLabel?: ReactNode` (visible readout / `aria-valuetext`), `segments?: number` (tachometer ticks), `striped?`.
+- `Modal`: `tone?: ModalTone` (e.g. achievement styling), `eyebrow?: ReactNode` (HUD line above the title).
+- `Tabs`: generic ids (`Tabs<T extends string>`), `activation?: 'automatic'|'manual'`, `fullWidth?`; helpers `tabId(prefix, id)` / `tabPanelId(prefix, id)`.
+- `FormField`: `children` may be a render function receiving the wired `id` / `aria-describedby` / `aria-invalid` props (`FormFieldRenderProps`).
+- `IconButton`: `badgeLabel?: string` (sr-only context for the `badge` count).
+- Barrel extras: `buttonClasses` / `buttonGapClass` / `isExternalHref`, `fieldClasses`, `fieldDescribedBy` / `fieldErrorId` / `fieldHintId` / `joinIds`, `Portal`, `useFocusTrap` / `getTabbableElements`, `useOverlayBehavior`, `mergeRefs`.
+- Loading buttons use `aria-disabled` + `aria-busy` (focus is kept); the `disabled` prop still sets native `disabled`.
+
 ### ui-kit → `src/components/gamification/*`
 
 | Component          | Key props                                                                                                                                                                                                                          |
@@ -1175,20 +1198,24 @@ All components: named exports, one component per file (`PascalCase.tsx`), `class
 | `BadgeUnlockModal` | `badgeId: BadgeId \| null`, `open: boolean`, `onClose()`, `queueCount?`                                                                                                                                                            |
 | `BadgeWatcher`     | no props — mounted once in AppLayout; diffs `useAuth().profile?.badges` vs previous (skips the first load and user switches), shows `toast.achievement` + queued `BadgeUnlockModal`; level-up toast when `profile.level` increases |
 
+Barrel `@/components/gamification` also exports the pure helpers `snapshotFromProfile(profile)` / `diffBadgeSnapshots(prev, next)` (`BadgeSnapshot`, `BadgeSnapshotDiff`) used by `BadgeWatcher`. Note: `BadgeWatcher` also celebrates badges awarded by `placeOrder`, so the order-success page (commerce, WF2) should decide whether it shows its own badge list as well.
+
 ### ui-kit → `src/components/common/DataState.tsx`
 
 `DataState({ isLoading: boolean; isError: boolean; error?: unknown; onRetry?: () => void; isEmpty?: boolean; skeleton?: ReactNode; empty?: ReactNode; children: ReactNode | (() => ReactNode) })`
 
 ### layout → `src/components/layout/*` (+ search, effects, auth, newsletter)
 
-- `AppLayout` (replaces core's placeholder; keep export name, `<main id="main-content" tabIndex={-1}>` and `<Outlet/>`) mounts **once**: `SkipLink`, `ScrollProgress`, `Navbar`, `MobileDrawer`, `Footer`, `ScanlinesOverlay`, `CommandPalette`, `SignInPrompt`, `Toaster`, `BadgeWatcher`.
+- `AppLayout` (replaces core's placeholder; keep export name, `<main id="main-content" tabIndex={-1}>` and `<Outlet/>`) mounts **once**: `PageBackdrop`, `SkipLink`, `Navbar` (which renders `ScrollProgress` along its bottom edge), `<main>` with `<Suspense fallback={<RouteFallback/>}><Outlet/></Suspense>`, `Footer`, then the global overlays `MobileDrawer`, `CommandPalette`, `SignInPrompt`, `Toaster`, `BadgeWatcher`, `ScanlinesOverlay`.
 - `Navbar` (sticky `glass`, shrinks on scroll, `z-header`, NAV_LINKS with `isNavLinkActive` → `aria-current`, search button (Ctrl/Cmd+K), `WishlistNavButton`, `CartButton`, `ThemeToggle`, `SoundToggle`, `ScanlinesToggle`, `UserMenu`), `Footer` (FOOTER_LINK_GROUPS, SOCIAL_LINKS, NewsletterForm inline, FOOTER_DISCLAIMER, © COPYRIGHT_OWNER), `MobileDrawer` (uiStore.mobileNavOpen), `ThemeToggle`, `SoundToggle`, `ScanlinesToggle` (cycles auto/on/off), `CartButton` (useCartCount badge → /cart), `WishlistNavButton` (useWishlistCount → /wishlist), `UserMenu` (avatar/profile level, links My Garage/Orders/Wishlist, Sign out; signed out → GoogleSignInButton).
 - `search/CommandPalette` (Ctrl/Cmd+K via `useHotkey`, uiStore.searchOpen, combobox ARIA, grouped suggestions, recent searches, Enter → `/search?q=`), `search/SearchInput` (`value`, `onChange(v)`, `onSubmit?(v)`, `placeholder?` = "Search the garage…", `autoFocus?`, `size?`).
-- `src/lib/search.ts`: `buildSearchIndex(products: readonly Product[]): SearchIndex`, `searchProducts(index: SearchIndex, query: string, limit?: number): Product[]`, `groupSuggestions(products: readonly Product[], query: string): Array<{ make: string; models: Array<{ model: string; count: number; slugs: string[] }> }>`.
+- `src/lib/search.ts`: `buildSearchIndex(products: readonly Product[]): SearchIndex`, `searchProducts(index: SearchIndex, query: string, limit?: number /* default: all */): Product[]`, `searchProductsScored(index, query, limit?): ScoredProduct[]` (`{ product, score }`), `groupSuggestions(products: readonly Product[], query: string, options?: { maxMakes?: number /* 4 */; maxModels?: number /* 6 */ }): MakeSuggestion[]` (`MakeSuggestion = { make; models: ModelSuggestion[] }`, `ModelSuggestion = { model; count; slugs: string[] }`), `matchText(text, query): number`, plus `normalizeSearchText`, `tokenize`, `editDistance`, `SEARCH_FIELD_WEIGHTS`. Strict token/prefix/joined-prefix/substring matching; typo tolerance only as a fallback pass when nothing matches strictly.
 - `effects/*`: `GridBackground` (`fade?`), `RacingLines` (`count?`), `ParticleField` (`density?`; canvas; off under reduced motion), `TireMarks`, `SpeedLines` (`intensity?`), `ScanlinesOverlay` (no props; `useScanlinesActive`), `Speedometer` (`value`, `max?` 320, `label?`, `unit?`, `size?`), `Tachometer` (`rpm`, `redline?`, `size?`), `HudPanel` (`title?`, `children`). All decorative → `aria-hidden`, all accept `className`.
 - `newsletter/NewsletterForm` (`variant?: 'section'|'inline'`) — `useSubscribeNewsletter`, inline success/error status (`aria-live`).
 - `auth/SignInPrompt` (no props; Modal bound to `uiStore.signInPrompt`, shows `reason`, calls `useAuth().signIn()`, closes on success — AuthProvider also closes it and runs the queued action), `auth/GoogleSignInButton` (`fullWidth?`, `size?`, `label?`, `onSignedIn?(user)`).
-- Hooks: `useSound(): (name: SoundName) => void` (lazy `import('howler')`, plays `SOUND_SOURCES[name]` at `SOUND_VOLUME[name]`; no-op when `soundEnabled` is false or the file is missing), `useHotkey(combo: string | string[], handler: (e: KeyboardEvent) => void, opts?: { enabled?: boolean; preventDefault?: boolean; allowInInputs?: boolean })` (`'mod+k'` = Ctrl on Windows / Cmd on macOS), `useScrollProgress(): number` (0..1, rAF-throttled).
+- Hooks: `useSound(): (name: SoundName) => void` (lazy `import('howler')`, plays `SOUND_SOURCES[name]` at `SOUND_VOLUME[name]`; no-op when `soundEnabled` is false or the file is missing) + `playSound(name)` (same, outside React), `useHotkey(combo: string | readonly string[], handler: (e: KeyboardEvent) => void, opts?: { enabled?: boolean; preventDefault?: boolean /* true */; allowInInputs?: boolean; allowRepeat?: boolean })` (`'mod+k'` = Ctrl on Windows / Cmd on macOS) + helpers `parseHotkey`, `matchesHotkey`, `isEditableTarget`, `isMacPlatform`, `hotkeyLabels(combo)` (`['Ctrl','K']` / `['⌘','K']`), `hotkeyAria(combo)`; `useScrollProgress(): number` (0..1, rAF-throttled shared store) + `useIsScrolled(threshold = 8): boolean`.
+
+**Additive layout APIs (as built — details in [`docs/components/layout.md`](components/layout.md)):** `SearchButton` (`variant?: 'pill'|'compact'|'icon'|'row'`, `aria-keyshortcuts`), `Gauge` (shared base of `Speedometer` / `Tachometer`), `HudPanel` (`meta?`, `tone?: 'default'|'accent'|'highlight'`, `titleAs?`, `as?`, `padding?`), `GoogleSignInButton` (`loadingText?`, `variant?` default `'secondary'`; also reused by `RequireAuth`), `GoogleMark` (`tile?`), `NewsletterForm` (`eyebrow?`, `title?`, `description?`, `headingAs?`), `Logo`, `NavLinks`, `SocialLinks`, `PageBackdrop`, `ToggleRow`, `UserAvatar`, `SkipLink` (`targetId?`). The command palette dialog (`CommandPaletteDialog`) and the footer `NewsletterForm` are code-split (lazy + idle prefetch). There is no `@/components/auth` barrel — import files directly.
 
 ### product → `src/components/product/*`
 
@@ -1205,6 +1232,15 @@ All components: named exports, one component per file (`PascalCase.tsx`), `class
 | `AddToGarageButton`   | `product: Product`, `size?`, `fullWidth?` — `useGarageActions`, `useIsInGarage` ("IN YOUR GARAGE ✓" state)                                                                                                                                                                                                                                                                                                      |
 | `StockStatus`         | `stock: number`, `size?` — `stockStatus()` colours: in-stock success, low danger-ink, sold-out muted                                                                                                                                                                                                                                                                                                            |
 | `CollectorMeta`       | `product: Product`, `layout?: 'inline'\|'stacked'` — scale / year / vehicleType / series HUD line                                                                                                                                                                                                                                                                                                               |
+
+**Additive product APIs (as built — details in [`docs/components/product.md`](components/product.md)); barrel `@/components/product`:**
+
+- `HorizontalRail` also accepts `items` + `renderItem(item, index)` + `getItemKey?` (instead of `children`), `label` (alias of `ariaLabel`; one of them is required), `action?`, `itemWidth?`, `gap?: 'sm'|'md'|'lg'`, `showControls?`, `slideLabel?(index, total)`, `trackClassName?`.
+- `ProductGrid`: `emptyState` (alias of `empty`), `variant?`, `priorityCount?` (first N cards eager + no entrance fade), `label?`, `loadingLabel?`, `cardHeadingAs?`.
+- `ProductCard`: `headingAs?`, `imageSizes?`. `VaultCard`: `layout?: 'vertical'|'horizontal'`, `priority?`, `headingAs?`.
+- `CarImage`: `fit?`, `crop?`, `gravity?`, `widths?` (srcset), `aspectBox?`, `style?`, `renderMedia?` (slot for a future 3D viewer).
+- `AddToCartButton`: `onAdded?` (e.g. BUY NOW → checkout). `WishlistButton`: `iconVariant?`, `fullWidth?`. `AddToGarageButton`: `variant?` (two-step "CONFIRM REMOVE?" when already parked).
+- The barrel also exports `COLLECTOR_EDITION_MIN_SCORE` (collectorScore ≥ 8 → "COLLECTOR EDITION" tag).
 
 ---
 

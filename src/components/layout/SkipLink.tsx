@@ -27,11 +27,7 @@ export function SkipLink({
   };
 
   return (
-    <a
-      href={`#${targetId}`}
-      onClick={handleClick}
-      className={cn('skip-link', className)}
-    >
+    <a href={`#${targetId}`} onClick={handleClick} className={cn('skip-link', className)}>
       {children}
     </a>
   );

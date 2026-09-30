@@ -13,7 +13,7 @@ export const ACTIVE_PAYMENT_PROVIDER: PaymentProviderId = env.paymentProvider;
 
 /** Provider factories. `razorpay` is reserved and not implemented yet. */
 const PROVIDER_FACTORIES: Partial<Record<PaymentProviderId, () => PaymentProvider>> = {
-  dummy: () => new DummyPaymentProvider(),
+  dummy: () => new DummyPaymentProvider({ successRate: env.dummyPaymentSuccessRate }),
 };
 
 let providerInstance: PaymentProvider | null = null;
@@ -30,7 +30,9 @@ export function getPaymentProvider(): PaymentProvider {
       `[payment] Provider "${ACTIVE_PAYMENT_PROVIDER}" is not implemented — falling back to test payments.`,
     );
   }
-  providerInstance = (factory ?? (() => new DummyPaymentProvider()))();
+  providerInstance = (
+    factory ?? (() => new DummyPaymentProvider({ successRate: env.dummyPaymentSuccessRate }))
+  )();
   return providerInstance;
 }
 

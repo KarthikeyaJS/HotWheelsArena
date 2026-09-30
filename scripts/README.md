@@ -4,16 +4,16 @@ Node tooling for data seeding, admin access and generated assets. Run TypeScript
 `npx tsx <file>` (tsx is a root devDependency). They import `shared/` with relative paths,
 because tsx does not resolve the `@shared` alias.
 
-| Script                | npm                                              | What it does                                                                                        |
-| --------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `seed.ts`             | `npm run seed` / `npm run seed:emulator`         | Validates and writes the launch catalogue to Firestore                                              |
-| `verify-seed.ts`      | `npm run seed:verify`                            | Reads the seeded data back and checks it against the catalogue                                      |
-| `set-admin.ts`        | `npm run set-admin`                              | Grants or revokes the `admin` custom claim for a user                                               |
-| `generate-images.ts`  | `npm run images` / `npm run images:check`        | Generates every SVG in `public/placeholders/`, plus the favicon and social card                     |
-| `rasterize-images.ts` | —                                                | Renders `og-image.png` and `apple-touch-icon.png` from their SVGs                                   |
-| `generate-sounds.mjs` | `npm run sounds`                                 | Generates the engine sound effects in `public/sounds/`                                              |
-| `smoke-e2e.mjs`       | `npm run smoke`                                  | End-to-end smoke test of the Cloud Functions, rules and seed on the Emulator Suite (see below)      |
-| `dev/snap.mjs`        | `npm run snap`                                   | Playwright screenshot of a route (dev server) + console/page errors and 375px overflow (`--help`)   |
+| Script                | npm                                       | What it does                                                                                      |
+| --------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `seed.ts`             | `npm run seed` / `npm run seed:emulator`  | Validates and writes the launch catalogue to Firestore                                            |
+| `verify-seed.ts`      | `npm run seed:verify`                     | Reads the seeded data back and checks it against the catalogue                                    |
+| `set-admin.ts`        | `npm run set-admin`                       | Grants or revokes the `admin` custom claim for a user                                             |
+| `generate-images.ts`  | `npm run images` / `npm run images:check` | Generates every SVG in `public/placeholders/`, plus the favicon and social card                   |
+| `rasterize-images.ts` | —                                         | Renders `og-image.png` and `apple-touch-icon.png` from their SVGs                                 |
+| `generate-sounds.mjs` | `npm run sounds`                          | Generates the engine sound effects in `public/sounds/`                                            |
+| `smoke-e2e.mjs`       | `npm run smoke`                           | End-to-end smoke test of the Cloud Functions, rules and seed on the Emulator Suite (see below)    |
+| `dev/snap.mjs`        | `npm run snap`                            | Playwright screenshot of a route (dev server) + console/page errors and 375px overflow (`--help`) |
 
 Pass flags to npm scripts after `--`, for example `npm run seed -- --dry-run`.
 

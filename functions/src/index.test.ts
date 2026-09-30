@@ -20,7 +20,9 @@ beforeAll(async () => {
   process.env.GCLOUD_PROJECT = DEMO_PROJECT_ID;
   process.env.FIREBASE_CONFIG = JSON.stringify({ projectId: DEMO_PROJECT_ID });
   exported = { ...(await import('./index.js')) };
-}, 30_000);
+  // Cold import of firebase-functions + firebase-admin: ~7 s normally, but it exceeded 30 s once
+  // right after a fresh `npm ci` (cold disk cache / antivirus scan), so allow generous headroom.
+}, 90_000);
 
 function endpointOf(name: string): EndpointManifest {
   const fn = exported[name];

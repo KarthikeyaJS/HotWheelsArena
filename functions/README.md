@@ -227,6 +227,10 @@ and starts auth, firestore and functions only. Both use the `demo-hotwheelsarena
 app connects when `VITE_USE_EMULATORS=true`. Seed data with `npm run seed:emulator` at the root.
 Rebuild (`npm run build:watch`) and the emulator reloads the functions.
 
+**Automated smoke test**: from the repo root, `npm run smoke` builds `lib/`, boots the Auth,
+Firestore and Functions emulators, seeds them and runs `scripts/smoke-e2e.mjs`, which calls every
+callable over HTTP and checks the trigger (see `scripts/README.md`).
+
 **Manual smoke test** (with the emulators running and data seeded):
 
 1. Sign in with the emulated Google provider. `ensureUserProfile` and `onUserCreate` create
@@ -237,7 +241,12 @@ Rebuild (`npm run build:watch`) and the emulator reloads the functions.
 3. Manually park a rare car from a product page. `onGarageWrite` unlocks **TREASURE HUNTER** once.
    Removing the car keeps the badge.
 4. Submit and then edit a review. `ratingAvg` / `ratingCount` on the product stay consistent.
-5. Subscribe to the newsletter 6 times in 10 minutes. The 6th attempt returns `resource-exhausted`.
+5. Subscribe to the newsletter twice with the same address: the second call returns
+   `already-subscribed`. The rate limit (6th attempt from one IP within 10 minutes →
+   `resource-exhausted`) keys on the client IP, which the Functions emulator does not expose — it
+   logs "client IP unavailable, rate limit skipped" and lets the call through. To exercise the
+   limit locally, send an `X-Forwarded-For` header (as `npm run smoke` does); in production
+   Google's front end sets it.
 
 `npm run shell` opens `firebase functions:shell` against the emulators, where you can call
 callables directly.

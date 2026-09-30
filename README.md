@@ -167,27 +167,27 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 
 ## npm scripts
 
-| Script                            | What it does                                                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                     | Vite dev server on <http://localhost:5173>                                                              |
-| `npm run build`                   | `typecheck` + production build into `dist/`                                                             |
-| `npm run preview`                 | Serves `dist/` with Vite (does **not** apply the `firebase.json` headers)                               |
-| `npm run typecheck`               | `tsc -b` over the web app, `shared/`, scripts, tests and configs                                        |
-| `npm run lint` / `lint:fix`       | ESLint (flat config)                                                                                    |
-| `npm run format` / `format:check` | Prettier write / check                                                                                  |
-| `npm test` / `test:watch`         | Vitest unit tests for `src/` (jsdom) and `shared/` (node)                                               |
-| `npm run test:rules`              | Starts the Firestore emulator and runs `tests/rules/**` (security rules + deploy-config drift checks)   |
-| `npm run emulators`               | Starts every emulator in `firebase.json` for `demo-hotwheelsarena`                                      |
-| `npm run seed`                    | Seeds a **live** project (service account required, see below)                                          |
-| `npm run seed:emulator`           | Seeds the local Firestore emulator                                                                      |
-| `npm run seed:verify`             | Reads a seeded database back and checks it against the catalogue (`-- --emulator` or `-- --project <id>`) |
-| `npm run set-admin`               | Grants/revokes/checks the `admin` custom claim (`-- --email you@example.com [--emulator] [--revoke]`)    |
-| `npm run sounds`                  | Regenerates the royalty-free placeholder engine sounds in `public/sounds/`                              |
-| `npm run images` / `images:check` | Regenerates the placeholder SVGs, favicon and OG card / fails if any is missing or stale                |
-| `npm run snap`                    | Playwright screenshot of a dev-server route + console errors and 375px overflow (`-- --help`)            |
-| `npm run functions:build`         | Compiles `functions/` to `functions/lib/`                                                               |
+| Script                            | What it does                                                                                                                        |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | Vite dev server on <http://localhost:5173>                                                                                          |
+| `npm run build`                   | `typecheck` + production build into `dist/`                                                                                         |
+| `npm run preview`                 | Serves `dist/` with Vite (does **not** apply the `firebase.json` headers)                                                           |
+| `npm run typecheck`               | `tsc -b` over the web app, `shared/`, scripts, tests and configs                                                                    |
+| `npm run lint` / `lint:fix`       | ESLint (flat config)                                                                                                                |
+| `npm run format` / `format:check` | Prettier write / check                                                                                                              |
+| `npm test` / `test:watch`         | Vitest unit tests for `src/` (jsdom) and `shared/` (node)                                                                           |
+| `npm run test:rules`              | Starts the Firestore emulator and runs `tests/rules/**` (security rules + deploy-config drift checks)                               |
+| `npm run emulators`               | Starts every emulator in `firebase.json` for `demo-hotwheelsarena`                                                                  |
+| `npm run seed`                    | Seeds a **live** project (service account required, see below)                                                                      |
+| `npm run seed:emulator`           | Seeds the local Firestore emulator                                                                                                  |
+| `npm run seed:verify`             | Reads a seeded database back and checks it against the catalogue (`-- --emulator` or `-- --project <id>`)                           |
+| `npm run set-admin`               | Grants/revokes/checks the `admin` custom claim (`-- --email you@example.com [--emulator] [--revoke]`)                               |
+| `npm run sounds`                  | Regenerates the royalty-free placeholder engine sounds in `public/sounds/`                                                          |
+| `npm run images` / `images:check` | Regenerates the placeholder SVGs, favicon and OG card / fails if any is missing or stale                                            |
+| `npm run snap`                    | Playwright screenshot of a dev-server route + console errors and 375px overflow (`-- --help`)                                       |
+| `npm run functions:build`         | Compiles `functions/` to `functions/lib/`                                                                                           |
 | `npm run smoke`                   | End-to-end smoke test: builds functions (`presmoke`), boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` |
-| `npm run deploy`                  | `build`, then `firebase deploy` (Hosting, Firestore rules and indexes, Functions) to the active project |
+| `npm run deploy`                  | `build`, then `firebase deploy` (Hosting, Firestore rules and indexes, Functions) to the active project                             |
 
 Inside `functions/`: `build`, `build:watch`, `typecheck`, `test`, `serve` (build + Auth/Firestore/Functions emulators), `shell`, `deploy`, `logs`.
 
@@ -545,6 +545,7 @@ Notes:
 | `npm test`                                                  | Vitest unit tests: `shared/` (gamification, commerce totals, schemas) and `src/` (formatters, product helpers, errors, stores) |
 | `npm --prefix functions test`                               | Functions unit tests (pricing, order planning, stats, profiles, rate limits, email, env)                                       |
 | `npm run test:rules`                                        | Boots the Firestore emulator (Java 21) and runs `tests/rules/**`                                                               |
+| `npm run smoke`                                             | End-to-end: builds functions, boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` (20 checks)        |
 | `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                                                                  |
 
 `tests/rules/` covers:
@@ -555,7 +556,9 @@ Notes:
 - wishlist, addresses (every Indian-format rule, all 36 states and UTs), orders (own get/list, others denied, no client create, admin status updates only), and locked collections (`newsletter`, `rateLimits`, `processedPayments`, unknown collections);
 - `config.test.ts`: deploy-config drift guards. The CSP hash matches `index.html`, emulator ports match `shared/constants.ts`, rule constants match `shared/`, headers and caching behave as intended per path, the orders index and TTL policy exist, and the functions ignore list cannot strip `lib/`.
 
-**End-to-end smoke test** (manual, about 5 minutes, on the emulators):
+**Automated end-to-end smoke test** — `npm run smoke` (about a minute, Java 21, ports 9099/8080/5001 free). It signs up a collector in the Auth emulator and drives the real callables over HTTP: `ensureUserProfile` (+ idempotent repeat), `placeOrder` for two in-stock cars charged exactly the `computeOrderTotals` total (order doc, `source: 'purchase'` garage entries, XP, FIRST RIDE, stats), an idempotent replay of the same transaction id, rejections for a tampered amount, a sold-out car and an unauthenticated call, `submitReview` aggregates, newsletter dedupe and the per-IP rate limit, a forged `purchase` garage entry denied by the rules, and a manual garage entry whose `onGarageWrite` sync unlocks TREASURE HUNTER. It prints a PASS/FAIL table and exits non-zero on any failure; see [`scripts/README.md`](scripts/README.md#end-to-end-smoke-test--smoke-e2emjs).
+
+**Manual smoke test in the browser** (about 5 minutes, on the emulators):
 
 1. Follow the [Quick start](#quick-start-no-firebase-project-needed), then open the Emulator UI and check that `products` has 36 documents.
 2. Browse Home, Shop (filters, sort, <kbd>Ctrl</kbd>+<kbd>K</kbd> search), a product page and the Vault, and toggle dark/light theme.
@@ -597,7 +600,8 @@ Preview channels use the **live** project's Firestore, Functions and Auth. Pull 
 - **Port already in use** (`Could not start Firestore Emulator, port taken`): another emulator or app holds 8080, 9099, 5001, 5000 or 4000. Windows: `netstat -ano | findstr :8080`, then `Stop-Process -Id <pid>`. macOS/Linux: `lsof -i :8080`. Or change the port in `firebase.json` **and** `EMULATOR_PORTS` in `shared/constants.ts` (a test checks they match).
 - **`Java … not found` or "requires Java 21"**: install a JDK 21+ and make sure `java -version` works in the same terminal (set `JAVA_HOME` or add it to `PATH`).
 - **Functions don't load in the emulator**: run `npm run functions:build` first (the emulator loads `functions/lib/functions/src/index.js`), and check the Emulator UI logs.
-- **Missing devDependencies / `vite: not found`**: `NODE_ENV=production` is set globally. Run `npm install --include=dev`, and the same in `functions/`.
+- **Missing devDependencies / `vite: not found`**: `NODE_ENV=production` is set globally. Run `npm install --include=dev`, and `npm --prefix functions ci --include=dev` (or `npm install --include=dev` from inside `functions/`).
+- **`functions/package.json` suddenly depends on `"hotwheelsarena": "file:.."`**: someone ran `npm --prefix functions install` with no package name (npm 10 installs the current folder into the prefix). Run `npm uninstall hotwheelsarena --include=dev` from inside `functions/` (npm removes the junction/symlink safely — never `rm -rf` through it), then `npm install --include=dev` there.
 - **Sign-in popup blocked or closes immediately**: allow popups for the site. The app falls back to redirect sign-in when a popup is blocked. On a real project, check that the domain is in **Authorized domains**. If redirect sign-in fails in Safari or other browsers that block third-party storage, set `VITE_FIREBASE_AUTH_DOMAIN` to the domain that serves the app (for example `<project-id>.web.app` or your custom domain, which Firebase Hosting serves `/__/auth/*` for) and add `https://<that-domain>/__/auth/handler` to the OAuth client's authorized redirect URIs (Google Cloud Console → APIs & Services → Credentials).
 - **Console: `Refused to execute inline script because it violates … Content Security Policy`**: the inline script in `index.html` changed. Recompute the hash (see [CSP](#hosting-caching-and-csp)).
 - **`Missing or insufficient permissions`**: the request doesn't match `firestore.rules`. Signed out? Querying orders without `where('uid', '==', me)`? Writing a field that only functions may write? Run `npm run test:rules` after rule changes.

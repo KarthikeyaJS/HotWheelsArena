@@ -41,6 +41,9 @@ const EnvSchema = z.object({
   VITE_PAYMENT_PROVIDER: optionalString
     .pipe(z.enum(PAYMENT_PROVIDER_IDS).optional())
     .catch(undefined),
+  VITE_DUMMY_PAYMENT_SUCCESS_RATE: optionalString
+    .pipe(z.coerce.number().finite().min(0).max(1).optional())
+    .catch(undefined),
   VITE_ENABLE_ANALYTICS: booleanFlag.catch(undefined),
   VITE_SITE_URL: optionalString.pipe(z.string().url().optional()).catch(undefined),
 });
@@ -72,6 +75,8 @@ export interface AppEnv {
   /** `null` → Cloudinary disabled, local placeholder URLs are used. */
   cloudinaryCloudName: string | null;
   paymentProvider: PaymentProviderId;
+  /** Approval probability (0–1) of the test-mode DummyPaymentProvider for card/UPI (default 0.9). */
+  dummyPaymentSuccessRate: number;
   enableAnalytics: boolean;
   /** Public origin without trailing slash, e.g. `https://hotwheelsarena.web.app`. */
   siteUrl: string;
@@ -104,6 +109,7 @@ export const env: AppEnv = {
   functionsRegion: raw.VITE_FUNCTIONS_REGION ?? FUNCTIONS_REGION,
   cloudinaryCloudName: raw.VITE_CLOUDINARY_CLOUD_NAME ?? null,
   paymentProvider: raw.VITE_PAYMENT_PROVIDER ?? 'dummy',
+  dummyPaymentSuccessRate: raw.VITE_DUMMY_PAYMENT_SUCCESS_RATE ?? 0.9,
   enableAnalytics: isTrue(raw.VITE_ENABLE_ANALYTICS),
   siteUrl: (raw.VITE_SITE_URL ?? siteUrlFallback).replace(/\/+$/, ''),
   isDev: import.meta.env.DEV,
