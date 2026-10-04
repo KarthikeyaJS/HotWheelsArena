@@ -3,6 +3,7 @@ import { useMemo, type ReactNode } from 'react';
 import { HudPanel } from '@/components/effects/HudPanel';
 import { Speedometer } from '@/components/effects/Speedometer';
 import { StatBar } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import type { Product } from '@/types';
 import {
   MACHINE_STATS_NOTE,
@@ -32,14 +33,19 @@ export function MeetTheMachine({ product, className }: MeetTheMachineProps) {
   const stats = useMemo(() => buildMachineStats(product), [product]);
 
   return (
-    <HudPanel title="Performance readout" meta="SIM DATA" padding="lg" className={className}>
-      <div className="grid items-center gap-8 md:grid-cols-[auto_minmax(0,1fr)]">
+    <HudPanel
+      title="Performance readout"
+      meta="SIM DATA"
+      padding="lg"
+      className={cn('flex flex-col', className)}
+    >
+      <div className="mb-6 grid flex-1 items-center gap-8 md:grid-cols-[auto_minmax(0,1fr)]">
         <div className="hidden justify-center md:flex">
           <Speedometer
             value={product.themedStats.topSpeedKmh}
             max={MACHINE_STAT_CEILINGS.topSpeedKmh}
-            label="TOP SPEED"
-            size="md"
+            label="SPEED"
+            size="lg"
           />
         </div>
         <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2" aria-label={`${product.name} stats`}>
@@ -57,7 +63,7 @@ export function MeetTheMachine({ product, className }: MeetTheMachineProps) {
           ))}
         </ul>
       </div>
-      <p className="mt-6 border-t border-line pt-4 text-xs italic text-muted">
+      <p className="mt-auto border-t border-line pt-4 text-xs italic text-muted">
         {MACHINE_STATS_NOTE}
       </p>
     </HudPanel>

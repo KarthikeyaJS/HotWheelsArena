@@ -43,7 +43,7 @@ export function BuyNowButton({
 
   return (
     <Button
-      variant="primary"
+      variant={soldOut ? 'outline' : 'primary'}
       size={size}
       fullWidth={fullWidth}
       disabled={soldOut}

@@ -124,7 +124,10 @@ export default function ProductPage() {
   }, [product, notFound]);
   useDocumentMeta(meta);
 
-  const productJsonLd = useMemo(() => (product ? buildProductDetailJsonLd(product) : null), [product]);
+  const productJsonLd = useMemo(
+    () => (product ? buildProductDetailJsonLd(product) : null),
+    [product],
+  );
   const breadcrumbJsonLd = useMemo(
     () => (product ? buildBreadcrumbJsonLd(productBreadcrumbs(product)) : null),
     [product],

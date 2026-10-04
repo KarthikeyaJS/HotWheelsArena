@@ -19,7 +19,7 @@ export function ReviewSummary({ summary, className }: ReviewSummaryProps) {
   return (
     <div className={cn('flex flex-col gap-5', className)}>
       <div className="flex items-end gap-4">
-        <p className="font-mono text-5xl font-bold leading-none tabular-nums text-fg sm:text-6xl">
+        <p className="font-mono text-5xl font-bold tabular-nums leading-none text-fg sm:text-6xl">
           {summary.average.toFixed(1)}
           <span className="ml-1 text-lg font-semibold text-muted">/5</span>
         </p>
@@ -48,7 +48,10 @@ export function ReviewSummary({ summary, className }: ReviewSummaryProps) {
               valueText={`${formatNumber(bucket.count)} of ${formatNumber(summary.sampleSize)} reviews`}
               size="sm"
             />
-            <span aria-hidden="true" className="text-right font-mono text-xs tabular-nums text-muted">
+            <span
+              aria-hidden="true"
+              className="text-right font-mono text-xs tabular-nums text-muted"
+            >
               {formatNumber(bucket.count)}
             </span>
           </li>

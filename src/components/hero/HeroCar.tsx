@@ -1,5 +1,11 @@
 import { memo, useId, type CSSProperties } from 'react';
 import { cn } from '@/lib/cn';
+import {
+  HERO_CAR_FLOOR_Y as FLOOR_Y,
+  HERO_CAR_HEADLIGHT,
+  HERO_CAR_VIEWBOX,
+  HERO_CAR_WHEELS,
+} from './heroCarGeometry';
 
 /**
  * The hero car: an inline React SVG adapted from `public/placeholders/hero-car.svg`, so its parts
@@ -12,22 +18,6 @@ import { cn } from '@/lib/cn';
  * night garage and the bright showroom. The only literal colour is `white`, used for emitted
  * light (headlights) and specular sheen, which are physically white in either theme.
  */
-
-/** SVG user-space viewport (car drawn in the source file's inner coordinates). */
-export const HERO_CAR_VIEWBOX = { x: 40, y: 170, width: 800, height: 270 } as const;
-/** Rear-bumper x (user units) — the car's left edge. */
-export const HERO_CAR_BODY_LEFT = 66;
-/** Tyre radius (user units) — used to spin the wheels in proportion to the distance travelled. */
-export const HERO_CAR_WHEEL_RADIUS = 52;
-/** Wheel hub centres (user units) — rotation origins. */
-export const HERO_CAR_WHEELS = {
-  rear: { x: 210, y: 310 },
-  front: { x: 590, y: 310 },
-} as const;
-/** Headlight lens centre (user units) — flare/glow origin. */
-export const HERO_CAR_HEADLIGHT = { x: 733, y: 291 } as const;
-/** Floor line (user units) — the reflection mirrors around it. */
-const FLOOR_Y = 362;
 
 const INK = 'rgb(var(--on-accent))';
 const METAL = 'rgb(var(--metal))';
@@ -85,25 +75,53 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
       className={cn('block overflow-visible', className)}
     >
       <defs>
-        <linearGradient id={ids.paint} gradientUnits="userSpaceOnUse" x1="0" y1="194" x2="0" y2="330">
+        <linearGradient
+          id={ids.paint}
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="194"
+          x2="0"
+          y2="330"
+        >
           <stop offset="0" style={stop(SPECULAR)} />
           <stop offset="0.3" style={stop(METAL)} />
           <stop offset="0.5" style={stop(METAL)} />
           <stop offset="0.6" style={stop(shade(34))} />
           <stop offset="1" style={stop(shade(8))} />
         </linearGradient>
-        <linearGradient id={ids.sheen} gradientUnits="userSpaceOnUse" x1="60" y1="0" x2="760" y2="0">
+        <linearGradient
+          id={ids.sheen}
+          gradientUnits="userSpaceOnUse"
+          x1="60"
+          y1="0"
+          x2="760"
+          y2="0"
+        >
           <stop offset="0" style={stop(LIGHT, 0)} />
           <stop offset="0.3" style={stop(LIGHT, 0.2)} />
           <stop offset="0.5" style={stop(LIGHT, 0)} />
           <stop offset="0.8" style={stop(LIGHT, 0.1)} />
           <stop offset="1" style={stop(LIGHT, 0)} />
         </linearGradient>
-        <linearGradient id={ids.glass} gradientUnits="userSpaceOnUse" x1="0" y1="200" x2="0" y2="270">
+        <linearGradient
+          id={ids.glass}
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="200"
+          x2="0"
+          y2="270"
+        >
           <stop offset="0" style={stop(shade(32))} />
           <stop offset="1" style={stop(shade(4))} />
         </linearGradient>
-        <linearGradient id={ids.rim} gradientUnits="userSpaceOnUse" x1="-36" y1="-36" x2="36" y2="36">
+        <linearGradient
+          id={ids.rim}
+          gradientUnits="userSpaceOnUse"
+          x1="-36"
+          y1="-36"
+          x2="36"
+          y2="36"
+        >
           <stop offset="0" style={stop(shade(74))} />
           <stop offset="0.5" style={stop(shade(28))} />
           <stop offset="1" style={stop(shade(14))} />
@@ -133,7 +151,14 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
           <stop offset="0.65" style={stop(ACCENT, 0.16)} />
           <stop offset="1" style={stop(ACCENT, 0)} />
         </radialGradient>
-        <linearGradient id={ids.beam} gradientUnits="userSpaceOnUse" x1="728" y1="0" x2="846" y2="0">
+        <linearGradient
+          id={ids.beam}
+          gradientUnits="userSpaceOnUse"
+          x1="728"
+          y1="0"
+          x2="846"
+          y2="0"
+        >
           <stop offset="0" style={stop(LIGHT, 0.7)} />
           <stop offset="0.55" style={stop(LIGHT, 0.18)} />
           <stop offset="1" style={stop(LIGHT, 0)} />
@@ -149,7 +174,14 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
           <stop offset="0" style={stop(LIGHT, 1)} />
           <stop offset="1" style={stop(LIGHT, 0)} />
         </linearGradient>
-        <mask id={ids.reflectionMask} maskUnits="userSpaceOnUse" x={x} y={FLOOR_Y} width={width} height={80}>
+        <mask
+          id={ids.reflectionMask}
+          maskUnits="userSpaceOnUse"
+          x={x}
+          y={FLOOR_Y}
+          width={width}
+          height={80}
+        >
           <rect x={x} y={FLOOR_Y} width={width} height={80} fill={`url(#${ids.reflectionFade})`} />
         </mask>
         <filter id={ids.blur} x="-20%" y="-20%" width="140%" height="140%">
@@ -170,7 +202,12 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
             strokeDasharray="2 5"
             style={{ stroke: shade(46) }}
           />
-          <path d={SPOKES_PATH} stroke={`url(#${ids.rim})`} strokeWidth="4.5" strokeLinecap="round" />
+          <path
+            d={SPOKES_PATH}
+            stroke={`url(#${ids.rim})`}
+            strokeWidth="4.5"
+            strokeLinecap="round"
+          />
           <circle r="36" fill="none" stroke={`url(#${ids.rim})`} strokeWidth="3.5" />
           <circle r="37.8" fill="none" strokeWidth="1.4" className="stroke-accent" />
           <circle r="9" fill={`url(#${ids.rim})`} />
@@ -212,8 +249,20 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
           {[HERO_CAR_WHEELS.rear, HERO_CAR_WHEELS.front].map((wheel) => (
             <g key={wheel.x} transform={`translate(${wheel.x} ${wheel.y})`}>
               <circle r="38" style={{ fill: shade(22) }} opacity="0.85" />
-              <circle r="28" fill="none" strokeWidth="11" style={{ stroke: shade(70) }} opacity="0.7" />
-              <circle r="37.5" fill="none" strokeWidth="1.6" className="stroke-accent" opacity="0.8" />
+              <circle
+                r="28"
+                fill="none"
+                strokeWidth="11"
+                style={{ stroke: shade(70) }}
+                opacity="0.7"
+              />
+              <circle
+                r="37.5"
+                fill="none"
+                strokeWidth="1.6"
+                className="stroke-accent"
+                opacity="0.8"
+              />
               <circle r="8" style={{ fill: shade(60) }} />
             </g>
           ))}
@@ -289,7 +338,11 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
             strokeWidth="1"
             style={{ fill: shade(10), stroke: LIGHT }}
           />
-          <path d="M132 244L138 254M160 242L166 252" strokeWidth="4" style={{ stroke: shade(10) }} />
+          <path
+            d="M132 244L138 254M160 242L166 252"
+            strokeWidth="4"
+            style={{ stroke: shade(10) }}
+          />
           <path
             d="M212 252L232 244M226 254L246 246M240 256L260 248M254 258L274 250"
             strokeWidth="3"
@@ -342,7 +395,12 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
             opacity="0.85"
             style={{ fill: LIGHT }}
           />
-          <circle cx={HERO_CAR_HEADLIGHT.x} cy={HERO_CAR_HEADLIGHT.y} r="7" style={{ fill: LIGHT }} />
+          <circle
+            cx={HERO_CAR_HEADLIGHT.x}
+            cy={HERO_CAR_HEADLIGHT.y}
+            r="7"
+            style={{ fill: LIGHT }}
+          />
           <circle
             cx={HERO_CAR_HEADLIGHT.x}
             cy={HERO_CAR_HEADLIGHT.y}

@@ -314,10 +314,10 @@ export const RECENT_SEARCH_IDLE_MS = 1200;
 
 /** Options shown per list facet before "Show all". */
 export const FACET_VISIBLE_LIMIT = {
-  make: 8,
+  make: 6,
   model: 6,
   series: 6,
-  color: 8,
+  color: 10,
 } as const;
 
 export const AVAILABILITY_ORDER: readonly StockStatus[] = ['in-stock', 'low', 'sold-out'];

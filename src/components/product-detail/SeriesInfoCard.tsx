@@ -56,7 +56,9 @@ function GarageProgress({ series }: { series: Pick<Series, 'id' | 'carIds' | 'na
   if (status === 'signed-out') {
     return (
       <div className="flex flex-col items-start gap-1 rounded-lg border border-dashed border-line p-3">
-        <p className="text-sm text-muted">Track how much of this series is parked in your garage.</p>
+        <p className="text-sm text-muted">
+          Track how much of this series is parked in your garage.
+        </p>
         <Button
           variant="link"
           size="sm"

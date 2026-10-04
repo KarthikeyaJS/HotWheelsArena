@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { computeOrderTotals, DEFAULT_SITE_SETTINGS } from '@shared/commerce';
 import { useProducts } from '@/hooks/useProducts';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useCartItems, useCartStore } from '@/store/cartStore';
 import type { CartItem, OrderTotals, SiteSettings } from '@/types';
+import { useCartNoticeStore } from './cartNoticeStore';
 import {
   effectiveQtyCap,
   isNoticeChange,
-  mergeNoticeChanges,
   reconcileCart,
   type CartChange,
   type CartReconciliation,
@@ -26,7 +26,7 @@ export interface ReconciledCart extends CartReconciliation {
   /** Catalogue failed to load (prices could not be re-checked). */
   verifyError: Error | null;
   retryVerify: () => void;
-  /** Price / quantity changes detected since the page opened (shown as a notice). */
+  /** Price / quantity changes detected while reconciling (shown until dismissed). */
   notices: CartChange[];
   dismissNotices: () => void;
   /** Refetches catalogue + settings (e.g. after the server reported changed prices). */
@@ -51,7 +51,8 @@ export function useReconciledCart({
   const settingsQuery = useSiteSettings();
   const settings = settingsQuery.data ?? DEFAULT_SITE_SETTINGS;
   const maxQtyPerItem = effectiveQtyCap(settings.maxQtyPerItem);
-  const [notices, setNotices] = useState<CartChange[]>([]);
+  const notices = useCartNoticeStore((state) => state.notices);
+  const dismissNotices = useCartNoticeStore((state) => state.dismiss);
 
   const products = productsQuery.data;
   const reconciliation = useMemo(
@@ -79,9 +80,7 @@ export function useReconciledCart({
   useEffect(() => {
     if (!reconciliation.verified || !products) return;
     const noticeChanges = reconciliation.changes.filter(isNoticeChange);
-    if (noticeChanges.length > 0) {
-      setNotices((current) => mergeNoticeChanges(current, noticeChanges));
-    }
+    useCartNoticeStore.getState().record(noticeChanges);
     if (!reconciliation.needsSync) return;
     const store = useCartStore.getState();
     store.reconcile(products);
@@ -92,6 +91,11 @@ export function useReconciledCart({
       .forEach((line) => store.setQty(line.productId, maxQtyPerItem));
   }, [reconciliation, products, maxQtyPerItem]);
 
+  // Forget notices about cars that left the cart (removed, or the order was placed).
+  useEffect(() => {
+    useCartNoticeStore.getState().prune(items.map((item) => item.productId));
+  }, [items]);
+
   const retryVerify = useCallback(() => {
     void refetchProducts();
   }, [refetchProducts]);
@@ -100,8 +104,6 @@ export function useReconciledCart({
   const refresh = useCallback(async () => {
     await Promise.all([refetchProducts(), refetchSettings()]);
   }, [refetchProducts, refetchSettings]);
-
-  const dismissNotices = useCallback(() => setNotices([]), []);
 
   const isVerifying =
     productsQuery.isPending ||

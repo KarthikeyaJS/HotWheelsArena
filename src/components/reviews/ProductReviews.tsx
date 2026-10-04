@@ -74,7 +74,8 @@ export const ProductReviews = forwardRef<HTMLElement, ProductReviewsProps>(funct
     [reviews, product.ratingAvg, product.ratingCount],
   );
   const ownReview = useMemo(
-    () => (uid ? (reviews.find((review) => review.id === uid || review.uid === uid) ?? null) : null),
+    () =>
+      uid ? (reviews.find((review) => review.id === uid || review.uid === uid) ?? null) : null,
     [reviews, uid],
   );
 
@@ -85,7 +86,10 @@ export const ProductReviews = forwardRef<HTMLElement, ProductReviewsProps>(funct
   let formArea: ReactNode;
   if (status === 'loading' || (status === 'signed-in' && reviewsQuery.isLoading)) {
     formArea = (
-      <div className="flex flex-col gap-3 rounded-xl border border-line bg-card p-5" aria-hidden="true">
+      <div
+        className="flex flex-col gap-3 rounded-xl border border-line bg-card p-5"
+        aria-hidden="true"
+      >
         <Skeleton className="h-4 w-36" />
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-28 w-full" />

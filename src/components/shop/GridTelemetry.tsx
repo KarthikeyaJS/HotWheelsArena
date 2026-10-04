@@ -39,22 +39,25 @@ export function GridTelemetry({
     >
       <ul className="grid grid-cols-3 gap-3 sm:gap-4">
         {items.map((item) => (
-          <li key={item.label} className="min-w-0 border-l border-line pl-3 first:border-l-0 first:pl-0">
-              {loading ? (
-                <div aria-hidden="true" className="flex flex-col gap-2">
-                  <span className="hud text-muted">{item.label}</span>
-                  <Skeleton className="h-7 w-14 rounded" />
-                </div>
-              ) : (
-                <HudReadout
-                  label={item.label}
-                  value={item.value}
-                  unit={item.unit}
-                  tone={item.tone ?? 'default'}
-                  size="md"
-                  className="[&>span:last-child]:text-xl sm:[&>span:last-child]:text-2xl"
-                />
-              )}
+          <li
+            key={item.label}
+            className="min-w-0 border-l border-line pl-3 first:border-l-0 first:pl-0"
+          >
+            {loading ? (
+              <div aria-hidden="true" className="flex flex-col gap-2">
+                <span className="hud text-muted">{item.label}</span>
+                <Skeleton className="h-7 w-14 rounded" />
+              </div>
+            ) : (
+              <HudReadout
+                label={item.label}
+                value={item.value}
+                unit={item.unit}
+                tone={item.tone ?? 'default'}
+                size="md"
+                className="[&>span:last-child]:text-xl sm:[&>span:last-child]:text-2xl"
+              />
+            )}
           </li>
         ))}
       </ul>

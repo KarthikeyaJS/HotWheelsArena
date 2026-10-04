@@ -112,23 +112,39 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
       <div className="flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <AddToGarageButton product={product} size="lg" fullWidth variant="secondary" />
-          <BuyNowButton product={product} size="lg" fullWidth />
-        </div>
-        <div className="flex items-stretch gap-3">
-          <AddToCartButton
+          <BuyNowButton
             product={product}
             size="lg"
-            variant="outline"
-            label="Add to cart"
             fullWidth
-            className="min-w-0 flex-1"
+            className={soldOut ? undefined : 'order-first sm:order-none'}
           />
-          <WishlistButton product={product} size="lg" iconVariant="outline" />
         </div>
+        {soldOut ? (
+          <WishlistButton product={product} variant="button" size="lg" fullWidth />
+        ) : (
+          <div className="flex items-stretch gap-3">
+            <AddToCartButton
+              product={product}
+              size="lg"
+              variant="outline"
+              label="Add to cart"
+              fullWidth
+              className="min-w-0 flex-1"
+            />
+            <WishlistButton
+              product={product}
+              size="lg"
+              iconVariant="outline"
+              className="h-14 w-14 shrink-0"
+            />
+          </div>
+        )}
         <p className="text-xs leading-relaxed text-muted">
           <span className="font-semibold text-fg">Add to garage</span> logs a car you already own in
           your collection — it doesn&apos;t add it to your cart.
-          {soldOut ? ' Sold out cars can still be parked in your garage or wishlisted.' : ''}
+          {soldOut
+            ? ' Sold out for now — wishlist it to keep it on your radar for the next drop.'
+            : ''}
         </p>
       </div>
 

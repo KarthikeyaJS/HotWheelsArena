@@ -33,7 +33,7 @@ export function ShopViewTabs({ views, active, hrefFor, counts, className }: Shop
     <nav aria-label="Shop views" className={cn('relative -mx-4 sm:-mx-6 lg:mx-0', className)}>
       <ul
         ref={listRef}
-        className="scrollbar-none flex snap-x gap-2 overflow-x-auto scroll-smooth px-4 py-1 sm:px-6 lg:flex-wrap lg:overflow-visible lg:px-0"
+        className="scrollbar-none flex snap-x scroll-px-4 gap-1.5 overflow-x-auto scroll-smooth px-4 py-1 sm:scroll-px-6 sm:px-6 lg:flex-wrap lg:overflow-visible lg:px-0"
       >
         {views.map((view) => {
           const isActive = view.id === active;
@@ -46,7 +46,7 @@ export function ShopViewTabs({ views, active, hrefFor, counts, className }: Shop
                 preventScrollReset
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'group relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-md border px-3.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-[color,background-color,border-color,transform] duration-150 ease-race active:scale-[0.97] sm:text-xs',
+                  'group relative inline-flex h-10 items-center gap-1.5 overflow-hidden rounded-md border px-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-[color,background-color,border-color,transform] duration-150 ease-race active:scale-[0.97]',
                   isActive
                     ? 'border-accent bg-accent/10 text-accent-ink'
                     : 'border-line bg-card/70 text-fg hover:border-fg/40 hover:bg-card-hover',
@@ -62,10 +62,7 @@ export function ShopViewTabs({ views, active, hrefFor, counts, className }: Shop
                 <span>{view.label}</span>
                 {count !== undefined ? (
                   <span
-                    className={cn(
-                      'tabular-nums',
-                      isActive ? 'text-accent-ink/80' : 'text-muted',
-                    )}
+                    className={cn('tabular-nums', isActive ? 'text-accent-ink/80' : 'text-muted')}
                   >
                     <span className="sr-only">, </span>
                     {formatNumber(count)}

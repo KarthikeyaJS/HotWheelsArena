@@ -95,4 +95,5 @@ export function buildMachineStats(
 }
 
 /** Exact disclaimer shown under the stat bars (spec §5.4). */
-export const MACHINE_STATS_NOTE = 'Themed vehicle specifications — not claims about the toy itself.';
+export const MACHINE_STATS_NOTE =
+  'Themed vehicle specifications — not claims about the toy itself.';

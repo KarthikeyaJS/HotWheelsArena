@@ -11,7 +11,7 @@ export interface ProductSpecTableProps {
   className?: string;
 }
 
-const CORNER = 'pointer-events-none absolute h-3 w-3 border-fg/40';
+const CORNER = 'pointer-events-none absolute h-2.5 w-2.5 border-fg/40';
 
 /**
  * Spec sheet in a brushed-metal HUD panel: SCALE, YEAR, SERIES, COLOR, MATERIAL, TYPE and
@@ -39,10 +39,16 @@ export function ProductSpecTable({
         className,
       )}
     >
-      <span aria-hidden="true" className={cn(CORNER, 'left-2 top-2 border-l-2 border-t-2')} />
-      <span aria-hidden="true" className={cn(CORNER, 'right-2 top-2 border-r-2 border-t-2')} />
-      <span aria-hidden="true" className={cn(CORNER, 'bottom-2 left-2 border-b-2 border-l-2')} />
-      <span aria-hidden="true" className={cn(CORNER, 'bottom-2 right-2 border-b-2 border-r-2')} />
+      <span aria-hidden="true" className={cn(CORNER, 'left-1.5 top-1.5 border-l-2 border-t-2')} />
+      <span aria-hidden="true" className={cn(CORNER, 'right-1.5 top-1.5 border-r-2 border-t-2')} />
+      <span
+        aria-hidden="true"
+        className={cn(CORNER, 'bottom-1.5 left-1.5 border-b-2 border-l-2')}
+      />
+      <span
+        aria-hidden="true"
+        className={cn(CORNER, 'bottom-1.5 right-1.5 border-b-2 border-r-2')}
+      />
 
       <div className="flex items-center justify-between gap-3 border-b border-fg/10 px-5 py-3">
         <h2
@@ -57,7 +63,7 @@ export function ProductSpecTable({
         </span>
       </div>
 
-      <dl className="divide-y divide-fg/10 px-5">
+      <dl className="divide-y divide-fg/10 px-5 pb-1">
         {specs.map((spec) => (
           <div key={spec.label} className="grid grid-cols-[7.5rem_1fr] items-baseline gap-4 py-2.5">
             <dt className="hud text-[10px] text-fg/75">{spec.label}</dt>

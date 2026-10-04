@@ -1,0 +1,98 @@
+import { ArrowDownUp, SlidersHorizontal } from 'lucide-react';
+import { useId } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { isSortId, type SortId, type SortOption } from '@/config/shop';
+import { formatNumber } from '@/lib/format';
+
+export interface ResultsToolbarProps {
+  /** Id for the results heading (the section's `aria-labelledby`). */
+  headingId: string;
+  /** Matching cars; `null` while loading. */
+  count: number | null;
+  sort: SortId;
+  sortOptions: readonly SortOption[];
+  onSortChange: (sort: SortId) => void;
+  /** Active filters (for the mobile "FILTERS (3)" button). */
+  filterCount: number;
+  onOpenFilters: () => void;
+  filtersOpen: boolean;
+}
+
+/**
+ * Results bar: `24 MACHINES` heading (with a polite live announcement when it changes), the
+ * mobile FILTERS button (below `lg`) and the sort select.
+ */
+export function ResultsToolbar({
+  headingId,
+  count,
+  sort,
+  sortOptions,
+  onSortChange,
+  filterCount,
+  onOpenFilters,
+  filtersOpen,
+}: ResultsToolbarProps) {
+  const sortId = `sort-${useId().replace(/:/g, '')}`;
+  const noun = count === 1 ? 'machine' : 'machines';
+
+  return (
+    <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:gap-4">
+      <div className="flex min-h-10 items-center">
+        {count === null ? (
+          <>
+            <h2 id={headingId} className="sr-only">
+              Loading machines
+            </h2>
+            <Skeleton className="h-6 w-36 rounded" />
+          </>
+        ) : (
+          <h2
+            id={headingId}
+            className="flex items-baseline gap-2 font-mono font-bold normal-case tracking-normal"
+          >
+            <span className="text-2xl tabular-nums text-fg">{formatNumber(count)}</span>
+            <span className="text-xs uppercase tracking-hud text-muted">{noun}</span>
+          </h2>
+        )}
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {count === null ? '' : `${formatNumber(count)} ${noun} on the grid`}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2 sm:ml-auto">
+        <Button
+          variant="outline"
+          onClick={onOpenFilters}
+          leftIcon={<SlidersHorizontal />}
+          aria-haspopup="dialog"
+          aria-expanded={filtersOpen}
+          className="shrink-0 lg:hidden"
+        >
+          Filters
+          {filterCount > 0 ? (
+            <span className="ml-1 font-mono tabular-nums text-accent-ink">
+              ({filterCount})<span className="sr-only"> active</span>
+            </span>
+          ) : null}
+        </Button>
+        <label htmlFor={sortId} className="hud hidden shrink-0 text-muted sm:block">
+          Sort by
+        </label>
+        <Select
+          id={sortId}
+          value={sort}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (isSortId(next)) onSortChange(next);
+          }}
+          options={sortOptions.map((option) => ({ value: option.id, label: option.label }))}
+          leftIcon={<ArrowDownUp />}
+          aria-label="Sort by"
+          containerClassName="min-w-0 flex-1 sm:w-56 sm:flex-none"
+        />
+      </div>
+    </div>
+  );
+}

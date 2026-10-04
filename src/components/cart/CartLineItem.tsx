@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { IconButton } from '@/components/ui/IconButton';
 import { QuantityStepper } from '@/components/ui/QuantityStepper';
+import { RarityChip } from '@/components/ui/RarityChip';
 import { productPath } from '@/config/routes';
 import { cn } from '@/lib/cn';
 import { formatCollectionNumber, formatINR } from '@/lib/format';
@@ -101,6 +102,7 @@ export const CartLineItem = memo(function CartLineItem({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {hud ? <p className="hud text-muted">{hud}</p> : null}
+          {line.product && !blocked ? <RarityChip rarity={line.product.rarity} size="sm" /> : null}
           {blocked ? (
             <Chip tone="danger" variant="solid" size="sm" icon={<AlertTriangle />}>
               {BLOCKED_COPY[status].chip}

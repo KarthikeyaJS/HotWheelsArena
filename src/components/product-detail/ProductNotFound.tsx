@@ -12,11 +12,7 @@ export interface ProductNotFoundProps {
 
 /** `porsche-911-gt3` → `porsche 911 gt3`. */
 function slugToQuery(slug: string | undefined): string {
-  return (slug ?? '')
-    .replace(/[-_]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 60);
+  return (slug ?? '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
 }
 
 /**
@@ -34,7 +30,7 @@ export function ProductNotFound({ slug, className }: ProductNotFoundProps) {
         className,
       )}
     >
-      <TireMarks variant="drift" className="-z-10 text-fg/[0.06]" />
+      <TireMarks variant="drift" className="-z-10 text-fg/[0.04]" />
       <span
         aria-hidden="true"
         className="bg-grid bg-grid-fade pointer-events-none absolute inset-0 -z-10 opacity-60"

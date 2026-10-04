@@ -24,7 +24,12 @@ export interface MediaViewerProps {
  * - `model` → the poster image plus `ModelViewerSlot`, which overlays an interactive 3D viewer
  *   once one is wired up (it renders nothing today, so the poster stays visible).
  */
-export function MediaViewer({ item, priority = false, dimmed = false, className }: MediaViewerProps) {
+export function MediaViewer({
+  item,
+  priority = false,
+  dimmed = false,
+  className,
+}: MediaViewerProps) {
   const image = item.kind === 'image' ? item.image : item.poster;
   const imgClassName = cn(
     'drop-shadow-[0_18px_22px_rgb(0_0_0/0.35)] transition-[filter,opacity] duration-500',

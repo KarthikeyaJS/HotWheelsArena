@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangle, CheckCircle2, PenLine } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, PenLine } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { REVIEW_TEXT_MAX, REVIEW_TEXT_MIN, ReviewFormSchema } from '@shared/schemas';
@@ -138,7 +138,7 @@ export function ReviewForm({
             id={fieldErrorId(ratingId)}
             className="flex items-start gap-1.5 text-xs font-medium text-danger-ink"
           >
-            <AlertTriangle aria-hidden="true" className="mt-px h-3.5 w-3.5 shrink-0" />
+            <AlertCircle aria-hidden="true" className="mt-px h-3.5 w-3.5 shrink-0" />
             <span>{ratingError}</span>
           </p>
         ) : null}

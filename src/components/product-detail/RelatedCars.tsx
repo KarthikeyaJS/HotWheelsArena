@@ -6,6 +6,7 @@ import { Button, EmptyState, SectionHeading } from '@/components/ui';
 import { shopPath } from '@/config/routes';
 import { useProducts } from '@/hooks/useProducts';
 import { cn } from '@/lib/cn';
+import { padNumber } from '@/lib/format';
 import { getRelatedProducts } from '@/lib/product';
 import type { Product } from '@/types';
 
@@ -35,6 +36,8 @@ function RailSkeleton() {
 /**
  * "More machines like this" carousel: `getRelatedProducts` (same series, category, make,
  * rarity) over the cached catalogue, rendered as compact ProductCards in a HorizontalRail.
+ * The section heading sits above the rail (full width on phones); the rail header carries a
+ * small count line next to its prev/next controls.
  */
 export function RelatedCars({ product, limit = 8, className }: RelatedCarsProps) {
   const productsQuery = useProducts();
@@ -43,29 +46,24 @@ export function RelatedCars({ product, limit = 8, className }: RelatedCarsProps)
     [product, productsQuery.data, limit],
   );
 
-  const heading = (
-    <SectionHeading
-      id={HEADING_ID}
-      eyebrow="SAME GRID"
-      title="More machines like this"
-      description="Same series, class or maker — line them up in your garage."
-    />
-  );
-
-  const viewAll = (
-    <Button
-      variant="link"
-      to={shopPath({ category: product.category })}
-      rightIcon={<ArrowRight />}
-      aria-label="View all cars in this class"
-    >
-      View all
-    </Button>
-  );
-
   return (
     <section aria-labelledby={HEADING_ID} className={cn('flex flex-col gap-6', className)}>
-      {productsQuery.isError && !productsQuery.isLoading ? heading : null}
+      <SectionHeading
+        id={HEADING_ID}
+        eyebrow="SAME GRID"
+        title="More machines like this"
+        description="Same series, class or maker — line them up in your garage."
+        action={
+          <Button
+            variant="link"
+            to={shopPath({ category: product.category })}
+            rightIcon={<ArrowRight />}
+            aria-label="View all cars in this class"
+          >
+            View all
+          </Button>
+        }
+      />
       <DataState
         isLoading={productsQuery.isLoading}
         isError={productsQuery.isError}
@@ -75,39 +73,33 @@ export function RelatedCars({ product, limit = 8, className }: RelatedCarsProps)
         errorCompact
         errorTitle="Related cars stalled"
         loadingLabel="Loading related cars…"
-        skeleton={
-          <div className="flex flex-col gap-6">
-            {heading}
-            <RailSkeleton />
-          </div>
-        }
+        skeleton={<RailSkeleton />}
         empty={
-          <div className="flex flex-col gap-6">
-            {heading}
-            <EmptyState
-              icon={<CarFront />}
-              title="No close relatives on the grid"
-              description="This machine is one of a kind for now — explore the full garage for more."
-              action={
-                <Button to={shopPath()} variant="outline" rightIcon={<ArrowRight />}>
-                  Explore the garage
-                </Button>
-              }
-              size="sm"
-            />
-          </div>
+          <EmptyState
+            icon={<CarFront />}
+            title="No close relatives on the grid"
+            description="This machine is one of a kind for now — explore the full garage for more."
+            action={
+              <Button to={shopPath()} variant="outline" rightIcon={<ArrowRight />}>
+                Explore the garage
+              </Button>
+            }
+            size="sm"
+          />
         }
       >
         {() => (
           <HorizontalRail
             label={`Cars related to ${product.name}`}
-            title={heading}
-            action={viewAll}
+            title={
+              <p className="hud text-[10px] text-muted">
+                <span className="text-fg">{padNumber(related.length)}</span>{' '}
+                {related.length === 1 ? 'machine' : 'machines'} · swipe or drag
+              </p>
+            }
             items={related}
             getItemKey={(item) => item.id}
-            renderItem={(item) => (
-              <ProductCard product={item} variant="compact" headingAs="h3" />
-            )}
+            renderItem={(item) => <ProductCard product={item} variant="compact" headingAs="h3" />}
           />
         )}
       </DataState>
