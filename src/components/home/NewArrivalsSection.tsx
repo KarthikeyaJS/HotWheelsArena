@@ -74,7 +74,7 @@ export function NewArrivalsSection() {
         >
           {() => (
             <HorizontalRail
-              label="Just off the track"
+              label="New arrivals"
               items={cars}
               itemWidth={RAIL_ITEM_WIDTH}
               renderItem={(product) => <ProductCard product={product} variant="compact" />}

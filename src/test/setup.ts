@@ -3,8 +3,13 @@
  * small browser API shims jsdom lacks (matchMedia, IntersectionObserver, ResizeObserver).
  */
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+// findBy* / waitFor default to 1s, which is too tight when the whole suite runs in parallel
+// (≈70 jsdom files on every core): lazy chunks, debounced URL syncs and transition renders then
+// time out intermittently. 5s keeps genuine failures fast enough while removing load flakes.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();

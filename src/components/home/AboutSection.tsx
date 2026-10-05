@@ -45,19 +45,14 @@ export function AboutSection() {
 
   return (
     <HomeSection id={HOME_SECTION_IDS.about} className="pb-20 lg:pb-28">
-      {/*
-        NewsletterForm renders the visible heading with an internal id, so the section is named
-        through this hidden copy of the same text (aria-labelledby may reference hidden nodes).
-      */}
-      <span id={headingId} hidden>
-        {NEWSLETTER_TITLE}
-      </span>
+      {/* The NewsletterForm heading carries the section heading id (HomeSection aria-labelledby). */}
       <NewsletterForm
         variant="section"
         eyebrow="Pit crew radio · 08"
         title={NEWSLETTER_TITLE}
         description="Drop alerts, vault restocks and collector news, straight to your inbox. No spam — unsubscribe anytime."
         headingAs="h2"
+        headingId={headingId}
       />
       <div className="mt-10 grid gap-8 border-t border-line pt-10 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-5">

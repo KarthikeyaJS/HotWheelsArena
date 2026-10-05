@@ -27,7 +27,7 @@ const HELP = `snap.mjs — screenshot a route + report console errors
   --height <px>         Viewport height (default 900)
   --theme dark|light    Theme preference injected before load (default dark)
   --full                Full-page screenshot
-  --wait <selector>     Wait for this CSS selector before capturing
+  --wait <selector>     Wait for this CSS selector before acting (default: the route's "main h1")
   --delay <ms>          Extra settle delay before capture (default 600)
   --signin              Sign in with an emulator test account first (dev-only hook)
   --email <email>       Test account email for --signin (default collector@hwa.test)
@@ -169,7 +169,13 @@ try {
     await page.goto(url, { waitUntil: 'load', timeout });
   });
 
-  if (values.wait) await page.waitForSelector(values.wait, { timeout });
+  if (values.wait) {
+    await page.waitForSelector(values.wait, { timeout });
+  } else {
+    // Pages are lazy routes: wait until the route (not the Suspense fallback) has rendered its
+    // h1, so --scroll/--click act on the real page. Best effort — some states have no h1.
+    await page.waitForSelector('main h1', { timeout: Math.min(timeout, 10000) }).catch(() => {});
+  }
 
   // --click / --type actions, in command-line order.
   const actions = tokens

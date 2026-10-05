@@ -45,7 +45,12 @@ export function PaymentDetails({ payment, method, className }: PaymentDetailsPro
         </div>
         <div className="flex items-baseline justify-between gap-4">
           <dt className="text-muted">Status</dt>
-          <dd className={cn('font-mono text-xs font-bold uppercase tracking-hud', payment.status === 'success' ? 'text-success' : 'text-danger-ink')}>
+          <dd
+            className={cn(
+              'font-mono text-xs font-bold uppercase tracking-hud',
+              payment.status === 'success' ? 'text-success' : 'text-danger-ink',
+            )}
+          >
             {method === 'cod' && payment.status === 'success'
               ? 'Pay on delivery'
               : payment.status === 'success'

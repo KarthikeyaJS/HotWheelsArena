@@ -80,7 +80,7 @@ export function VaultCard({
   return (
     <article
       className={cn(
-        'group relative isolate overflow-hidden rounded-2xl border border-highlight/35 bg-card text-fg shadow-card',
+        'group relative isolate flex flex-col overflow-hidden rounded-2xl border border-highlight/35 bg-card text-fg shadow-card',
         'transition-[border-color,box-shadow,background-color] duration-300 ease-race',
         'focus-within:border-highlight/70 focus-within:shadow-glow-highlight hover:border-highlight/70 hover:bg-card-hover hover:shadow-glow-highlight',
         horizontal && 'md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]',
@@ -140,7 +140,9 @@ export function VaultCard({
       </div>
 
       {/* Details */}
-      <div className={cn('flex flex-col gap-4 p-5', horizontal && 'md:justify-center md:pl-2')}>
+      <div
+        className={cn('flex flex-1 flex-col gap-4 p-5', horizontal && 'md:justify-center md:pl-2')}
+      >
         {horizontal ? <div className="hidden md:block">{header}</div> : null}
         <div className="flex flex-col gap-1.5">
           <p className="hud text-[10px] text-muted">{productMetaLine(product)}</p>
@@ -183,7 +185,13 @@ export function VaultCard({
           <StockStatus stock={product.stock} />
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+        {/* mt-auto: price + CTAs line up across a grid row even when a name wraps. */}
+        <div
+          className={cn(
+            'mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4',
+            horizontal && 'md:mt-0',
+          )}
+        >
           <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} size="lg" />
           <div className="flex items-center gap-2">
             <WishlistButton product={product} size="md" />

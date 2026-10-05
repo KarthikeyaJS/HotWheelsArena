@@ -40,7 +40,12 @@ vi.mock('@/hooks/useSiteSettings', () => ({
 }));
 
 const gt3 = makeProduct();
-const supra = makeProduct({ id: 'toyota-supra-a80', name: 'Toyota Supra (A80)', price: 1199, stock: 3 });
+const supra = makeProduct({
+  id: 'toyota-supra-a80',
+  name: 'Toyota Supra (A80)',
+  price: 1199,
+  stock: 3,
+});
 
 beforeEach(() => {
   mocks.products = { data: undefined, isPending: true };

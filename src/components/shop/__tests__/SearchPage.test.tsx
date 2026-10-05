@@ -101,9 +101,9 @@ describe('SearchPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Results for “toyota”' }),
     ).toBeInTheDocument();
-    await waitFor(() => expect(useRecentSearchStore.getState().recent).toEqual(['toyota']), {
-      timeout: 3000,
-    });
+    // Recorded after RECENT_SEARCH_IDLE_MS (1.2s) of no typing; the global 5s async timeout
+    // (src/test/setup.ts) leaves headroom under full-suite load.
+    await waitFor(() => expect(useRecentSearchStore.getState().recent).toEqual(['toyota']));
   });
 
   it('submits immediately on Enter', async () => {

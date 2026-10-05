@@ -82,10 +82,27 @@ export default function OrdersPage() {
             {() => (
               <div className="flex flex-col gap-6">
                 <section aria-label="Order stats" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <HudReadout label="ORDERS" value={padNumber(stats.orders)} className="rounded-lg border border-line bg-card p-4" />
-                  <HudReadout label="CARS BOUGHT" value={formatNumber(stats.cars)} className="rounded-lg border border-line bg-card p-4" />
-                  <HudReadout label="XP EARNED" value={formatNumber(stats.xp)} tone="accent" className="rounded-lg border border-line bg-card p-4" />
-                  <HudReadout label="SPENT" value={formatINR(stats.spent)} className="rounded-lg border border-line bg-card p-4" />
+                  <HudReadout
+                    label="ORDERS"
+                    value={padNumber(stats.orders)}
+                    className="rounded-lg border border-line bg-card p-4"
+                  />
+                  <HudReadout
+                    label="CARS BOUGHT"
+                    value={formatNumber(stats.cars)}
+                    className="rounded-lg border border-line bg-card p-4"
+                  />
+                  <HudReadout
+                    label="XP EARNED"
+                    value={formatNumber(stats.xp)}
+                    tone="accent"
+                    className="rounded-lg border border-line bg-card p-4"
+                  />
+                  <HudReadout
+                    label="SPENT"
+                    value={formatINR(stats.spent)}
+                    className="rounded-lg border border-line bg-card p-4"
+                  />
                 </section>
                 <ul aria-label="Orders" className="flex flex-col gap-4">
                   {orders.map((order) => (

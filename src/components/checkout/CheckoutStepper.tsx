@@ -43,7 +43,8 @@ export function CheckoutStepper({
                 aria-hidden="true"
                 className={cn(
                   'grid h-8 w-8 shrink-0 place-items-center rounded-md border font-mono text-xs font-bold tabular-nums transition-colors duration-200',
-                  state === 'current' && 'border-accent bg-accent text-on-accent shadow-glow-accent',
+                  state === 'current' &&
+                    'border-accent bg-accent text-on-accent shadow-glow-accent',
                   state === 'complete' && 'border-accent/50 bg-accent/10 text-accent-ink',
                   state === 'upcoming' && 'border-line bg-surface text-muted',
                 )}
@@ -85,7 +86,10 @@ export function CheckoutStepper({
                   {content}
                 </span>
               )}
-              <span aria-hidden="true" className="relative h-1 overflow-hidden rounded-full bg-line">
+              <span
+                aria-hidden="true"
+                className="relative h-1 overflow-hidden rounded-full bg-line"
+              >
                 <span
                   className={cn(
                     'absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-500 ease-race motion-reduce:transition-none',

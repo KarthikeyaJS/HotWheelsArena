@@ -67,7 +67,7 @@ export function ChooseYourRide() {
         index={2}
         eyebrow="The line-up"
         title="Choose your ride"
-        description="Six classes, parked and fuelled. Hover a bay to fire up the engine, then pick a class to see every car in it."
+        description="Six classes, parked and fuelled. Fire up a bay, then pick a class to see every car in it."
         action={
           <Button variant="outline" to={shopPath()} rightIcon={<ArrowRight />}>
             All cars

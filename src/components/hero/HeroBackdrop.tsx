@@ -46,14 +46,14 @@ export const HeroBackdrop = memo(function HeroBackdrop({ sequence, className }: 
         <span className="absolute left-[9%] top-[16%] font-display text-[clamp(5rem,12vw,10rem)] font-black leading-none text-fg/[0.03]">
           B2
         </span>
-        <span className="absolute left-[70%] top-[55%] font-mono text-[10px] uppercase tracking-hud text-fg/20">
+        <span className="absolute left-[50%] top-[50%] hidden font-mono text-[10px] uppercase tracking-hud text-fg/20 lg:block">
           Level B2 · Collector parking only
         </span>
         <div className="absolute inset-x-0 top-[62%] h-px bg-line" />
         {CEILING_LIGHTS.map((left) => (
           <span
             key={left}
-            className="absolute top-[5%] h-2.5 w-[10%] rounded-sm border border-line bg-surface shadow-card dark:top-[6%] dark:h-1 dark:w-[8%] dark:rounded-full dark:border-0 dark:bg-fg/80 dark:shadow-[0_0_26px_6px_rgb(var(--text)/0.16)]"
+            className="absolute top-[5%] hidden h-2.5 w-[10%] rounded-sm border border-line bg-surface shadow-card dark:top-[6%] dark:h-1 dark:w-[8%] dark:rounded-full dark:border-0 dark:bg-fg/80 dark:shadow-[0_0_26px_6px_rgb(var(--text)/0.16)] md:block"
             style={{ left }}
           />
         ))}

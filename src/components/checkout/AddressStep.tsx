@@ -93,7 +93,11 @@ export function AddressStep({
   const saveAddress = useSaveAddress();
   const saved = useMemo(() => savedQuery.data ?? [], [savedQuery.data]);
   const [selection, setSelection] = useState<string | null>(
-    initialSource?.kind === 'saved' ? initialSource.id : initialSource?.kind === 'new' ? NEW_ADDRESS : null,
+    initialSource?.kind === 'saved'
+      ? initialSource.id
+      : initialSource?.kind === 'new'
+        ? NEW_ADDRESS
+        : null,
   );
   const [saveForLater, setSaveForLater] = useState(true);
   const [savedIssue, setSavedIssue] = useState<string | null>(null);
@@ -228,9 +232,7 @@ export function AddressStep({
               {savedIssue}
             </p>
           ) : null}
-          {hasSaved ? (
-            <p className="hud text-muted">New delivery address</p>
-          ) : null}
+          {hasSaved ? <p className="hud text-muted">New delivery address</p> : null}
           <AddressFields register={register} setValue={setValue} errors={errors} />
           <Checkbox
             label="Save this address to my garage"

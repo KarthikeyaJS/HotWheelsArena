@@ -21,23 +21,35 @@ export function useReviews(productId: string | undefined): UseQueryResult<Review
   });
 }
 
+/** `submitReview` request plus a client-only flag that picks the success toast copy. */
+export interface SubmitReviewVariables extends SubmitReviewRequest {
+  /** `true` when editing an existing review ("Review updated" instead of "Review posted"). */
+  isUpdate?: boolean;
+}
+
 /**
  * Submits (or updates) the signed-in collector's review via the `submitReview` callable.
- * On success: toasts, refetches reviews and product rating aggregates. Errors are NOT toasted —
- * render `getFriendlyErrorMessage(mutation.error)` inline in the form.
+ * On success: toasts ("Review posted" / "Review updated" when `isUpdate`), refetches reviews and
+ * product rating aggregates. Errors are NOT toasted — render `getFriendlyErrorMessage(mutation.error)`
+ * inline in the form. `isUpdate` is stripped before the request is sent.
  */
 export function useSubmitReview(): UseMutationResult<
   SubmitReviewResponse,
   Error,
-  SubmitReviewRequest
+  SubmitReviewVariables
 > {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: mutationKeys.submitReview,
-    mutationFn: (request: SubmitReviewRequest) => submitReview(request),
-    onSuccess: (_response, request) => {
-      toast.success('Review posted', 'Thanks for sharing with the collector community.');
-      void queryClient.invalidateQueries({ queryKey: queryKeys.reviews(request.productId) });
+    mutationFn: ({ isUpdate: _isUpdate, ...request }: SubmitReviewVariables) =>
+      submitReview(request),
+    onSuccess: (_response, variables) => {
+      if (variables.isUpdate) {
+        toast.success('Review updated', 'Your take on this machine has been refreshed.');
+      } else {
+        toast.success('Review posted', 'Thanks for sharing with the collector community.');
+      }
+      void queryClient.invalidateQueries({ queryKey: queryKeys.reviews(variables.productId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.products() });
     },
   });

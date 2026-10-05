@@ -55,11 +55,15 @@ export function PaymentMethodPreview({
             <span className="hud text-[10px]">DEBIT</span>
           </div>
           <span className="mt-4 block h-7 w-10 rounded-md border border-fg/20 bg-[linear-gradient(135deg,rgb(var(--metal)),rgb(var(--metal)/0.45))]" />
-          <p className="mt-3 font-mono text-base tracking-[0.14em] sm:text-lg">{TEST_CARD.number}</p>
+          <p className="mt-3 font-mono text-base tracking-[0.14em] sm:text-lg">
+            {TEST_CARD.number}
+          </p>
           <div className="mt-2 flex items-end justify-between gap-3">
             <span className="min-w-0">
               <span className="hud block text-[9px]">CARD HOLDER</span>
-              <span className="block truncate font-mono text-xs uppercase">{holderName || 'COLLECTOR'}</span>
+              <span className="block truncate font-mono text-xs uppercase">
+                {holderName || 'COLLECTOR'}
+              </span>
             </span>
             <span className="shrink-0 text-right">
               <span className="hud block text-[9px]">VALID THRU</span>
@@ -92,9 +96,8 @@ export function PaymentMethodPreview({
         {method === 'card' ? (
           <>
             <p className="text-sm text-fg">
-              A simulated card is used — card{' '}
-              <span className="font-mono">{TEST_CARD.number}</span>, expiry{' '}
-              <span className="font-mono">{TEST_CARD.expiry}</span>.
+              A simulated card is used — card <span className="font-mono">{TEST_CARD.number}</span>,
+              expiry <span className="font-mono">{TEST_CARD.expiry}</span>.
             </p>
             <p className="text-xs text-muted">
               No card details are asked for, collected or sent. Some test payments are declined on
@@ -105,8 +108,7 @@ export function PaymentMethodPreview({
         {method === 'upi' ? (
           <>
             <p className="text-sm text-fg">
-              Simulated UPI collect request to{' '}
-              <span className="font-mono">{TEST_UPI_ID}</span>.
+              Simulated UPI collect request to <span className="font-mono">{TEST_UPI_ID}</span>.
             </p>
             <p className="text-xs text-muted">
               No app opens and no UPI ID is collected — approval is simulated in about two seconds.

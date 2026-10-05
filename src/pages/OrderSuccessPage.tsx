@@ -78,7 +78,10 @@ function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
         className="relative isolate overflow-hidden rounded-2xl border border-line bg-surface px-5 pb-10 pt-14 text-center shadow-card sm:px-10 sm:pt-16"
       >
         <div aria-hidden="true" className="bg-checker absolute inset-x-0 top-0 h-7 opacity-90" />
-        <div aria-hidden="true" className="bg-grid bg-grid-fade absolute inset-0 -z-10 opacity-70" />
+        <div
+          aria-hidden="true"
+          className="bg-grid bg-grid-fade absolute inset-0 -z-10 opacity-70"
+        />
         <div
           aria-hidden="true"
           className="absolute left-1/2 top-10 -z-10 h-64 w-[36rem] max-w-full -translate-x-1/2 rounded-full bg-accent/15 blur-3xl"
@@ -106,7 +109,9 @@ function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
         </p>
         <div className="mt-6 inline-flex max-w-full items-center gap-2 rounded-lg border border-line bg-card py-1.5 pl-3 pr-1.5">
           <span className="hud text-muted">ORDER</span>
-          <span className="font-mono text-sm font-bold text-fg">{formatOrderRef(view.orderId)}</span>
+          <span className="font-mono text-sm font-bold text-fg">
+            {formatOrderRef(view.orderId)}
+          </span>
           <code className="hidden max-w-[16rem] truncate font-mono text-xs text-muted sm:inline">
             {view.orderId}
           </code>
@@ -188,7 +193,13 @@ function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
         </div>
         <div className="lg:col-span-5 lg:border-l lg:border-line lg:pl-6">
           <TotalsBreakdown totals={view.totals} size="lg" totalLabel="Total paid" />
-          <Button to={shopPath()} variant="link" size="sm" leftIcon={<ShoppingBag />} className="mt-5">
+          <Button
+            to={shopPath()}
+            variant="link"
+            size="sm"
+            leftIcon={<ShoppingBag />}
+            className="mt-5"
+          >
             Find your next ride
           </Button>
         </div>

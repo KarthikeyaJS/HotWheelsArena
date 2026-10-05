@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { toast, useToastStore } from '@/store/toastStore';
+import { MIN_ACTION_TOAST_DURATION, toast, useToastStore } from '@/store/toastStore';
 import { Toaster } from '../Toaster';
 
 const toastIds = (): string[] => useToastStore.getState().toasts.map((item) => item.id);
@@ -69,6 +69,23 @@ describe('Toaster', () => {
     act(() => {
       vi.advanceTimersByTime(200);
     });
+    expect(toastIds()).toHaveLength(0);
+  });
+
+  it('renders an optional action button that runs the action and dismisses the toast', () => {
+    const onUndo = vi.fn();
+    render(<Toaster />);
+    act(() => {
+      toast({ title: 'Pulled from your pit stop', action: { label: 'Undo', onClick: onUndo } });
+    });
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Pulled from your pit stop. Undo available in notifications',
+    );
+    expect(useToastStore.getState().toasts[0]?.duration).toBeGreaterThanOrEqual(
+      MIN_ACTION_TOAST_DURATION,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(onUndo).toHaveBeenCalledTimes(1);
     expect(toastIds()).toHaveLength(0);
   });
 

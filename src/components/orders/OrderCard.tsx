@@ -31,7 +31,7 @@ export const OrderCard = memo(function OrderCard({
   return (
     <article
       className={cn(
-        'group relative overflow-hidden rounded-xl border border-line bg-card p-4 shadow-card transition-colors duration-200 ease-race hover:bg-card-hover focus-within:bg-card-hover sm:p-5',
+        'group relative overflow-hidden rounded-xl border border-line bg-card p-4 shadow-card transition-colors duration-200 ease-race focus-within:bg-card-hover hover:bg-card-hover sm:p-5',
         className,
       )}
     >

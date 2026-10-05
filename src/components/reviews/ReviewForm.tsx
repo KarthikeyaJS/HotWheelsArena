@@ -73,7 +73,7 @@ export function ReviewForm({
   const onSubmit = handleSubmit((values) => {
     setJustSaved(false);
     mutation.mutate(
-      { productId, rating: values.rating, text: values.text },
+      { productId, rating: values.rating, text: values.text, isUpdate: isEditing },
       {
         onSuccess: () => {
           setJustSaved(true);

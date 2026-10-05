@@ -23,6 +23,11 @@ export interface NewsletterFormProps {
   description?: string;
   /** Heading level for the section variant (default `h2`). */
   headingAs?: 'h2' | 'h3';
+  /**
+   * Id for the section-variant heading (default: generated). Pass one when an ancestor landmark
+   * needs `aria-labelledby` pointing at this heading.
+   */
+  headingId?: string;
   className?: string;
 }
 
@@ -85,11 +90,12 @@ export function NewsletterForm({
   title = 'Get drop alerts first',
   description = 'New castings, vault drops and restocks — straight to your inbox. No spam, unsubscribe anytime.',
   headingAs: Heading = 'h2',
+  headingId: headingIdProp,
   className,
 }: NewsletterFormProps) {
   const baseId = useId();
   const inputId = `newsletter-${baseId.replace(/:/g, '')}`;
-  const headingId = `${inputId}-title`;
+  const headingId = headingIdProp ?? `${inputId}-title`;
   const mutation = useSubscribeNewsletter();
   const {
     register,

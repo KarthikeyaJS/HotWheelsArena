@@ -79,6 +79,16 @@ export type ScanlineMode = 'auto' | 'on' | 'off';
 
 export type ToastVariant = 'default' | 'success' | 'error' | 'achievement';
 
+/**
+ * Optional action button inside a toast (e.g. "Undo"). Clicking it runs `onClick` and then
+ * dismisses the toast. Keep an equivalent inline control for anything important: toasts time
+ * out (paused while hovered/focused), so they must never be the only way to undo.
+ */
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface ToastInput {
   title: string;
   description?: string;
@@ -88,12 +98,15 @@ export interface ToastInput {
   icon?: ReactNode;
   /** Auto-dismiss delay in ms (Toaster enforces it). `Infinity` = sticky. */
   duration?: number;
+  /** Optional action button (toasts with an action stay at least `MIN_ACTION_TOAST_DURATION`). */
+  action?: ToastAction;
 }
 
 export interface Toast extends Required<Pick<ToastInput, 'title' | 'variant' | 'duration'>> {
   id: string;
   description?: string;
   icon?: ReactNode;
+  action?: ToastAction;
   createdAt: number;
 }
 

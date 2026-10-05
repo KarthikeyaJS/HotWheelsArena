@@ -5,6 +5,7 @@ import { SPRING_SNAPPY } from '@/lib/animations';
 import { cn } from '@/lib/cn';
 import { useToasts, useToastStore } from '@/store/toastStore';
 import type { Toast, ToastVariant } from '@/types';
+import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { Portal } from './Portal';
 
@@ -67,7 +68,8 @@ const POSITIONS: Readonly<Record<ToasterPosition, string>> = {
 /** Text read by the live region for a toast. */
 function announcementFor(item: Toast): string {
   const prefix = item.variant === 'achievement' ? 'Achievement: ' : '';
-  return `${prefix}${item.title}${item.description ? `. ${item.description}` : ''}`;
+  const action = item.action ? `. ${item.action.label} available in notifications` : '';
+  return `${prefix}${item.title}${item.description ? `. ${item.description}` : ''}${action}`;
 }
 
 interface ToastCardProps {
@@ -130,6 +132,19 @@ function ToastCard({ item, paused, onDismiss, enterFrom }: ToastCardProps) {
           <p className={cn('text-sm font-semibold leading-snug', style.title)}>{item.title}</p>
           {item.description ? (
             <p className="mt-0.5 text-sm leading-snug text-muted">{item.description}</p>
+          ) : null}
+          {item.action ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2.5"
+              onClick={() => {
+                item.action?.onClick();
+                onDismiss(item.id);
+              }}
+            >
+              {item.action.label}
+            </Button>
           ) : null}
         </div>
         <IconButton

@@ -29,9 +29,7 @@ export function TestModeBanner({ providerLabel, className }: TestModeBannerProps
         <FlaskConical />
       </span>
       <p className="min-w-0 text-sm text-fg">
-        <span className="font-display text-xs font-bold uppercase tracking-display">
-          Test mode
-        </span>
+        <span className="font-display text-xs font-bold uppercase tracking-display">Test mode</span>
         <span aria-hidden="true" className="mx-2 text-muted">
           —
         </span>

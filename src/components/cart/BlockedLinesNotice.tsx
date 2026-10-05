@@ -36,9 +36,9 @@ export function BlockedLinesNotice({
             {pluralize(blocked.length, 'car')} can't make this race
           </Heading>
           <p className="mt-1 text-sm text-muted">
-            {blocked.map((line) => line.item.name).join(', ')}{' '}
-            {blocked.length === 1 ? 'is' : 'are'} sold out or no longer available. Remove{' '}
-            {blocked.length === 1 ? 'it' : 'them'} to start your engine.
+            {blocked.map((line) => line.item.name).join(', ')} {blocked.length === 1 ? 'is' : 'are'}{' '}
+            sold out or no longer available. Remove {blocked.length === 1 ? 'it' : 'them'} to start
+            your engine.
           </p>
         </div>
       </div>

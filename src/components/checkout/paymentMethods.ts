@@ -4,7 +4,9 @@ import type { PaymentMethod } from '@/types';
 
 /** Display label for a payment method (`Card`, `UPI`, `Cash on Delivery`). */
 export function paymentMethodLabel(method: PaymentMethod): string {
-  return PAYMENT_METHOD_OPTIONS.find((option) => option.id === method)?.label ?? method.toUpperCase();
+  return (
+    PAYMENT_METHOD_OPTIONS.find((option) => option.id === method)?.label ?? method.toUpperCase()
+  );
 }
 
 /** Lucide icon for a payment method. */

@@ -31,9 +31,9 @@ const TAGLINE_LAST = TAGLINE_WORDS[TAGLINE_WORDS.length - 1] ?? BRAND_TAGLINE;
  * HERO / DIGITAL GARAGE — full-viewport garage scene (night garage in dark mode, bright showroom
  * in light mode) with the inline hero car, headline, CTAs and racing HUD.
  *
- * Desktop (≥1024px) without reduced motion: the section grows to ~135% of the viewport of
+ * Desktop (≥1024px) without reduced motion: the section grows to ~105% of the viewport of
  * extra scroll and its stage sticks under the header while the GSAP sequence scrubs
- * (`useHeroScrollSequence`). Otherwise: a static hero with simple fades. The headline and CTAs
+ * (`useHeroScrollSequence`; the timeline runs on ~43svh past the release for the hand-off). Otherwise: a static hero with simple fades. The headline and CTAs
  * are plain markup, visible on first paint (LCP), and GSAP only animates from those values.
  */
 export function HeroSection() {
@@ -69,7 +69,12 @@ export function HeroSection() {
       aria-labelledby={headingId}
       tabIndex={-1}
       data-sequence={sequence ? 'scroll' : 'static'}
-      className={cn('relative focus:outline-none', sequence && 'h-[calc(235svh-60px)]')}
+      className={cn(
+        'relative focus:outline-none',
+        // ~105svh of pinned scroll; the timeline runs on past the release (HERO_HANDOFF_RUNOUT)
+        // and the next section overlaps the stage's last stretch, so it rises as the car exits.
+        sequence && 'mb-[-25svh] h-[calc(205svh-60px)]',
+      )}
     >
       <div
         ref={stageRef}
@@ -159,7 +164,7 @@ export function HeroSection() {
           </div>
         </div>
 
-        <Container className="relative pb-5 pt-2">
+        <Container data-hero="strip" className="relative pb-5 pt-2">
           <div className="flex items-center justify-between gap-4 border-t border-line/70 pt-3">
             <div data-hero="hud">
               <HeroReadouts store={store} live={sequence} />

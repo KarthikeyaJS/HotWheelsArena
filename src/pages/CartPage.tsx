@@ -22,6 +22,8 @@ interface RemovedEntry {
   item: CartItem;
   /** Position the line had, so Undo puts it back in place. */
   index: number;
+  /** The "Removed" toast (it carries its own Undo action); dismissed when undone inline. */
+  toastId?: string;
 }
 
 type FocusTarget = { kind: 'undo'; key: string } | { kind: 'line'; productId: string } | null;
@@ -49,34 +51,46 @@ export default function CartPage() {
     useCartStore.getState().setQty(productId, qty);
   }, []);
 
-  const handleRemove = useCallback((line: ReconciledCartLine) => {
-    const items = useCartStore.getState().items;
-    const index = items.findIndex((item) => item.productId === line.item.productId);
-    if (index === -1) return;
-    const entry: RemovedEntry = {
-      key: `${line.item.productId}-${Date.now().toString(36)}`,
-      item: items[index] ?? line.original,
-      index,
-    };
-    useCartStore.getState().removeItem(line.item.productId);
-    setRemoved((current) =>
-      [...current.filter((e) => e.item.productId !== line.item.productId), entry].slice(
-        -MAX_REMOVED,
-      ),
-    );
-    setFocusTarget({ kind: 'undo', key: entry.key });
-    toast({
-      title: 'Removed from your pit stop',
-      description: `${line.item.name} — use Undo in the list to put it back.`,
-    });
-  }, []);
-
   const handleUndo = useCallback((entry: RemovedEntry) => {
-    useCartStore.setState((state) => ({ items: restoreCartLine(state.items, entry.item, entry.index) }));
+    if (entry.toastId) toast.dismiss(entry.toastId);
+    // Already back (inline Undo + toast Undo, or re-added from elsewhere) → nothing to restore.
+    if (useCartStore.getState().items.some((item) => item.productId === entry.item.productId)) {
+      setRemoved((current) => current.filter((e) => e.key !== entry.key));
+      return;
+    }
+    useCartStore.setState((state) => ({
+      items: restoreCartLine(state.items, entry.item, entry.index),
+    }));
     setRemoved((current) => current.filter((e) => e.key !== entry.key));
     setFocusTarget({ kind: 'line', productId: entry.item.productId });
     toast.success('Back in your pit stop', entry.item.name);
   }, []);
+
+  const handleRemove = useCallback(
+    (line: ReconciledCartLine) => {
+      const items = useCartStore.getState().items;
+      const index = items.findIndex((item) => item.productId === line.item.productId);
+      if (index === -1) return;
+      const entry: RemovedEntry = {
+        key: `${line.item.productId}-${Date.now().toString(36)}`,
+        item: items[index] ?? line.original,
+        index,
+      };
+      useCartStore.getState().removeItem(line.item.productId);
+      entry.toastId = toast({
+        title: 'Removed from your pit stop',
+        description: line.item.name,
+        action: { label: 'Undo', onClick: () => handleUndo(entry) },
+      });
+      setRemoved((current) =>
+        [...current.filter((e) => e.item.productId !== line.item.productId), entry].slice(
+          -MAX_REMOVED,
+        ),
+      );
+      setFocusTarget({ kind: 'undo', key: entry.key });
+    },
+    [handleUndo],
+  );
 
   const handleDismissRemoved = useCallback((entry: RemovedEntry) => {
     setRemoved((current) => current.filter((e) => e.key !== entry.key));
@@ -130,7 +144,8 @@ export default function CartPage() {
         action={
           isEmpty ? undefined : (
             <p className="hud rounded-md border border-line bg-surface px-3 py-2 text-muted">
-              TOTAL <span className="ml-2 text-sm font-bold text-fg">{formatINR(cart.totals.total)}</span>
+              TOTAL{' '}
+              <span className="ml-2 text-sm font-bold text-fg">{formatINR(cart.totals.total)}</span>
             </p>
           )
         }
@@ -153,7 +168,10 @@ export default function CartPage() {
         </div>
       ) : (
         <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <section aria-labelledby="cart-lines-title" className="flex flex-col gap-4 lg:col-span-7 xl:col-span-8">
+          <section
+            aria-labelledby="cart-lines-title"
+            className="flex flex-col gap-4 lg:col-span-7 xl:col-span-8"
+          >
             <div className="flex items-center justify-between gap-3">
               <h2
                 id="cart-lines-title"
@@ -166,8 +184,16 @@ export default function CartPage() {
               </h2>
             </div>
 
-            <PriceUpdateNotice changes={cart.notices} onDismiss={cart.dismissNotices} headingAs="h3" />
-            <BlockedLinesNotice blocked={cart.blocked} onRemoveAll={handleRemoveBlocked} headingAs="h3" />
+            <PriceUpdateNotice
+              changes={cart.notices}
+              onDismiss={cart.dismissNotices}
+              headingAs="h3"
+            />
+            <BlockedLinesNotice
+              blocked={cart.blocked}
+              onRemoveAll={handleRemoveBlocked}
+              headingAs="h3"
+            />
 
             <ErrorBoundary label="Pit stop lines">
               <ul className="flex flex-col gap-4">

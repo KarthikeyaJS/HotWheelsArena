@@ -5,7 +5,10 @@ import { cn } from '@/lib/cn';
 import { formatINR } from '@/lib/format';
 import type { OrderItem } from '@/types';
 
-export type OrderLineSummary = Pick<OrderItem, 'productId' | 'slug' | 'name' | 'image' | 'price' | 'qty'>;
+export type OrderLineSummary = Pick<
+  OrderItem,
+  'productId' | 'slug' | 'name' | 'image' | 'price' | 'qty'
+>;
 
 export interface OrderLinesListProps {
   lines: readonly OrderLineSummary[];

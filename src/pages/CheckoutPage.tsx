@@ -4,7 +4,11 @@ import { computeOrderTotals } from '@shared/commerce';
 import { BlockedLinesNotice } from '@/components/cart/BlockedLinesNotice';
 import { PriceUpdateNotice } from '@/components/cart/PriceUpdateNotice';
 import { useReconciledCart } from '@/components/cart/useReconciledCart';
-import { AddressStep, type AddressSource, type AddressStepResult } from '@/components/checkout/AddressStep';
+import {
+  AddressStep,
+  type AddressSource,
+  type AddressStepResult,
+} from '@/components/checkout/AddressStep';
 import { CheckoutStepper } from '@/components/checkout/CheckoutStepper';
 import { CheckoutSummary } from '@/components/checkout/CheckoutSummary';
 import {
@@ -36,6 +40,7 @@ import { orderSuccessPath } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { usePrevious } from '@/hooks/usePrevious';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { cn } from '@/lib/cn';
 import { useDocumentMeta } from '@/lib/seo';
 import { useCartStore } from '@/store/cartStore';
 import { useUiStore } from '@/store/uiStore';
@@ -134,7 +139,9 @@ export default function CheckoutPage() {
   );
 
   const handleUnauthenticated = useCallback(() => {
-    useUiStore.getState().openSignInPrompt('Your pit pass expired — sign in again to finish your order.');
+    useUiStore
+      .getState()
+      .openSignInPrompt('Your pit pass expired — sign in again to finish your order.');
   }, []);
 
   const flow = usePlaceOrderFlow({
@@ -300,7 +307,10 @@ export default function CheckoutPage() {
             </ErrorBoundary>
           </div>
 
-          <div className="lg:col-span-5 xl:col-span-4">
+          {/* The review step already lists cars + totals; on phones skip the duplicate summary. */}
+          <div
+            className={cn('lg:col-span-5 xl:col-span-4', step === 'review' && 'hidden lg:block')}
+          >
             <ErrorBoundary label="Order summary">
               <CheckoutSummary
                 className="lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]"

@@ -175,7 +175,13 @@ export function reconcileCart(
       });
     }
     if (soldOut) {
-      changes.push({ productId: product.id, name: product.name, kind: 'sold-out', from: null, to: null });
+      changes.push({
+        productId: product.id,
+        name: product.name,
+        kind: 'sold-out',
+        from: null,
+        to: null,
+      });
     } else if (qty < original.qty) {
       changes.push({
         productId: product.id,
@@ -211,7 +217,9 @@ export function reconcileCart(
 
 /** Changes that must be surfaced as a notice (they disappear from the cart once synced). */
 export function isNoticeChange(change: CartChange): boolean {
-  return change.kind === 'price-up' || change.kind === 'price-down' || change.kind === 'qty-reduced';
+  return (
+    change.kind === 'price-up' || change.kind === 'price-down' || change.kind === 'qty-reduced'
+  );
 }
 
 /**
@@ -247,6 +255,8 @@ export function mergeNoticeChanges(
 }
 
 /** `items` → `{ productId, qty }[]` for `placeOrder`. */
-export function toOrderItems(items: readonly CartItem[]): Array<{ productId: string; qty: number }> {
+export function toOrderItems(
+  items: readonly CartItem[],
+): Array<{ productId: string; qty: number }> {
   return items.map((item) => ({ productId: item.productId, qty: item.qty }));
 }

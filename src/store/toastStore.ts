@@ -17,6 +17,12 @@ export const DEFAULT_TOAST_DURATION: Readonly<Record<ToastVariant, number>> = {
   achievement: 7000,
 };
 
+/**
+ * Toasts with an action button stay at least this long (ms) so there is time to reach the
+ * button (timers also pause while the stack is hovered or focused).
+ */
+export const MIN_ACTION_TOAST_DURATION = 8000;
+
 /** Identical toasts pushed within this window are collapsed into one. */
 const DEDUPE_WINDOW_MS = 1200;
 
@@ -48,14 +54,16 @@ export const useToastStore = create<ToastState>()((set, get) => ({
     );
     if (duplicate) return duplicate.id;
 
+    const baseDuration = input.duration ?? DEFAULT_TOAST_DURATION[variant];
     const toastItem: Toast = {
       id: nextId(),
       title: input.title,
       variant,
-      duration: input.duration ?? DEFAULT_TOAST_DURATION[variant],
+      duration: input.action ? Math.max(baseDuration, MIN_ACTION_TOAST_DURATION) : baseDuration,
       createdAt: now,
       ...(input.description !== undefined ? { description: input.description } : {}),
       ...(input.icon !== undefined ? { icon: input.icon } : {}),
+      ...(input.action !== undefined ? { action: input.action } : {}),
     };
     set((state) => ({ toasts: [...state.toasts, toastItem].slice(-MAX_TOASTS) }));
     return toastItem.id;

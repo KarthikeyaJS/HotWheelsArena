@@ -53,8 +53,17 @@ function OrderDetail({ order }: { order: Order }) {
         }
       />
 
-      <HudPanel as="section" title="Delivery tracker" titleAs="h2" meta={ORDER_STATUS_META[order.status].label}>
-        <OrderTimeline status={order.status} placedAt={order.createdAt} updatedAt={order.updatedAt} />
+      <HudPanel
+        as="section"
+        title="Delivery tracker"
+        titleAs="h2"
+        meta={ORDER_STATUS_META[order.status].label}
+      >
+        <OrderTimeline
+          status={order.status}
+          placedAt={order.createdAt}
+          updatedAt={order.updatedAt}
+        />
       </HudPanel>
 
       <div className="grid gap-6 lg:grid-cols-12">
@@ -77,7 +86,10 @@ function OrderDetail({ order }: { order: Order }) {
               </Button>
             </div>
             {order.badgesUnlocked.length > 0 ? (
-              <ul aria-label="Badges unlocked by this order" className="mt-5 grid gap-3 sm:grid-cols-2">
+              <ul
+                aria-label="Badges unlocked by this order"
+                className="mt-5 grid gap-3 sm:grid-cols-2"
+              >
                 {order.badgesUnlocked.map((badgeId) => (
                   <li key={badgeId}>
                     <BadgeCard badgeId={badgeId} unlocked size="sm" />
@@ -85,7 +97,9 @@ function OrderDetail({ order }: { order: Order }) {
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-muted">No new badges on this order — keep collecting.</p>
+              <p className="mt-3 text-sm text-muted">
+                No new badges on this order — keep collecting.
+              </p>
             )}
           </HudPanel>
         </div>
@@ -122,7 +136,8 @@ export default function OrderDetailPage() {
   const notFound =
     order === null ||
     orderId === '' ||
-    (orderQuery.isError && (isPermissionError(orderQuery.error) || isNotFoundError(orderQuery.error)));
+    (orderQuery.isError &&
+      (isPermissionError(orderQuery.error) || isNotFoundError(orderQuery.error)));
 
   useDocumentMeta({
     title: order ? `Order ${formatOrderRef(order.id)}` : 'Order details',
@@ -132,7 +147,13 @@ export default function OrderDetailPage() {
 
   return (
     <Container className="py-10 lg:py-14">
-      <Button to={ROUTES.orders} variant="ghost" size="sm" leftIcon={<ArrowLeft />} className="-ml-3 mb-6">
+      <Button
+        to={ROUTES.orders}
+        variant="ghost"
+        size="sm"
+        leftIcon={<ArrowLeft />}
+        className="-ml-3 mb-6"
+      >
         All orders
       </Button>
       <ErrorBoundary label="Order details" resetKeys={[orderId]}>

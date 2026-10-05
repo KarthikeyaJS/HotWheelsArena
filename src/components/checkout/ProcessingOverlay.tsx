@@ -41,7 +41,11 @@ const TARGET_RPM: Readonly<Record<ProcessingPhase, number>> = {
   done: 9400,
 };
 
-function OverlayPanel({ phase, method, amount }: Required<{ phase: ProcessingPhase }> & Omit<ProcessingOverlayProps, 'phase'>) {
+function OverlayPanel({
+  phase,
+  method,
+  amount,
+}: Required<{ phase: ProcessingPhase }> & Omit<ProcessingOverlayProps, 'phase'>) {
   const panelRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const reduceMotion = useReducedMotion();
@@ -78,7 +82,10 @@ function OverlayPanel({ phase, method, amount }: Required<{ phase: ProcessingPha
       transition={{ duration: 0.2 }}
       className="fixed inset-0 z-modal grid place-items-center bg-bg/85 px-4 backdrop-blur-md focus:outline-none"
     >
-      <div aria-hidden="true" className="bg-grid bg-grid-fade pointer-events-none absolute inset-0 opacity-70" />
+      <div
+        aria-hidden="true"
+        className="bg-grid bg-grid-fade pointer-events-none absolute inset-0 opacity-70"
+      />
       <div className="relative flex w-full max-w-md flex-col items-center gap-5 overflow-hidden rounded-2xl border border-line bg-surface/90 px-6 py-8 text-center shadow-card-hover sm:px-10">
         <span aria-hidden="true" className="racing-stripe is-active" />
         <p className="hud text-muted">{copy.step}</p>
@@ -97,7 +104,10 @@ function OverlayPanel({ phase, method, amount }: Required<{ phase: ProcessingPha
           {' · '}
           <span className="font-mono text-fg">{formatINR(amount)}</span>
         </p>
-        <div aria-hidden="true" className="relative h-1 w-full overflow-hidden rounded-full bg-line">
+        <div
+          aria-hidden="true"
+          className="relative h-1 w-full overflow-hidden rounded-full bg-line"
+        >
           <span
             className={
               reduceMotion
@@ -119,7 +129,9 @@ export function ProcessingOverlay({ phase, method, amount }: ProcessingOverlayPr
   return (
     <Portal>
       <AnimatePresence>
-        {phase ? <OverlayPanel key="processing" phase={phase} method={method} amount={amount} /> : null}
+        {phase ? (
+          <OverlayPanel key="processing" phase={phase} method={method} amount={amount} />
+        ) : null}
       </AnimatePresence>
     </Portal>
   );

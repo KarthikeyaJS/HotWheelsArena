@@ -112,7 +112,12 @@ export function AddressFields({
         )}
       </FormField>
 
-      <FormField label="Landmark" htmlFor={id('landmark')} optional error={errors.landmark?.message}>
+      <FormField
+        label="Landmark"
+        htmlFor={id('landmark')}
+        optional
+        error={errors.landmark?.message}
+      >
         {(f) => (
           <Input
             id={f.id}

@@ -7,6 +7,14 @@ import { SEQUENCE_EXIT_AT, quantizeProgress, type ProgressStore } from './teleme
 /** CSS `top` of the sticky stage (the condensed header height). */
 export const HERO_STICKY_TOP = 60;
 
+/**
+ * Hand-off run-out: the scrubbed timeline keeps going for this fraction of the viewport height
+ * AFTER the sticky stage is released. So while the car blasts off and the stage fades, the stage
+ * already scrolls away and "Choose your ride" (pulled up by the section's negative margin) rises
+ * into view — there is no stretch of empty garage between the car's exit and the next section.
+ */
+export const HERO_HANDOFF_RUNOUT = 0.43;
+
 export interface HeroScrollSequenceOptions {
   /** Desktop (≥1024px) and no reduced-motion preference. */
   enabled: boolean;
@@ -74,12 +82,11 @@ export function useHeroScrollSequence({
             scrollTrigger: {
               trigger: section,
               start: 0,
+              // Pin release (section bottom meets stage bottom) + the hand-off run-out.
               end: () => {
                 const top = section.getBoundingClientRect().top + window.scrollY;
-                return Math.max(
-                  1,
-                  top + section.offsetHeight - stage.offsetHeight - HERO_STICKY_TOP,
-                );
+                const release = top + section.offsetHeight - stage.offsetHeight - HERO_STICKY_TOP;
+                return Math.max(1, release + HERO_HANDOFF_RUNOUT * window.innerHeight);
               },
               scrub: 0.6,
               invalidateOnRefresh: true,
@@ -218,14 +225,38 @@ export function useHeroScrollSequence({
               { x: () => -0.08 * viewportWidth(), autoAlpha: 0, duration: 0.32, ease: 'power1.in' },
               0.02,
             )
-            // Hand-off: HUD dims and the stage fades into the page as the car exits.
-            .fromTo('[data-hero="hud"]', { opacity: 1 }, { opacity: 0, duration: 0.12 }, 0.86)
+            // Hand-off: the stage is released at ~70% (see HERO_HANDOFF_RUNOUT) and scrolls away
+            // while the car exits, the HUD dims and the stage fades into the page; the collection
+            // section (pulled up by the section's negative bottom margin) rises in right below.
+            .fromTo('[data-hero="hud"]', { opacity: 1 }, { opacity: 0, duration: 0.12 }, 0.8)
             .fromTo(
               '[data-hero="exit-fade"]',
               { opacity: 0 },
-              { opacity: 1, duration: 0.14 },
-              0.86,
+              { opacity: 1, duration: 0.17 },
+              0.78,
             );
+
+          // The bottom HUD strip sits exactly where the next section's intro copy lands once
+          // both scroll together, so it drops out as that section starts rising into view.
+          const strip = stage.querySelector('[data-hero="strip"]');
+          const nextSection = section.nextElementSibling;
+          if (strip && nextSection) {
+            gsap.fromTo(
+              strip,
+              { opacity: 1 },
+              {
+                opacity: 0,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: nextSection,
+                  start: 'top bottom',
+                  end: 'top 80%',
+                  scrub: true,
+                  invalidateOnRefresh: true,
+                },
+              },
+            );
+          }
         }, stage);
 
         revert = () => context.revert();

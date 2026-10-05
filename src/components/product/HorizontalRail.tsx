@@ -326,7 +326,7 @@ export function HorizontalRail<T>(props: HorizontalRailProps<T>) {
     >
       {title !== undefined || action !== undefined || controlsVisible ? (
         <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-          <div className="min-w-0 flex-1">{title}</div>
+          <div className="min-w-0 flex-1 basis-[min(100%,18rem)]">{title}</div>
           <div className="flex shrink-0 items-center gap-3">
             {action}
             {controlsVisible ? (

@@ -115,6 +115,7 @@ export function FilterRail({
           onToggle={(value) => toggle('model', value)}
           limit={FACET_VISIBLE_LIMIT.model}
           noun="models"
+          emptyMessage="No models from the selected makes in this view."
         />
       </FilterGroup>
 

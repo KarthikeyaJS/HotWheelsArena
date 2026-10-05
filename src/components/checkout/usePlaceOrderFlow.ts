@@ -5,31 +5,18 @@ import {
   PaymentAbortedError,
   createPaymentReference,
   getPaymentProvider,
-  type PaymentCustomer,
 } from '@/services/payment';
-import type {
-  Address,
-  CartItem,
-  PaymentMethod,
-  PaymentResult,
-  PlaceOrderResponse,
-} from '@/types';
+import type { PaymentResult, PlaceOrderResponse } from '@/types';
 import { classifyPlaceOrderError, type PlaceOrderErrorKind } from './checkoutErrors';
+import { paymentSignature, type PlaceOrderInput } from './placeOrderInput';
+
+export type { PlaceOrderInput };
 
 /**
  * `idle` → `paying` (test bank, ~2s) → `confirming` (placeOrder callable) → success callback.
  * `declined` = the (test) payment failed; `error` = placeOrder failed (see `errorKind`).
  */
 export type PlaceOrderPhase = 'idle' | 'paying' | 'confirming' | 'declined' | 'error' | 'done';
-
-export interface PlaceOrderInput {
-  lines: readonly CartItem[];
-  address: Address;
-  method: PaymentMethod;
-  /** `computeOrderTotals(lines, settings).total` — the amount to charge. */
-  amount: number;
-  customer: PaymentCustomer;
-}
 
 export interface PlaceOrderFlowCallbacks {
   onSuccess: (response: PlaceOrderResponse, input: PlaceOrderInput) => void;
@@ -54,15 +41,6 @@ export interface PlaceOrderFlow {
 interface HeldPayment {
   signature: string;
   result: PaymentResult;
-}
-
-/** Identifies an attempt: same method, amount and lines → the held payment can be reused. */
-export function paymentSignature(input: PlaceOrderInput): string {
-  const lines = input.lines
-    .map((line) => `${line.productId}:${line.qty}:${line.price}`)
-    .sort()
-    .join(',');
-  return `${input.method}|${input.amount}|${lines}`;
 }
 
 /**
@@ -133,8 +111,7 @@ export function usePlaceOrderFlow({
           if (result.status !== 'success') {
             setPhase('declined');
             setMessage(
-              result.message ??
-                'Payment declined in test mode — try again or pick another method.',
+              result.message ?? 'Payment declined in test mode — try again or pick another method.',
             );
             return;
           }

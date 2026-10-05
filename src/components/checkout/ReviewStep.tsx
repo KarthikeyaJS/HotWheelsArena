@@ -96,7 +96,10 @@ export function ReviewStep({
         </div>
       ) : null}
 
-      <section aria-labelledby="review-cars-title" className="rounded-xl border border-line bg-card p-4 shadow-card sm:p-5">
+      <section
+        aria-labelledby="review-cars-title"
+        className="rounded-xl border border-line bg-card p-4 shadow-card sm:p-5"
+      >
         <div className="mb-4 flex items-center justify-between gap-3">
           <h3 id="review-cars-title" className="hud font-normal text-muted">
             Cars · {totals.itemCount}
@@ -198,34 +201,42 @@ export function ReviewStep({
       {failurePanel ? (
         failurePanel
       ) : (
-      <div className="flex flex-col gap-3 border-t border-line pt-6">
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="ghost" leftIcon={<ArrowLeft />} onClick={onEditPayment} disabled={placing}>
-            Back to payment
-          </Button>
-          <Button
-            size="lg"
-            rightIcon={<Flag />}
-            onClick={onPlaceOrder}
-            disabled={!canPlace}
-            loading={placing || (isVerifying && canPlace)}
-            loadingText={placing ? 'Starting engine…' : 'Checking prices…'}
-            data-testid="place-order"
-          >
-            Place order ·{' '}
-            <span className="font-mono font-bold normal-case tracking-normal">
-              {formatINR(totals.total)}
-            </span>
-          </Button>
+        <div className="flex flex-col gap-3 border-t border-line pt-6">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              variant="ghost"
+              leftIcon={<ArrowLeft />}
+              onClick={onEditPayment}
+              disabled={placing}
+            >
+              Back to payment
+            </Button>
+            <Button
+              size="lg"
+              rightIcon={<Flag />}
+              onClick={onPlaceOrder}
+              disabled={!canPlace}
+              loading={placing || (isVerifying && canPlace)}
+              loadingText={placing ? 'Starting engine…' : 'Checking prices…'}
+              data-testid="place-order"
+            >
+              Place order ·{' '}
+              <span className="font-mono font-bold normal-case tracking-normal">
+                {formatINR(totals.total)}
+              </span>
+            </Button>
+          </div>
+          <p className="text-xs text-muted sm:text-right">
+            By placing this order you agree to our{' '}
+            <Link
+              to={ROUTES.terms}
+              className="rounded-sm text-fg underline-offset-2 hover:underline"
+            >
+              terms
+            </Link>
+            . Test mode — no real payment is taken.
+          </p>
         </div>
-        <p className="text-xs text-muted sm:text-right">
-          By placing this order you agree to our{' '}
-          <Link to={ROUTES.terms} className="rounded-sm text-fg underline-offset-2 hover:underline">
-            terms
-          </Link>
-          . Test mode — no real payment is taken.
-        </p>
-      </div>
       )}
     </div>
   );

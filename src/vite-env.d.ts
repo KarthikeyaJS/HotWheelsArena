@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_FUNCTIONS_REGION?: string;
   readonly VITE_CLOUDINARY_CLOUD_NAME?: string;
   readonly VITE_PAYMENT_PROVIDER?: string;
+  /** Test mode only: approval probability (0–1) of simulated card/UPI payments (default 0.9). */
+  readonly VITE_DUMMY_PAYMENT_SUCCESS_RATE?: string;
   readonly VITE_ENABLE_ANALYTICS?: string;
   readonly VITE_SITE_URL?: string;
 }

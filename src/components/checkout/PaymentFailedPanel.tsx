@@ -66,9 +66,7 @@ export function PaymentFailedPanel({
                 ? 'Pit pass expired'
                 : "Couldn't confirm your order"}
           </h3>
-          <p className="mt-1.5 text-sm text-muted">
-            {declined ? DECLINED_MESSAGE : message}
-          </p>
+          <p className="mt-1.5 text-sm text-muted">{declined ? DECLINED_MESSAGE : message}</p>
           {declined && message && message !== DECLINED_MESSAGE ? (
             <p className="mt-1 text-xs text-muted">Test bank: {message}</p>
           ) : null}

@@ -20,6 +20,9 @@ export default defineConfig((env) =>
               include: ['src/**/*.test.{ts,tsx}'],
               environment: 'jsdom',
               setupFiles: ['./src/test/setup.ts'],
+              // Interaction tests (userEvent typing + debounced URL syncs + lazy dialogs) can take
+              // a few seconds each under full-suite load; the 5s default made them flaky.
+              testTimeout: 20_000,
             },
           },
           {

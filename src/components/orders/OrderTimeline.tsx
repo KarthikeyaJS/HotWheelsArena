@@ -51,7 +51,10 @@ export function OrderTimeline({ status, placedAt, updatedAt, className }: OrderT
   const currentStep = ORDER_STATUS_META[status].step;
 
   return (
-    <ol aria-label="Delivery progress" className={cn('grid gap-4 sm:grid-cols-4 sm:gap-0', className)}>
+    <ol
+      aria-label="Delivery progress"
+      className={cn('grid gap-4 sm:grid-cols-4 sm:gap-0', className)}
+    >
       {ORDER_TRACK_STEPS.map((step, index) => {
         const meta = ORDER_STATUS_META[step];
         const Icon = STEP_ICONS[step];
@@ -78,7 +81,9 @@ export function OrderTimeline({ status, placedAt, updatedAt, className }: OrderT
               className={cn(
                 'relative z-[1] grid h-10 w-10 shrink-0 place-items-center rounded-lg border transition-colors [&_svg]:h-[18px] [&_svg]:w-[18px]',
                 current && step === 'delivered' && 'border-success bg-success text-bg',
-                current && step !== 'delivered' && 'border-accent bg-accent text-on-accent shadow-glow-accent',
+                current &&
+                  step !== 'delivered' &&
+                  'border-accent bg-accent text-on-accent shadow-glow-accent',
                 done && 'border-accent/50 bg-accent/10 text-accent-ink',
                 !reached && 'border-line bg-surface text-muted',
               )}

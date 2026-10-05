@@ -67,7 +67,9 @@ export function FreeShippingMeter({ totals, threshold, className }: FreeShipping
       <div className="relative flex items-start gap-3">
         <motion.span
           aria-hidden="true"
-          animate={celebrate && !reduceMotion ? { rotate: [0, -14, 10, -6, 0], scale: [1, 1.2, 1] } : {}}
+          animate={
+            celebrate && !reduceMotion ? { rotate: [0, -14, 10, -6, 0], scale: [1, 1.2, 1] } : {}
+          }
           transition={{ duration: 0.7 }}
           className={cn(
             'grid h-9 w-9 shrink-0 place-items-center rounded-md border [&_svg]:h-[18px] [&_svg]:w-[18px]',

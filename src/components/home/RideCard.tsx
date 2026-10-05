@@ -150,7 +150,9 @@ export const RideCard = memo(function RideCard({
                   height={450}
                   imgClassName={cn(
                     'transition-[filter] duration-300',
-                    lit ? 'brightness-110 dark:brightness-150' : 'brightness-100 dark:brightness-125',
+                    lit
+                      ? 'brightness-110 dark:brightness-150'
+                      : 'brightness-100 dark:brightness-125',
                   )}
                 />
                 <HeadlightGlow on={lit} position={card.headlight} />

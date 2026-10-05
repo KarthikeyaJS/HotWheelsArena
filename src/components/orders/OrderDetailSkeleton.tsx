@@ -13,7 +13,10 @@ export function OrderDetailSkeleton() {
       <div className="grid gap-6 lg:grid-cols-12">
         <div className="flex flex-col gap-4 lg:col-span-7 xl:col-span-8">
           {[0, 1, 2].map((row) => (
-            <div key={row} className="flex items-center gap-4 rounded-xl border border-line bg-card p-4">
+            <div
+              key={row}
+              className="flex items-center gap-4 rounded-xl border border-line bg-card p-4"
+            >
               <Skeleton className="h-14 w-24 rounded-md" />
               <div className="flex flex-1 flex-col gap-2">
                 <Skeleton className="h-4 w-2/3 rounded-sm" />
