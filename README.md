@@ -110,6 +110,7 @@ The binding contract (every export, token, hook, store, write shape and componen
 │  ├─ styles/                tokens.css (both themes), globals.css
 │  └─ router.tsx             routes
 ├─ tests/rules/              Firestore security-rules tests + deploy-config drift tests
+├─ tests/e2e/                Playwright end-to-end suite (+ fixtures.ts helpers); config in playwright.config.ts
 ├─ firebase.json             Hosting, Firestore, Functions, Emulators
 ├─ firestore.rules           security rules
 ├─ firestore.indexes.json    composite indexes + TTL policy
@@ -172,7 +173,7 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 | `npm run dev`                     | Vite dev server on <http://localhost:5173>                                                                                          |
 | `npm run build`                   | `typecheck` + production build into `dist/`                                                                                         |
 | `npm run preview`                 | Serves `dist/` with Vite (does **not** apply the `firebase.json` headers)                                                           |
-| `npm run typecheck`               | `tsc -b` over the web app, `shared/`, scripts, tests and configs                                                                    |
+| `npm run typecheck`               | `tsc -b` over the web app, `shared/`, scripts, rules + e2e tests and configs                                                        |
 | `npm run lint` / `lint:fix`       | ESLint (flat config)                                                                                                                |
 | `npm run format` / `format:check` | Prettier write / check                                                                                                              |
 | `npm test` / `test:watch`         | Vitest unit tests for `src/` (jsdom) and `shared/` (node)                                                                           |
@@ -187,6 +188,9 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 | `npm run snap`                    | Playwright screenshot of a dev-server route + console errors and 375px overflow (`-- --help`)                                       |
 | `npm run functions:build`         | Compiles `functions/` to `functions/lib/`                                                                                           |
 | `npm run smoke`                   | End-to-end smoke test: builds functions (`presmoke`), boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` |
+| `npm run e2e`                     | Playwright browser suite: builds functions (`pree2e`), boots Auth/Firestore/Functions emulators, seeds, runs `playwright test`      |
+| `npm run e2e:ui`                  | Playwright UI mode for debugging (start `npm run emulators` + `npm run seed:emulator` first)                                        |
+| `npm run e2e:report`              | Opens the last Playwright HTML report (`playwright-report/`)                                                                        |
 | `npm run deploy`                  | `build`, then `firebase deploy` (Hosting, Firestore rules and indexes, Functions) to the active project                             |
 
 Inside `functions/`: `build`, `build:watch`, `typecheck`, `test`, `serve` (build + Auth/Firestore/Functions emulators), `shell`, `deploy`, `logs`.
@@ -197,22 +201,23 @@ Seeding, admin claims, the smoke test, screenshots and asset generation are docu
 
 Vite embeds every `VITE_*` value in the client bundle, so **never put secrets in them**. `.env.example` documents all of them. Invalid values fall back to safe defaults instead of crashing the app (`src/config/env.ts`).
 
-| Variable                            | Default when empty                      | Purpose                                                                     |
-| ----------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
-| `VITE_FIREBASE_API_KEY`             | `demo-api-key`                          | Web API key (public identifier, not a secret)                               |
-| `VITE_FIREBASE_AUTH_DOMAIN`         | `<projectId>.firebaseapp.com`           | Domain that serves the Auth helper (`/__/auth/*`)                           |
-| `VITE_FIREBASE_PROJECT_ID`          | `demo-hotwheelsarena`                   | Project id. A `demo-*` id turns the emulators on unless overridden          |
-| `VITE_FIREBASE_STORAGE_BUCKET`      | `<projectId>.appspot.com`               | Part of the web config (Firebase Storage itself is not used)                |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `000000000000`                          | Part of the web config                                                      |
-| `VITE_FIREBASE_APP_ID`              | placeholder                             | Web app id                                                                  |
-| `VITE_FIREBASE_MEASUREMENT_ID`      | (none)                                  | `G-…` id, only needed for Analytics                                         |
-| `VITE_USE_EMULATORS`                | `true` for `demo-*` ids, else `false`   | Connect Auth/Firestore/Functions to the local emulators                     |
-| `VITE_EMULATOR_HOST`                | `127.0.0.1`                             | Emulator host (ports are fixed in `shared/constants.ts`)                    |
-| `VITE_FUNCTIONS_REGION`             | `asia-south1`                           | Region of the callable functions                                            |
-| `VITE_CLOUDINARY_CLOUD_NAME`        | (none): local SVG placeholders are used | Cloudinary cloud name                                                       |
-| `VITE_PAYMENT_PROVIDER`             | `dummy`                                 | Payment provider id (`razorpay` is reserved)                                |
-| `VITE_ENABLE_ANALYTICS`             | `false`                                 | Firebase Analytics (never initialised on the emulators)                     |
-| `VITE_SITE_URL`                     | current origin                          | Absolute URLs for canonical links, Open Graph and JSON-LD (no trailing `/`) |
+| Variable                            | Default when empty                      | Purpose                                                                                                                 |
+| ----------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `VITE_FIREBASE_API_KEY`             | `demo-api-key`                          | Web API key (public identifier, not a secret)                                                                           |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | `<projectId>.firebaseapp.com`           | Domain that serves the Auth helper (`/__/auth/*`)                                                                       |
+| `VITE_FIREBASE_PROJECT_ID`          | `demo-hotwheelsarena`                   | Project id. A `demo-*` id turns the emulators on unless overridden                                                      |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | `<projectId>.appspot.com`               | Part of the web config (Firebase Storage itself is not used)                                                            |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `000000000000`                          | Part of the web config                                                                                                  |
+| `VITE_FIREBASE_APP_ID`              | placeholder                             | Web app id                                                                                                              |
+| `VITE_FIREBASE_MEASUREMENT_ID`      | (none)                                  | `G-…` id, only needed for Analytics                                                                                     |
+| `VITE_USE_EMULATORS`                | `true` for `demo-*` ids, else `false`   | Connect Auth/Firestore/Functions to the local emulators                                                                 |
+| `VITE_EMULATOR_HOST`                | `127.0.0.1`                             | Emulator host (ports are fixed in `shared/constants.ts`)                                                                |
+| `VITE_FUNCTIONS_REGION`             | `asia-south1`                           | Region of the callable functions                                                                                        |
+| `VITE_CLOUDINARY_CLOUD_NAME`        | (none): local SVG placeholders are used | Cloudinary cloud name                                                                                                   |
+| `VITE_PAYMENT_PROVIDER`             | `dummy`                                 | Payment provider id (`razorpay` is reserved)                                                                            |
+| `VITE_DUMMY_PAYMENT_SUCCESS_RATE`   | `0.9`                                   | Test mode only: approval probability (0–1) of simulated card/UPI payments; the e2e suite uses `1` (COD always succeeds) |
+| `VITE_ENABLE_ANALYTICS`             | `false`                                 | Firebase Analytics (never initialised on the emulators)                                                                 |
+| `VITE_SITE_URL`                     | current origin                          | Absolute URLs for canonical links, Open Graph and JSON-LD (no trailing `/`)                                             |
 
 Cloud Functions read one runtime flag from `functions/.env` or `functions/.env.<projectId>` (standard Firebase dotenv files):
 
@@ -389,7 +394,7 @@ URLs are built by `cl(publicId, { w, h, crop })` in `src/lib/cloudinary.ts` as `
 
 Checkout runs in **TEST MODE** (a banner says so). No real money moves and no card details are collected.
 
-- **Client**: `src/services/payment/PaymentProvider.ts` defines the `PaymentProvider` interface (`createPayment(request) → Promise<PaymentResult>`). `DummyPaymentProvider` simulates about 2 s of processing and succeeds about 90% of the time (COD always succeeds). Its transaction ids look like `test_` + 20 hex characters. The active provider comes from `VITE_PAYMENT_PROVIDER` via `getPaymentProvider()` in `src/config/payment.ts`.
+- **Client**: `src/services/payment/PaymentProvider.ts` defines the `PaymentProvider` interface (`createPayment(request) → Promise<PaymentResult>`). `DummyPaymentProvider` simulates about 2 s of processing and succeeds about 90% of the time (COD always succeeds; tune it with `VITE_DUMMY_PAYMENT_SUCCESS_RATE`, e.g. `1` for deterministic demos and e2e runs or `0` to rehearse declines). Its transaction ids look like `test_` + 20 hex characters. The active provider comes from `VITE_PAYMENT_PROVIDER` via `getPaymentProvider()` in `src/config/payment.ts`.
 - **Server**: `placeOrder` re-prices the cart from Firestore and verifies the payment result with the verifier registered for its provider (`functions/src/payments/`). The dummy verifier requires `status: 'success'`, `mode: 'test'`, a well-formed transaction id and **amount = server total** (otherwise "Prices changed — review your pit stop."). It only accepts test payments while `ALLOW_TEST_PAYMENTS` is `true`. Each transaction id can create one order: replays return the original result (`processedPayments/{provider}_{transactionId}`).
 
 **Adding Razorpay later** takes three changes:
@@ -540,13 +545,14 @@ Notes:
 
 ## Testing
 
-| Command                                                     | What it covers                                                                                                                 |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `npm test`                                                  | Vitest unit tests: `shared/` (gamification, commerce totals, schemas) and `src/` (formatters, product helpers, errors, stores) |
-| `npm --prefix functions test`                               | Functions unit tests (pricing, order planning, stats, profiles, rate limits, email, env)                                       |
-| `npm run test:rules`                                        | Boots the Firestore emulator (Java 21) and runs `tests/rules/**`                                                               |
-| `npm run smoke`                                             | End-to-end: builds functions, boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` (20 checks)        |
-| `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                                                                  |
+| Command                                                     | What it covers                                                                                                                                       |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                                  | Vitest unit + component tests: `shared/` (gamification, commerce totals, schemas) and `src/` (stores, hooks, helpers, pages and components in jsdom) |
+| `npm --prefix functions test`                               | Functions unit tests (pricing, order planning, stats, profiles, rate limits, email, env)                                                             |
+| `npm run test:rules`                                        | Boots the Firestore emulator (Java 21) and runs `tests/rules/**`                                                                                     |
+| `npm run smoke`                                             | Backend end-to-end: builds functions, boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` (20 checks over HTTP)            |
+| `npm run e2e`                                               | Browser end-to-end: builds functions, boots the emulators, seeds, runs the Playwright suite in `tests/e2e/` (3 projects, 168 tests)                  |
+| `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                                                                                        |
 
 `tests/rules/` covers:
 
@@ -557,6 +563,19 @@ Notes:
 - `config.test.ts`: deploy-config drift guards. The CSP hash matches `index.html`, emulator ports match `shared/constants.ts`, rule constants match `shared/`, headers and caching behave as intended per path, the orders index and TTL policy exist, and the functions ignore list cannot strip `lib/`.
 
 **Automated end-to-end smoke test** — `npm run smoke` (about a minute, Java 21, ports 9099/8080/5001 free). It signs up a collector in the Auth emulator and drives the real callables over HTTP: `ensureUserProfile` (+ idempotent repeat), `placeOrder` for two in-stock cars charged exactly the `computeOrderTotals` total (order doc, `source: 'purchase'` garage entries, XP, FIRST RIDE, stats), an idempotent replay of the same transaction id, rejections for a tampered amount, a sold-out car and an unauthenticated call, `submitReview` aggregates, newsletter dedupe and the per-IP rate limit, a forged `purchase` garage entry denied by the rules, and a manual garage entry whose `onGarageWrite` sync unlocks TREASURE HUNTER. It prints a PASS/FAIL table and exits non-zero on any failure; see [`scripts/README.md`](scripts/README.md#end-to-end-smoke-test--smoke-e2emjs).
+
+**Browser end-to-end suite (Playwright)** — `npm run e2e` (about 7 minutes; Java 21, ports 9099/8080/5001/4400/4500 and **5173** free; first time: `npx playwright install chromium`). `firebase emulators:exec` boots Auth/Firestore/Functions and seeds them, then Playwright starts its own Vite dev server on port 5173, wired to the emulators with `VITE_DUMMY_PAYMENT_SUCCESS_RATE=1` (deterministic payments). Three projects run every spec: **desktop-dark** and **desktop-light** at 1440×900, and **mobile** at 375×812 (which also re-checks every route in the light theme). Coverage:
+
+- every route (public and signed-in, all garage tabs): exactly one `<h1>`, a meaningful title, no page errors, no console errors, no horizontal overflow, `noindex` on private pages;
+- axe-core scans (`wcag2a` + `wcag2aa`) of the main routes in both themes: zero serious/critical violations;
+- home section order, category card → `/shop?category=…`, the GSAP hero sequence on desktop, and a reduced-motion run (static hero, no pin spacer, no scroll-track, GSAP never loaded);
+- command palette (<kbd>Ctrl</kbd>+<kbd>K</kbd>, `/`, Esc, Make → Models group, Enter → `/search?q=…`) and shop load more + sort + MAKE filter + clear all (URL-synced; drawer on mobile);
+- product page: add-to-cart badge, signed-out PIT PASS prompt, Product JSON-LD, the themed-specs note; reviews (validation, post, edit mode);
+- the **real Google popup** through the Auth emulator UI (once, desktop-dark);
+- checkout end to end with COD and with card: cart totals and free-shipping meter → address validation → payment → review → place order → success (order id, XP, FIRST RIDE, no modal on top) → `/orders` → order detail → purchased cars in `/garage`;
+- My Garage: picker → favourite → copies → duplicates tracker → tabs with URL sync → achievements progress; newsletter subscribe → already subscribed.
+
+Conventions (`tests/e2e/fixtures.ts`): every test signs in as its **own** collector (`uniqueEmail()` + the dev hook `window.__hwaTest.signIn`), so tests stay independent on the shared emulator database and run two at a time (one on CI, with one retry). The automatic `consoleGuard` fixture fails a test on any page error or unexpected `console.error` (the allowlist only holds aborted Firestore channel requests), and the per-project `theme` option is persisted before first paint. Failures keep a trace and a screenshot under `test-results/e2e/`; the HTML report goes to `playwright-report/` (`npm run e2e:report`). To debug interactively: `npm run emulators`, `npm run seed:emulator`, then `npm run e2e:ui` or `npx playwright test tests/e2e/checkout.spec.ts --project=desktop-dark --headed`. Locally Playwright reuses a dev server already running on 5173, so start that one with `VITE_DUMMY_PAYMENT_SUCCESS_RATE=1` for deterministic payments.
 
 **Manual smoke test in the browser** (about 5 minutes, on the emulators):
 
@@ -597,6 +616,7 @@ Preview channels use the **live** project's Firestore, Functions and Auth. Pull 
 
 ## Troubleshooting
 
+- **`npm run e2e` fails at start-up**: port 5173 is taken (Playwright starts its own dev server with `--strictPort`) or the Chromium build is missing (`npx playwright install chromium`). Stop other dev servers first (`npx kill-port 5173`).
 - **Port already in use** (`Could not start Firestore Emulator, port taken`): another emulator or app holds 8080, 9099, 5001, 5000 or 4000. Windows: `netstat -ano | findstr :8080`, then `Stop-Process -Id <pid>`. macOS/Linux: `lsof -i :8080`. Or change the port in `firebase.json` **and** `EMULATOR_PORTS` in `shared/constants.ts` (a test checks they match).
 - **`Java … not found` or "requires Java 21"**: install a JDK 21+ and make sure `java -version` works in the same terminal (set `JAVA_HOME` or add it to `PATH`).
 - **Functions don't load in the emulator**: run `npm run functions:build` first (the emulator loads `functions/lib/functions/src/index.js`), and check the Emulator UI logs.

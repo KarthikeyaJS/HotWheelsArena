@@ -10,3 +10,6 @@ package-lock.json
 functions/package-lock.json
 *.log
 index.html
+test-results
+playwright-report
+blob-report

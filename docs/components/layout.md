@@ -278,7 +278,9 @@ in elsewhere. Open it via `useRequireAuthAction()` or `useUiStore.getState().ope
 
 ### `NewsletterForm`
 
-`variant?: 'section' | 'inline'` (`section`), section copy `eyebrow?` / `title?` / `description?`, `headingAs?: 'h2' | 'h3'`.
+`variant?: 'section' | 'inline'` (`section`), section copy `eyebrow?` / `title?` / `description?`, `headingAs?: 'h2' | 'h3'`,
+`headingId?: string` (id for the section-variant heading — pass it when an ancestor landmark needs `aria-labelledby` pointing at
+this heading, as the home `#about` section does; defaults to a generated id).
 React Hook Form + `zodResolver(NewsletterSchema)` + `useSubscribeNewsletter()`. Inline validation (`aria-invalid`,
 described error), loading button (input becomes read-only, focus kept), and a polite live region for
 **subscribed** ("You're on the grid!…"), **already-subscribed** and **error** (friendly message; cleared on edit). Resets

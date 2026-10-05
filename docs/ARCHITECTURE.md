@@ -50,6 +50,7 @@ D:\hotwheels
 ├─ functions/**                   functions
 ├─ firebase.json, .firebaserc, firestore.rules, firestore.indexes.json,
 │  tests/rules/**, vitest.rules.config.ts, .github/**, README.md                infra
+├─ playwright.config.ts, tsconfig.e2e.json, tests/e2e/**                        verify (WF2) — Playwright e2e, see §17
 ├─ scripts/**, public/**          seed-assets
 └─ docs/ARCHITECTURE.md           core;  docs/components/<agent>.md  each WF1 agent
 ```
@@ -97,7 +98,9 @@ garage (`GaragePage`, `WishlistPage`, `components/garage/**`), content (Vault, C
 `test` (`vitest run`), `test:watch`, `test:rules`, `emulators`, `seed`, `seed:emulator`, `seed:verify` (`tsx scripts/verify-seed.ts`),
 `set-admin` (`tsx scripts/set-admin.ts`), `sounds`, `images` / `images:check` (`tsx scripts/generate-images.ts [--check]`),
 `snap` (`node scripts/dev/snap.mjs`, Playwright screenshots), `functions:build`, `presmoke` (= `functions:build`),
-`smoke` (`firebase emulators:exec --only auth,firestore,functions … "npm run seed:emulator && node scripts/smoke-e2e.mjs"`), `deploy`.
+`smoke` (`firebase emulators:exec --only auth,firestore,functions … "npm run seed:emulator && node scripts/smoke-e2e.mjs"`),
+`pree2e` (= `functions:build`), `e2e` (`firebase emulators:exec --only auth,firestore,functions … "npm run seed:emulator && playwright test"`),
+`e2e:ui` (`playwright test --ui`), `e2e:report` (`playwright show-report`), `deploy`.
 
 Functions package: install with `npm --prefix functions ci --include=dev` or `npm install --include=dev` **inside** `functions/`.
 Never `npm --prefix functions install` without a package name — npm 10 then adds the root package to `functions/` as `file:..`.
@@ -105,12 +108,14 @@ Never `npm --prefix functions install` without a package name — npm 10 then ad
 ### TypeScript projects
 
 - `tsconfig.app.json` — `src` + `shared`, strict + `noUncheckedIndexedAccess` + `noImplicitOverride` + `noImplicitReturns`, `jsx: react-jsx`, bundler resolution, paths `@/*`, `@shared`, `@shared/*`.
-- `tsconfig.node.json` — `vite.config.ts`, `vitest.config.ts`, `vitest.rules.config.ts`, `tailwind.config.ts`, `scripts/**/*.ts`, `tests/**/*.ts`; types `node`; `allowImportingTsExtensions`. **No path aliases** here: scripts/tests import shared **relatively** (e.g. `../shared/index.ts` or `../shared/gamification.js`) because `tsx` doesn't read tsconfig.node.json paths.
+- `tsconfig.e2e.json` — `playwright.config.ts` + `tests/e2e/**/*.ts`; libs ES2023 + DOM (for `page.evaluate` callbacks), types `node`.
+- `tsconfig.node.json` — `vite.config.ts`, `vitest.config.ts`, `vitest.rules.config.ts`, `tailwind.config.ts`, `scripts/**/*.ts`, `tests/rules/**/*.ts`; types `node`; `allowImportingTsExtensions`. **No path aliases** here: scripts/tests import shared **relatively** (e.g. `../shared/index.ts` or `../shared/gamification.js`) because `tsx` doesn't read tsconfig.node.json paths.
 - Check your files: `npx tsc -p tsconfig.app.json --noEmit` (web) / `npx tsc -p tsconfig.node.json --noEmit` (scripts/tests).
 
 ### Vitest
 
 `vitest.config.ts` defines projects **web** (`src/**/*.test.{ts,tsx}`, jsdom, setup `src/test/setup.ts` with jest-dom matchers + matchMedia/IntersectionObserver/ResizeObserver shims + RTL cleanup + storage clearing) and **shared** (`shared/**/*.test.ts`, node). Import test APIs explicitly: `import { describe, it, expect } from 'vitest'`.
+Load tolerance: the web project has `testTimeout: 20_000` and `src/test/setup.ts` sets RTL `configure({ asyncUtilTimeout: 5000 })`, because ~70 jsdom files run in parallel on every core (lazy chunks, debounced URL syncs and router transitions need more than RTL's 1 s default). Don't pass shorter explicit `timeout`s to `waitFor`/`findBy*`.
 
 ### Vite
 
@@ -232,6 +237,7 @@ interface AppEnv {
   functionsRegion: string;
   cloudinaryCloudName: string | null;
   paymentProvider: PaymentProviderId;
+  dummyPaymentSuccessRate: number; // VITE_DUMMY_PAYMENT_SUCCESS_RATE (0–1, default 0.9; e2e uses 1)
   enableAnalytics: boolean;
   siteUrl: string;
   isDev: boolean;
@@ -720,12 +726,17 @@ interface CartItem {
 type Theme = 'dark' | 'light';
 type ScanlineMode = 'auto' | 'on' | 'off';
 type ToastVariant = 'default' | 'success' | 'error' | 'achievement';
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
 interface ToastInput {
   title: string;
   description?: string;
   variant?: ToastVariant;
   icon?: ReactNode;
   duration?: number;
+  action?: ToastAction; // button inside the toast (runs onClick, then dismisses)
 }
 interface Toast extends Required<Pick<ToastInput, 'title' | 'variant' | 'duration'>> {
   id: string;
@@ -915,6 +926,7 @@ useGarageStore; useIsInGarage(id): boolean; useIsWishlisted(id): boolean; useIsF
 MAX_TOASTS = 5; DEFAULT_TOAST_DURATION = { default: 4000, success: 4000, error: 6500, achievement: 7000 }
 interface ToastState { toasts: Toast[]; push(input: ToastInput): string; dismiss(id): void; clear(): void }
 useToastStore; useToasts(): Toast[]
+MIN_ACTION_TOAST_DURATION = 8000   // toasts with an `action` stay at least this long
 toast(input: ToastInput): string
 toast.success(title, description?, options?): string; toast.error(title, description?, options?): string
 toast.achievement(title, description?, icon?): string; toast.dismiss(id); toast.clear()
@@ -1050,7 +1062,7 @@ useSavedAddresses(): UseQueryResult<SavedAddress[]>
 
 ```ts
 usePlaceOrder(): UseMutationResult<PlaceOrderResponse, Error, PlaceOrderRequest>      // invalidates orders+garage; no toast; does NOT clear the cart
-useSubmitReview(): UseMutationResult<SubmitReviewResponse, Error, SubmitReviewRequest> // success toast + refetch reviews/products; errors inline
+useSubmitReview(): UseMutationResult<SubmitReviewResponse, Error, SubmitReviewVariables> // SubmitReviewRequest & { isUpdate? } ("Review updated" vs "Review posted" toast; isUpdate is stripped before the call) + refetch reviews/products; errors inline
 useSubscribeNewsletter(): UseMutationResult<NewsletterResponse, Error, NewsletterRequest> // validates with NewsletterSchema; no toasts
 interface SaveAddressVariables { address: Address; id?: string; isDefault?: boolean }
 useSaveAddress(): UseMutationResult<string, Error, SaveAddressVariables>; useDeleteAddress(): UseMutationResult<void, Error, string>
@@ -1156,7 +1168,7 @@ All components: named exports, one component per file (`PascalCase.tsx`), `class
 | `Modal`             | `open`, `onClose()`, `title: ReactNode`, `description?`, `children`, `footer?`, `size?: 'sm'\|'md'\|'lg'\|'xl'`, `initialFocusRef?`, `closeOnOverlayClick?` (true), `hideCloseButton?` — portal, focus trap, Esc, `aria-modal`, labelled/described, returns focus, locks scroll                                                                                                          |
 | `Drawer`            | `open`, `onClose()`, `side?: 'left'\|'right'\|'bottom'`, `title`, `children`, `footer?`, `size?` — same a11y as Modal                                                                                                                                                                                                                                                                    |
 | `Tabs` + `TabPanel` | `Tabs`: `items: Array<{ id: string; label: ReactNode; badge?: number; disabled?: boolean }>`, `value: string`, `onChange(id)`, `label: string` (tablist aria-label), `idPrefix: string`, `variant?: 'underline'\|'pill'`; arrow/Home/End keys, roving tabindex. `TabPanel`: `idPrefix`, `tabId`, `active: boolean`, `children` (ids `${idPrefix}-tab-${id}` / `${idPrefix}-panel-${id}`) |
-| `Toaster`           | `position?: 'bottom-right'\|'top-center'` — renders `useToasts()`, polite live region (assertive for errors), auto-dismiss by `toast.duration`, pause on hover/focus, dismiss button; achievement = highlight styling                                                                                                                                                                    |
+| `Toaster`           | `position?: 'bottom-right'\|'top-center'` — renders `useToasts()`, polite live region (assertive for errors), auto-dismiss by `toast.duration`, pause on hover/focus, dismiss button, optional `action` button (outline, sm; announced as "… available in notifications"); achievement = highlight styling                                                                               |
 | `ProgressBar`       | `value: number` (0–100), `label: string` (aria-label), `tone?: 'accent'\|'highlight'\|'success'\|'danger'`, `size?: 'xs'\|'sm'\|'md'`, `showValue?`, `animated?` (fills on mount/in view; instant under reduced motion)                                                                                                                                                                  |
 | `StatBar`           | `label: string`, `value: number`, `max: number`, `display?: string` (e.g. `320 KM/H`, `8/10`), `tone?`, `animateOnView?` (true)                                                                                                                                                                                                                                                          |
 | `StarRating`        | `value: number` (0–5, halves), `count?: number`, `size?`, `showValue?` — `role="img"` aria-label "Rated 4.5 out of 5"                                                                                                                                                                                                                                                                    |
@@ -1198,7 +1210,7 @@ All components: named exports, one component per file (`PascalCase.tsx`), `class
 | `BadgeUnlockModal` | `badgeId: BadgeId \| null`, `open: boolean`, `onClose()`, `queueCount?`                                                                                                                                                            |
 | `BadgeWatcher`     | no props — mounted once in AppLayout; diffs `useAuth().profile?.badges` vs previous (skips the first load and user switches), shows `toast.achievement` + queued `BadgeUnlockModal`; level-up toast when `profile.level` increases |
 
-Barrel `@/components/gamification` also exports the pure helpers `snapshotFromProfile(profile)` / `diffBadgeSnapshots(prev, next)` (`BadgeSnapshot`, `BadgeSnapshotDiff`) used by `BadgeWatcher`. Note: `BadgeWatcher` also celebrates badges awarded by `placeOrder`, so the order-success page (commerce, WF2) should decide whether it shows its own badge list as well.
+Barrel `@/components/gamification` also exports the pure helpers `snapshotFromProfile(profile)` / `diffBadgeSnapshots(prev, next)` (`BadgeSnapshot`, `BadgeSnapshotDiff`) used by `BadgeWatcher`. `BadgeWatcher` also celebrates badges awarded by `placeOrder`; as built (WF2 commerce) it **skips the unlock modal on `/checkout` and `/checkout/success/:orderId`** (toasts still fire), because the success page shows the unlocked badges itself and the live profile snapshot can land a moment before checkout navigates.
 
 ### ui-kit → `src/components/common/DataState.tsx`
 
@@ -1211,7 +1223,7 @@ Barrel `@/components/gamification` also exports the pure helpers `snapshotFromPr
 - `search/CommandPalette` (Ctrl/Cmd+K via `useHotkey`, uiStore.searchOpen, combobox ARIA, grouped suggestions, recent searches, Enter → `/search?q=`), `search/SearchInput` (`value`, `onChange(v)`, `onSubmit?(v)`, `placeholder?` = "Search the garage…", `autoFocus?`, `size?`).
 - `src/lib/search.ts`: `buildSearchIndex(products: readonly Product[]): SearchIndex`, `searchProducts(index: SearchIndex, query: string, limit?: number /* default: all */): Product[]`, `searchProductsScored(index, query, limit?): ScoredProduct[]` (`{ product, score }`), `groupSuggestions(products: readonly Product[], query: string, options?: { maxMakes?: number /* 4 */; maxModels?: number /* 6 */ }): MakeSuggestion[]` (`MakeSuggestion = { make; models: ModelSuggestion[] }`, `ModelSuggestion = { model; count; slugs: string[] }`), `matchText(text, query): number`, plus `normalizeSearchText`, `tokenize`, `editDistance`, `SEARCH_FIELD_WEIGHTS`. Strict token/prefix/joined-prefix/substring matching; typo tolerance only as a fallback pass when nothing matches strictly.
 - `effects/*`: `GridBackground` (`fade?`), `RacingLines` (`count?`), `ParticleField` (`density?`; canvas; off under reduced motion), `TireMarks`, `SpeedLines` (`intensity?`), `ScanlinesOverlay` (no props; `useScanlinesActive`), `Speedometer` (`value`, `max?` 320, `label?`, `unit?`, `size?`), `Tachometer` (`rpm`, `redline?`, `size?`), `HudPanel` (`title?`, `children`). All decorative → `aria-hidden`, all accept `className`.
-- `newsletter/NewsletterForm` (`variant?: 'section'|'inline'`) — `useSubscribeNewsletter`, inline success/error status (`aria-live`).
+- `newsletter/NewsletterForm` (`variant?: 'section'|'inline'`, `headingId?` — id of the section-variant heading so an ancestor landmark can point `aria-labelledby` at it) — `useSubscribeNewsletter`, inline success/error status (`aria-live`).
 - `auth/SignInPrompt` (no props; Modal bound to `uiStore.signInPrompt`, shows `reason`, calls `useAuth().signIn()`, closes on success — AuthProvider also closes it and runs the queued action), `auth/GoogleSignInButton` (`fullWidth?`, `size?`, `label?`, `onSignedIn?(user)`).
 - Hooks: `useSound(): (name: SoundName) => void` (lazy `import('howler')`, plays `SOUND_SOURCES[name]` at `SOUND_VOLUME[name]`; no-op when `soundEnabled` is false or the file is missing) + `playSound(name)` (same, outside React), `useHotkey(combo: string | readonly string[], handler: (e: KeyboardEvent) => void, opts?: { enabled?: boolean; preventDefault?: boolean /* true */; allowInInputs?: boolean; allowRepeat?: boolean })` (`'mod+k'` = Ctrl on Windows / Cmd on macOS) + helpers `parseHotkey`, `matchesHotkey`, `isEditableTarget`, `isMacPlatform`, `hotkeyLabels(combo)` (`['Ctrl','K']` / `['⌘','K']`), `hotkeyAria(combo)`; `useScrollProgress(): number` (0..1, rAF-throttled shared store) + `useIsScrolled(threshold = 8): boolean`.
 
@@ -1235,9 +1247,9 @@ Barrel `@/components/gamification` also exports the pure helpers `snapshotFromPr
 
 **Additive product APIs (as built — details in [`docs/components/product.md`](components/product.md)); barrel `@/components/product`:**
 
-- `HorizontalRail` also accepts `items` + `renderItem(item, index)` + `getItemKey?` (instead of `children`), `label` (alias of `ariaLabel`; one of them is required), `action?`, `itemWidth?`, `gap?: 'sm'|'md'|'lg'`, `showControls?`, `slideLabel?(index, total)`, `trackClassName?`.
+- `HorizontalRail` also accepts `items` + `renderItem(item, index)` + `getItemKey?` (instead of `children`), `label` (alias of `ariaLabel`; one of them is required), `action?`, `itemWidth?`, `gap?: 'sm'|'md'|'lg'`, `showControls?`, `slideLabel?(index, total)`, `trackClassName?`. The title wrapper has a `basis-[min(100%,18rem)]` so a long title wraps above the controls at 375px instead of being squeezed.
 - `ProductGrid`: `emptyState` (alias of `empty`), `variant?`, `priorityCount?` (first N cards eager + no entrance fade), `label?`, `loadingLabel?`, `cardHeadingAs?`.
-- `ProductCard`: `headingAs?`, `imageSizes?`. `VaultCard`: `layout?: 'vertical'|'horizontal'`, `priority?`, `headingAs?`.
+- `ProductCard`: `headingAs?`, `imageSizes?`. `VaultCard`: `layout?: 'vertical'|'horizontal'`, `priority?`, `headingAs?` (the card is a flex column with the price/CTA row pushed down, so rows line up across a grid even when a name wraps).
 - `CarImage`: `fit?`, `crop?`, `gravity?`, `widths?` (srcset), `aspectBox?`, `style?`, `renderMedia?` (slot for a future 3D viewer).
 - `AddToCartButton`: `onAdded?` (e.g. BUY NOW → checkout). `WishlistButton`: `iconVariant?`, `fullWidth?`. `AddToGarageButton`: `variant?` (two-step "CONFIRM REMOVE?" when already parked).
 - The barrel also exports `COLLECTOR_EDITION_MIN_SCORE` (collectorScore ≥ 8 → "COLLECTOR EDITION" tag).
@@ -1263,3 +1275,51 @@ Barrel `@/components/gamification` also exports the pure helpers `snapshotFromPr
 
 - IDs: category doc id == slug (6 `CATEGORY_SLUGS`); series doc id == slug (e.g. `hw-exotics-2026`); product docs with every `Product` field (incl. `description`, `seriesName`, `series` = series id, `images[0].url === primaryImage`, `publicId` like `hotwheelsarena/<slug>`, `currency: 'INR'`, Firestore `Timestamp` createdAt/updatedAt, `isActive: true`); `series.carIds` = product ids; reviews at `products/{id}/reviews/{uid}` with `productId, uid, displayName, photoURL, rating, text, verifiedBuyer, createdAt, updatedAt` + product `ratingAvg/ratingCount` consistent; `settings/site` = `DEFAULT_SITE_SETTINGS` + timestamps. Import shared relatively.
 - Public assets referenced by code: `/favicon.svg`, `/og-image.png` (1200×630), `/placeholders/car-generic.svg`, `/placeholders/hero-car.svg`, `/placeholders/category-{sports,off-road,racing,special,rescue,limited}.svg`, per-product silhouettes under `/placeholders/`, `/sounds/{rev,click,start}.wav`. Do **not** create `public/site.webmanifest` (generated by Vite).
+
+---
+
+## 15. Routes & pages (as built in WF2)
+
+Every page is `React.lazy` (its own chunk), default-exported, calls `useDocumentMeta` (title `"<Page> | HotWheelsArena"`, `noindex` on cart/checkout/orders/garage/wishlist/404/unknown series/unknown product/search) and renders exactly one `<h1>`. Feature code lives in the folder named in the last column.
+
+| Path                                                               | Page                            | Auth | Feature folder / notes                                                                                                                                                                          |
+| ------------------------------------------------------------------ | ------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                                | `HomePage`                      |      | `components/hero`, `components/home`, `components/scrolltrack`. Sections `hero → collection → new-arrivals → featured → vault → garage → achievements → about` (ids in `home/homeSections.ts`). |
+| `/shop`                                                            | `ShopPage`                      |      | `components/shop` + `config/shop.ts` + `hooks/useProductFilters.ts` — URL contract in §16                                                                                                       |
+| `/search?q=`                                                       | `SearchPage`                    |      | same rail/grid as the shop; refinement chips from `lib/search.groupSuggestions`; blank query = recent searches + shortcuts                                                                      |
+| `/collections`                                                     | `CollectionsPage`               |      | `components/collections` (series cards, signed-in completion)                                                                                                                                   |
+| `/collections/:slug`                                               | `SeriesPage`                    |      | `components/collections` (completion panel, missing cars, series grid; unknown slug → in-page "Series not found")                                                                               |
+| `/product/:slug`                                                   | `ProductPage`                   |      | `components/product-detail` + `components/reviews` (gallery, spec sheet, Meet the Machine + disclaimer, series card, related rail, reviews, Product + Breadcrumb JSON-LD)                       |
+| `/vault`                                                           | `VaultPage`                     |      | `components/vault` (`?filter=&sort=` in the URL)                                                                                                                                                |
+| `/cart`                                                            | `CartPage`                      |      | `components/cart` (`useReconciledCart` re-prices against the catalogue + settings; inline Undo row **and** an Undo toast action)                                                                |
+| `/checkout?step=`                                                  | `CheckoutPage`                  | yes  | `components/checkout` (address → payment → review; `usePlaceOrderFlow` = payment provider + `placeOrder`)                                                                                       |
+| `/checkout/success/:orderId`                                       | `OrderSuccessPage`              | yes  | `components/orders` (confetti, XP count-up, badges; data from `location.state`, falls back to `useOrder`)                                                                                       |
+| `/orders`, `/orders/:id`                                           | `OrdersPage`, `OrderDetailPage` | yes  | `components/orders`                                                                                                                                                                             |
+| `/garage?tab=`                                                     | `GaragePage`                    | yes  | `components/garage` (`collection` = bare `/garage`; `wishlist`, `favorites`, `achievements`, `stats`)                                                                                           |
+| `/wishlist`                                                        | `WishlistPage`                  | yes  | `components/garage/WishlistCollection` (shared with the garage tab)                                                                                                                             |
+| `/about` `/contact` `/faq` `/shipping-returns` `/privacy` `/terms` | `AboutPage` … `TermsPage`       |      | `components/content` (`ContentPage` layout, TOC, FAQ accordion, mailto contact form, PIN-code checker)                                                                                          |
+| `/new-drops`                                                       | redirect                        |      | → `/shop?view=new`                                                                                                                                                                              |
+| `*`                                                                | `NotFoundPage`                  |      | "Wrong turn — back to the garage" (`components/content/notfound`)                                                                                                                               |
+
+**Home hero hand-off** (`components/hero/useHeroScrollSequence.ts`): on ≥1024px without reduced motion the hero section is `calc(205svh - 60px)` tall with a sticky stage (~105svh of pinned scroll) and `mb-[-25svh]`; the scrubbed timeline ends `HERO_HANDOFF_RUNOUT` (0.43 × viewport height) **after** the stage is released, so the stage scrolls away while the car exits and "Choose your ride" rises right below. The bottom HUD strip (`data-hero="strip"`) fades through its own ScrollTrigger keyed to the next section (`top bottom → top 80%`), so it never overlaps the collection intro copy. Below 1024px or with reduced motion the hero is static and GSAP is never loaded.
+
+## 16. Shop / search URL contract
+
+The URL is the single source of truth for `/shop` and `/search` (`hooks/useProductFilters.ts`), e.g. `/shop?view=premium&make=Porsche,Land+Rover&scale=1:43&price=499-1999&sort=price-asc&shown=24`.
+
+- Params owned by the codec (`FILTER_PARAM_KEYS`): `q`, `view` (`all` default, `new`, `premium`, `limited`, `racing`, `sports`, `off-road`, `special`), `category` (any `CategorySlug`; with the All view it resolves to the matching category view — `rescue`/`limited` stay a removable chip), list facets `make`, `model`, `series`, `year`, `color`, `scale`, `rarity`, `availability` (comma lists; a literal comma is `\,`), `price=MIN-MAX` (either side optional), `sort` (`newest` default, `price-asc`, `price-desc`, `rarity`, `rating`; search adds `relevance` = default), `shown` (multiples of `PAGE_SIZE` 12).
+- Defaults are omitted and unknown params (`utm_*`) are preserved. Filter, sort and load-more changes use history **replace** + `preventScrollReset`; switching view tabs **pushes**. Price-slider writes are debounced (`PRICE_DEBOUNCE_MS`). Any filter change resets `shown`.
+- Deep links from other pages: `shopPath({ view, category, series, sort, q })` (`config/routes.ts`), or hand-build list params with the encoding above (e.g. `/shop?make=Porsche`).
+- Facet checkboxes are controlled by the URL, which updates inside a router transition (`v7_startTransition`): tests must click and then assert with a retrying matcher (`await expect(box).toBeChecked()`), not Playwright's synchronous `check()`.
+
+## 17. End-to-end tests (Playwright)
+
+`npm run e2e` = `pree2e` (functions build) → `firebase emulators:exec --only auth,firestore,functions` → `npm run seed:emulator && playwright test`. `playwright.config.ts` starts its own dev server (`npm run dev -- --port 5173 --strictPort`, reused locally if one is already running) with emulator env + `VITE_DUMMY_PAYMENT_SUCCESS_RATE=1`.
+
+- **Projects**: `desktop-dark` (1440×900), `desktop-light` (1440×900), `mobile` (375×812, touch). The `theme` fixture option is persisted into `hwa-prefs-v1` before first paint; `setTheme(page, theme)` switches it mid-test (the route spec re-checks every route in light on mobile).
+- **Isolation**: tests share one emulator database, so each test signs in as its own collector — `signIn(page, { email: uniqueEmail(testInfo, 'label') })` uses the dev hook `window.__hwaTest.signIn` (Auth emulator, unsigned Google ID token). Only `auth.spec.ts` drives the real Google popup (Auth emulator UI: "Add new account" → "Auto-generate user information" → "Sign in with Google.com"), once, in `desktop-dark`.
+- **Error guard**: the automatic `consoleGuard` fixture fails any test with a page error or a `console.error` outside `BENIGN_CONSOLE_ERRORS` (only aborted Firestore channel requests). Allow an intentional error for one test with `consoleGuard.allow(/pattern/)`.
+- **Selectors**: roles and accessible names first (`getByRole('button', { name: 'Add <car> to cart' })`, `getByRole('link', { name: /^Pit stop cart/ })`); data attributes only for decorative structure (`a[data-category]`, `section#hero[data-sequence]`). Visually hidden radios (stars, payment cards) are clicked through their `<label>`.
+- **Waiting**: `gotoRoute(page, path)` waits for the lazy route's `main h1`; never use `networkidle` (Firestore keeps a channel open).
+- **axe**: `a11y.spec.ts` scans with `@axe-core/playwright` (`wcag2a`, `wcag2aa`) under reduced motion after scrolling once through the page (reveals scroll-into-view content); serious/critical violations fail; counts are attached as test annotations (`E2E_AXE_LOG=1` prints them). Exclude a rule only for a documented false positive, narrowly (`.exclude(selector)`), never globally.
+- Artifacts: traces + screenshots on failure under `test-results/e2e/`, HTML report in `playwright-report/` (both gitignored). CI (`CI=1`): 1 worker, 1 retry, `forbidOnly`.

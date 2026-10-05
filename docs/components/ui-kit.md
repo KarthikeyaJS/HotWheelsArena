@@ -252,10 +252,17 @@ Same a11y as `Modal`. Props: `open`, `onClose`, `side?: 'left' | 'right' | 'bott
 
 Mount **once** (AppLayout). `position?: 'bottom-right' | 'top-center'` (bottom-right on desktop, full-width bottom on phones), `className?`. Renders `useToasts()`; each toast auto-dismisses after `toast.duration` (Infinity = sticky) with a draining progress line; timers **pause** while the stack is hovered, focused, or the tab is hidden; × dismiss button per toast. Announcements go through persistent live regions (polite; **assertive for `error`**). Variants: default (metal), success (green), error (red), **achievement** (yellow border/glow, gold trophy tile, shine sweep).
 
+**Action button** (added in WF2 verify): `toast({ …, action: { label, onClick } })` renders an outline `Button` (sm) under the description. Clicking it runs `onClick` and dismisses the toast; the live-region announcement appends "`<label>` available in notifications". Toasts with an action stay at least `MIN_ACTION_TOAST_DURATION` (8 s) and still pause on hover/focus — but they do time out, so keep an equivalent inline control for anything important (the cart keeps its inline Undo row next to the Undo toast).
+
 ```ts
 toast.success('Added to your pit stop', product.name);
 toast.error("Couldn't park that car", getFriendlyErrorMessage(err));
 toast.achievement('BADGE UNLOCKED', 'Treasure Hunter · +150 XP', '💎');
+toast({
+  title: 'Removed from your pit stop',
+  description: name,
+  action: { label: 'Undo', onClick: undo },
+});
 ```
 
 ### `EmptyState`

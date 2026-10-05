@@ -133,6 +133,10 @@ npx tsx scripts/set-admin.ts --email you@example.com --emulator --check  # print
 
 ## End-to-end smoke test — `smoke-e2e.mjs`
 
+> This is the **backend** smoke test (callables, rules and triggers over HTTP, no browser). The
+> **browser** end-to-end suite is Playwright in `tests/e2e/` (`npm run e2e`) — see the README
+> Testing section and `docs/ARCHITECTURE.md` §17.
+
 ```bash
 npm run smoke                  # presmoke builds functions/, then emulators:exec runs seed + smoke
 node scripts/smoke-e2e.mjs     # against emulators you already started and seeded

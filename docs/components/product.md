@@ -156,6 +156,8 @@ The card shows:
 - "Only **37** remaining" with "93% claimed", above an animated, striped `ProgressBar tone="highlight"`. The bar fills to `editionSize − stock` out of `editionSize`, and its `aria-valuetext` is "463 of 500 claimed, 37 remaining". Values are static from the product doc.
 - `PriceTag` (lg), a ♡ button, and the CTA **VIEW EDITION →** linking to the product.
 
+The card is a flex column whose details column grows and whose price/CTA row is pushed to the bottom (`mt-auto`), so price rows and CTAs line up across a grid row even when a name wraps to two lines (horizontal layout keeps its centred details from `md`).
+
 When the edition is sold out (stock 0), the car is greyed with an "EDITION SOLD OUT" lock stamp, the text reads "Edition fully claimed", and the CTA becomes an outline **VIEW DETAILS**. Products without `limitedEdition` show "VAULT EXCLUSIVE" and a `StockStatus` instead of the bar. The car image is also a link, but with `tabIndex=-1` and `aria-hidden`, so it adds no second tab stop.
 
 ```tsx
@@ -167,18 +169,18 @@ When the edition is sold out (stock 0), the car is greyed with an "EDITION SOLD 
 
 Accessible horizontal scroller for card rails. It is generic over the item type.
 
-| Prop                           | Type                                             | Default                       | Notes                                                                  |
-| ------------------------------ | ------------------------------------------------ | ----------------------------- | ---------------------------------------------------------------------- |
-| `label` **or** `ariaLabel`     | `string`                                         | **one is required**           | Carousel `aria-label` (`ariaLabel` is the ARCHITECTURE name)           |
-| `items` + `renderItem`         | `readonly T[]` + `(item: T, index) => ReactNode` |                               | Data mode. Keys come from `getItemKey`, else `item.id`, else the index |
-| `children`                     | `ReactNode`                                      |                               | Children mode: one slide per child                                     |
-| `title`                        | `ReactNode`                                      |                               | Header content left of the controls (e.g. a `SectionHeading`)          |
-| `action`                       | `ReactNode`                                      |                               | Header content before the arrows (e.g. "View all")                     |
-| `itemWidth`                    | `number \| string`                               | `clamp(15rem, 74vw, 18.5rem)` | Slide width (px or any CSS length)                                     |
-| `gap`                          | `'sm' \| 'md' \| 'lg'`                           | `'md'`                        |                                                                        |
-| `showControls`                 | `boolean`                                        | `true`                        | Arrows are hidden automatically when nothing overflows                 |
-| `slideLabel`                   | `(index, total) => string`                       | `"3 of 12"`                   |                                                                        |
-| `className` / `trackClassName` | `string`                                         |                               |                                                                        |
+| Prop                           | Type                                             | Default                       | Notes                                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label` **or** `ariaLabel`     | `string`                                         | **one is required**           | Carousel `aria-label` (`ariaLabel` is the ARCHITECTURE name)                                                                                                                           |
+| `items` + `renderItem`         | `readonly T[]` + `(item: T, index) => ReactNode` |                               | Data mode. Keys come from `getItemKey`, else `item.id`, else the index                                                                                                                 |
+| `children`                     | `ReactNode`                                      |                               | Children mode: one slide per child                                                                                                                                                     |
+| `title`                        | `ReactNode`                                      |                               | Header content left of the controls (e.g. a `SectionHeading`); its wrapper has `basis-[min(100%,18rem)]`, so a long title wraps above the controls on phones instead of being squeezed |
+| `action`                       | `ReactNode`                                      |                               | Header content before the arrows (e.g. "View all")                                                                                                                                     |
+| `itemWidth`                    | `number \| string`                               | `clamp(15rem, 74vw, 18.5rem)` | Slide width (px or any CSS length)                                                                                                                                                     |
+| `gap`                          | `'sm' \| 'md' \| 'lg'`                           | `'md'`                        |                                                                                                                                                                                        |
+| `showControls`                 | `boolean`                                        | `true`                        | Arrows are hidden automatically when nothing overflows                                                                                                                                 |
+| `slideLabel`                   | `(index, total) => string`                       | `"3 of 12"`                   |                                                                                                                                                                                        |
+| `className` / `trackClassName` | `string`                                         |                               |                                                                                                                                                                                        |
 
 Semantics:
 

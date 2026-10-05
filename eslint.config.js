@@ -16,6 +16,9 @@ export default defineConfig([
     'functions/node_modules/**',
     '.firebase/**',
     'emulator-data/**',
+    'test-results/**',
+    'playwright-report/**',
+    'blob-report/**',
   ]),
 
   // Every TypeScript file (web, shared, scripts, tests, functions)
