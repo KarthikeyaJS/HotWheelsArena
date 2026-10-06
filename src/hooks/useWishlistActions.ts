@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { getFriendlyErrorMessage } from '@/lib/errors';
 import { mutationKeys, queryKeys } from '@/lib/queryKeys';
@@ -9,6 +9,7 @@ import { toast } from '@/store/toastStore';
 import type { WishlistEntry } from '@/types';
 import type { ProductRef } from './useGarageActions';
 import { useRequireAuthAction } from './useRequireAuthAction';
+import { wishlistQueryOptions } from './useWishlist';
 
 interface WishlistVariables {
   uid: string;
@@ -42,8 +43,27 @@ const refOf = (product: ProductRef): { productId: string; name?: string } =>
     : { productId: product.id, ...(product.name ? { name: product.name } : {}) };
 
 /**
+ * Whether `productId` is on `uid`'s wishlist: from the mirror once it is hydrated, else from the
+ * wishlist query (joins UserDataSync's in-flight fetch right after sign-in). Rejects when the
+ * wishlist can't be read — the caller then writes nothing.
+ */
+function resolveWishlisted(
+  queryClient: QueryClient,
+  uid: string,
+  productId: string,
+): boolean | Promise<boolean> {
+  const store = useGarageStore.getState();
+  if (store.wishlistHydrated) return productId in store.wishlist;
+  return queryClient
+    .ensureQueryData(wishlistQueryOptions(uid))
+    .then((entries) => entries.some((entry) => entry.productId === productId));
+}
+
+/**
  * Optimistic wishlist mutations (cache + garageStore mirror, rollback + error toast), same
- * contract as `useGarageActions`.
+ * contract as `useGarageActions`. A `toggle` is resolved at click time against what the heart
+ * shows (signed out / not hydrated yet → "not saved" → add), so an action queued behind the
+ * sign-in prompt never turns into a remove; it is a quiet no-op if the car is already saved.
  */
 export function useWishlistActions(options: UseWishlistActionsOptions = {}): WishlistActions {
   const showToasts = options.toasts ?? true;
@@ -96,16 +116,22 @@ export function useWishlistActions(options: UseWishlistActionsOptions = {}): Wis
   const set = useCallback(
     (product: ProductRef, wishlisted: boolean | 'toggle') => {
       const ref = refOf(product);
+      const next =
+        wishlisted === 'toggle'
+          ? !(ref.productId in useGarageStore.getState().wishlist)
+          : wishlisted;
       requireAuth(() => {
         const uid = getCurrentUid();
         if (!uid) return;
-        const current = ref.productId in useGarageStore.getState().wishlist;
-        const next = wishlisted === 'toggle' ? !current : wishlisted;
-        if (next === current) return;
-        mutate({ ...ref, uid, wishlisted: next });
+        const apply = (current: boolean): void => {
+          if (next !== current) mutate({ ...ref, uid, wishlisted: next });
+        };
+        const current = resolveWishlisted(queryClient, uid, ref.productId);
+        if (typeof current === 'boolean') return apply(current);
+        return current.then(apply);
       }, 'Sign in to save cars to your wishlist.');
     },
-    [mutate, requireAuth],
+    [mutate, queryClient, requireAuth],
   );
 
   return {

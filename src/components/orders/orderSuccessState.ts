@@ -1,7 +1,8 @@
 /**
  * `location.state` handed from the checkout to the order-success page, so the celebration renders
- * instantly without a Firestore read. History state is untyped (and survives reloads), so it is
- * validated before use; anything unexpected falls back to `useOrder(orderId)`.
+ * instantly without a Firestore read. History state is untyped (and survives reloads and
+ * sign-out / sign-in in the same tab), so it is validated — and must belong to the signed-in
+ * collector — before use; anything else falls back to `useOrder(orderId)` (which the rules guard).
  */
 import { BADGE_IDS, PAYMENT_METHODS } from '@shared/types';
 import type { PaymentMethod, PlaceOrderResponse } from '@/types';
@@ -16,6 +17,8 @@ export interface OrderSuccessTotals {
 }
 
 export interface OrderSuccessState {
+  /** The collector who placed the order — another signed-in user never sees this state. */
+  uid: string;
   response: PlaceOrderResponse;
   items: OrderLineSummary[];
   totals: OrderSuccessTotals;
@@ -72,12 +75,19 @@ function isTotals(value: unknown): value is OrderSuccessTotals {
   );
 }
 
-/** The success state when it is well-formed AND belongs to `orderId`, else null. */
-export function readOrderSuccessState(value: unknown, orderId: string): OrderSuccessState | null {
-  if (!isRecord(value)) return null;
+/**
+ * The success state when it is well-formed, belongs to `orderId` AND was saved for the signed-in
+ * collector `uid` (null while signed out / auth is still loading → always null), else null.
+ */
+export function readOrderSuccessState(
+  value: unknown,
+  orderId: string,
+  uid: string | null,
+): OrderSuccessState | null {
+  if (!isRecord(value) || !uid || value.uid !== uid) return null;
   const { response, items, totals, paymentMethod } = value;
   if (!isResponse(response) || response.orderId !== orderId) return null;
   if (!Array.isArray(items) || !items.every(isLine) || !isTotals(totals)) return null;
   if (!isPaymentMethod(paymentMethod)) return null;
-  return { response, items, totals, paymentMethod, celebrated: value.celebrated === true };
+  return { uid, response, items, totals, paymentMethod, celebrated: value.celebrated === true };
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toOrderItems } from '@/components/cart/reconcile';
+import { orderLineExcess, orderLineLimitMessage, toOrderItems } from '@/components/cart/reconcile';
 import { usePlaceOrder } from '@/hooks/useOrders';
 import {
   PaymentAbortedError,
@@ -14,7 +14,8 @@ export type { PlaceOrderInput };
 
 /**
  * `idle` → `paying` (test bank, ~2s) → `confirming` (placeOrder callable) → success callback.
- * `declined` = the (test) payment failed; `error` = placeOrder failed (see `errorKind`).
+ * `declined` = the (test) payment failed; `error` = placeOrder failed or the order can't be placed
+ * as sent (see `errorKind`; `invalid-order` is also set, before paying, for too many lines).
  */
 export type PlaceOrderPhase = 'idle' | 'paying' | 'confirming' | 'declined' | 'error' | 'done';
 
@@ -89,6 +90,16 @@ export function usePlaceOrderFlow({
       setErrorKind(null);
 
       try {
+        // Defence in depth: placeOrder refuses more than MAX_ORDER_LINES lines, so never take a
+        // payment for an order that cannot be placed.
+        const excess = orderLineExcess(input.lines.length);
+        if (excess > 0) {
+          setErrorKind('invalid-order');
+          setMessage(orderLineLimitMessage(excess));
+          setPhase('error');
+          return;
+        }
+
         const signature = paymentSignature(input);
         let payment =
           heldPaymentRef.current?.signature === signature ? heldPaymentRef.current.result : null;

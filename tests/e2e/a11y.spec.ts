@@ -3,10 +3,24 @@
  * light at 1440px plus the 375px layout. Zero serious/critical violations allowed. Pages are
  * scanned with reduced motion (so no element is caught mid-fade) after scrolling through the
  * page once, which triggers the scroll-into-view reveals.
+ *
+ * Besides the empty-state routes, a signed-in "filled pit stop" flow scans the states only a
+ * real order reaches: a cart with two cars (summary + totals breakdown), each checkout step
+ * (address, payment with COD, review) and the order-success page.
  */
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { expect, gotoRoute, signIn, test, uniqueEmail } from './fixtures';
+import {
+  type CartSeedLine,
+  choosePaymentMethod,
+  expect,
+  fillAddress,
+  gotoRoute,
+  seedCart,
+  signIn,
+  test,
+  uniqueEmail,
+} from './fixtures';
 
 const PUBLIC_ROUTES = [
   '/',
@@ -38,6 +52,26 @@ const PRIVATE_ROUTES = [
   '/checkout',
 ] as const;
 
+/** Two in-stock cars at their seeded prices (₹199 + ₹229: under the free-shipping threshold). */
+const PIT_STOP: readonly CartSeedLine[] = [
+  {
+    productId: 'monsoon-mauler',
+    slug: 'monsoon-mauler',
+    name: 'Monsoon Mauler',
+    price: 199,
+    qty: 1,
+    stock: 91,
+  },
+  {
+    productId: 'mahindra-thar',
+    slug: 'mahindra-thar',
+    name: 'Mahindra Thar',
+    price: 229,
+    qty: 1,
+    stock: 134,
+  },
+];
+
 const BLOCKING_IMPACTS = new Set(['serious', 'critical']);
 
 test.use({ reducedMotion: 'reduce' });
@@ -59,6 +93,11 @@ async function revealPage(page: Page): Promise<void> {
 
 async function scan(page: Page, route: string): Promise<void> {
   await gotoRoute(page, route);
+  await scanCurrent(page, route);
+}
+
+/** Scans whatever the page shows right now (e.g. a checkout step reached by clicking). */
+async function scanCurrent(page: Page, route: string): Promise<void> {
   await revealPage(page);
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   const blocking = results.violations.filter((violation) =>
@@ -98,5 +137,50 @@ test.describe('axe (wcag2a + wcag2aa)', () => {
         await scan(page, route);
       });
     }
+  });
+
+  test('no serious/critical violations in a filled pit stop, checkout and order success', async ({
+    page,
+  }, testInfo) => {
+    test.slow();
+    await signIn(page, { email: uniqueEmail(testInfo, 'axe-pit-stop'), displayName: 'Axe Racer' });
+    await seedCart(page, PIT_STOP);
+
+    await test.step('/cart (2 cars)', async () => {
+      await gotoRoute(page, '/cart');
+      const summary = page.locator('[aria-labelledby="cart-summary-title"]');
+      for (const line of PIT_STOP) {
+        await expect(page.getByRole('link', { name: line.name, exact: true })).toBeVisible();
+      }
+      await expect(summary.getByRole('link', { name: /start engine/i })).toBeVisible();
+      await scanCurrent(page, '/cart (filled)');
+    });
+
+    await test.step('/checkout address step', async () => {
+      await gotoRoute(page, '/checkout');
+      await expect(page.getByRole('textbox', { name: /^Full name/ })).toBeVisible();
+      await scanCurrent(page, '/checkout?step=address');
+    });
+
+    await test.step('/checkout payment step (COD)', async () => {
+      await fillAddress(page);
+      await page.getByRole('button', { name: /continue to payment/i }).click();
+      await choosePaymentMethod(page, /^Cash on Delivery/);
+      await scanCurrent(page, '/checkout?step=payment');
+    });
+
+    await test.step('/checkout review step', async () => {
+      await page.getByRole('button', { name: /review order/i }).click();
+      await expect(page.getByRole('button', { name: /^Place order/ })).toBeVisible();
+      await scanCurrent(page, '/checkout?step=review');
+    });
+
+    await test.step('order success', async () => {
+      await page.getByRole('button', { name: /^Place order/ }).click();
+      await expect(page).toHaveURL(/\/checkout\/success\/[^/?#]+/, { timeout: 30_000 });
+      await expect(page.getByRole('heading', { level: 1 })).toContainText(/order confirmed/i);
+      await expect(page.getByRole('main')).toContainText(/\+[1-9][\d,]*\s*XP/);
+      await scanCurrent(page, '/checkout/success/:orderId');
+    });
   });
 });

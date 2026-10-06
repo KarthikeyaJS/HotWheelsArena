@@ -5,15 +5,27 @@
  * `placeOrder`), recompute the collector's stats from the FULL garage + active series, unlock
  * newly satisfied badges and award each badge's XP exactly once, then update the level.
  * Favourite toggles are skipped, badges / XP are never removed, and re-deliveries of the same
- * event are harmless (the plan is a no-op when the profile is already up to date).
+ * event are harmless (the plan changes nothing when the profile is already up to date).
+ *
+ * Bursts stay cheap: every full recompute stamps `statsSyncedAt` on the profile, and the
+ * transaction reads ONLY the profile first. If a recompute provably committed after this event's
+ * garage write (`isSuperseded`), that recompute already saw the write, so the event is skipped
+ * after one read instead of re-reading the garage, the series and every garage product. The
+ * write's commit time comes from the written document's `updateTime` (deletes: the event time,
+ * rounded up to its precision; see `garageWriteCommitBoundMs`).
  */
 import * as logger from 'firebase-functions/logger';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { COLLECTIONS, SUBCOLLECTIONS } from '../../../shared/index.js';
 import { db, serverTimestamp } from '../admin.js';
 import { REGION } from '../config.js';
-import { affectsStats, planGarageSync } from '../lib/garageSync.js';
-import { dataOf, readCollectorState, userRef } from '../refs.js';
+import {
+  affectsStats,
+  garageWriteCommitBoundMs,
+  isSuperseded,
+  planGarageSync,
+} from '../lib/garageSync.js';
+import { dataOf, readGarageState, userRef } from '../refs.js';
 
 export const GARAGE_DOCUMENT_PATH =
   `${COLLECTIONS.users}/{uid}/${SUBCOLLECTIONS.garage}/{productId}` as const;
@@ -30,28 +42,45 @@ export const onGarageWrite = onDocumentWritten(
       return;
     }
 
+    const commitBoundMs = garageWriteCommitBoundMs(
+      change.after.exists ? change.after.updateTime : undefined,
+      event.time,
+    );
+    const profileRef = userRef(uid);
+
     const plan = await db.runTransaction(async (transaction) => {
-      const state = await readCollectorState(transaction, uid);
+      const profileData = dataOf(await transaction.get(profileRef));
+      if (isSuperseded(profileData, commitBoundMs)) return null;
+
+      const state = await readGarageState(transaction, uid);
       const syncPlan = planGarageSync(
         {
           uid,
-          profileData: state.profileData,
+          profileData,
           garage: state.garage.values(),
           products: state.products,
           series: state.series,
         },
         serverTimestamp(),
       );
-      const profileRef = userRef(uid);
-      if (syncPlan.write?.kind === 'update') {
-        transaction.update(profileRef, syncPlan.write.data);
-      } else if (syncPlan.write?.kind === 'merge') {
+      if (syncPlan.write?.kind === 'merge') {
         transaction.set(profileRef, syncPlan.write.data, { merge: true });
+      } else if (syncPlan.write) {
+        transaction.update(profileRef, syncPlan.write.data);
       }
       return syncPlan;
     });
 
-    if (!plan.write) {
+    if (!plan) {
+      logger.debug('onGarageWrite: superseded by a later recompute, skipped', {
+        uid,
+        productId,
+        eventTime: event.time,
+        commitBoundMs,
+      });
+      return;
+    }
+    if (!plan.changed) {
       logger.debug('onGarageWrite: profile already up to date', { uid, productId });
       return;
     }

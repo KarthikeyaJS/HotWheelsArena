@@ -9,8 +9,13 @@ import { formatNumber } from '@/lib/format';
 export interface ResultsToolbarProps {
   /** Id for the results heading (the section's `aria-labelledby`). */
   headingId: string;
-  /** Matching cars; `null` while loading. */
+  /** Matching cars; `null` while loading (or while `unavailable`). */
   count: number | null;
+  /**
+   * The catalogue couldn't load (error state): the heading shows a neutral `— machines`
+   * (announced as "machines unavailable") instead of the loading skeleton.
+   */
+  unavailable?: boolean;
   sort: SortId;
   sortOptions: readonly SortOption[];
   onSortChange: (sort: SortId) => void;
@@ -27,6 +32,7 @@ export interface ResultsToolbarProps {
 export function ResultsToolbar({
   headingId,
   count,
+  unavailable = false,
   sort,
   sortOptions,
   onSortChange,
@@ -40,7 +46,20 @@ export function ResultsToolbar({
   return (
     <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:gap-4">
       <div className="flex min-h-10 items-center">
-        {count === null ? (
+        {unavailable ? (
+          <h2
+            id={headingId}
+            className="flex items-baseline gap-2 font-mono font-bold normal-case tracking-normal"
+          >
+            <span aria-hidden="true" className="text-2xl text-muted">
+              —
+            </span>
+            <span className="text-xs uppercase tracking-hud text-muted">
+              {noun}
+              <span className="sr-only"> unavailable</span>
+            </span>
+          </h2>
+        ) : count === null ? (
           <>
             <h2 id={headingId} className="sr-only">
               Loading machines
@@ -57,7 +76,7 @@ export function ResultsToolbar({
           </h2>
         )}
         <p className="sr-only" aria-live="polite" aria-atomic="true">
-          {count === null ? '' : `${formatNumber(count)} ${noun} on the grid`}
+          {count === null || unavailable ? '' : `${formatNumber(count)} ${noun} on the grid`}
         </p>
       </div>
 

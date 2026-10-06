@@ -83,6 +83,15 @@ service cloud.firestore {
       return value == null || (isString(value, 9, 2048) && value.matches('^https://.+$'));
     }
 
+    // Text without control, zero-width-space or bidi characters: the same set as
+    // shared/text.ts isUnsafeCodePoint (TAB and LF are allowed, and so are ZWNJ/ZWJ
+    // U+200C-U+200D for Indic spellings and emoji sequences). A full match of a negated
+    // class, so line breaks cannot split the check. RE2 has no \u escapes: code points are
+    // written \x{…}.
+    function hasNoHiddenChars(value) {
+      return value.matches('[^\\x{0}-\\x{8}\\x{B}-\\x{1F}\\x{7F}-\\x{9F}\\x{200B}\\x{200E}-\\x{200F}\\x{202A}-\\x{202E}\\x{2066}-\\x{2069}\\x{FEFF}]*');
+    }
+
     // Garage / wishlist entries may only reference cars that exist in the catalogue.
     function productExists(productId) {
       return exists(/databases/$(database)/documents/products/$(productId));
@@ -146,31 +155,33 @@ service cloud.firestore {
     //  Document validators
     // -------------------------------------------------------------------------------
 
-    // users/{uid}: the client may edit only its display name and photo, and must stamp
-    // updatedAt with the server time. xp / level / badges / stats / role / email /
-    // createdAt are function-owned and therefore immutable here.
+    // users/{uid}: the client may edit only its display name (no hidden characters) and
+    // photo, and must stamp updatedAt with the server time. xp / level / badges / stats /
+    // statsSyncedAt / role / email / createdAt are function-owned and therefore immutable here.
     function isValidProfileUpdate() {
       let data = request.resource.data;
       return onlyChanges(['displayName', 'photoURL', 'updatedAt'])
         && isRequestTime(data.updatedAt)
-        && (!changes('displayName') || isString(data.displayName, 1, 80))
+        && (!changes('displayName')
+          || (isString(data.displayName, 1, 80) && hasNoHiddenChars(data.displayName)))
         && (!changes('photoURL') || isOptionalHttpsUrl(data.photoURL));
     }
 
     // users/{uid}/addresses/{id}: Indian address format (same limits as the zod
-    // AddressSchema in shared/schemas.ts). line2 / landmark are always strings ('' ok).
+    // AddressSchema in shared/schemas.ts, including no hidden characters in the text
+    // fields). line2 / landmark are always strings ('' ok).
     function isValidAddress(data) {
       return hasExactKeys(data, [
           'name', 'phone', 'pincode', 'line1', 'line2', 'landmark',
           'city', 'state', 'isDefault', 'createdAt', 'updatedAt'
         ])
-        && isString(data.name, 2, 80)
+        && isString(data.name, 2, 80) && hasNoHiddenChars(data.name)
         && data.phone is string && data.phone.matches('^[6-9][0-9]{9}$')
         && data.pincode is string && data.pincode.matches('^[1-9][0-9]{5}$')
-        && isString(data.line1, 5, 120)
-        && isString(data.line2, 0, 120)
-        && isString(data.landmark, 0, 80)
-        && isString(data.city, 2, 60)
+        && isString(data.line1, 5, 120) && hasNoHiddenChars(data.line1)
+        && isString(data.line2, 0, 120) && hasNoHiddenChars(data.line2)
+        && isString(data.landmark, 0, 80) && hasNoHiddenChars(data.landmark)
+        && isString(data.city, 2, 60) && hasNoHiddenChars(data.city)
         && data.state in indianStates()
         && data.isDefault is bool
         && data.createdAt is timestamp

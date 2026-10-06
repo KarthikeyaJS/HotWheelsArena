@@ -100,6 +100,7 @@ export default function ShopPage() {
           <GridTelemetry
             items={telemetry}
             loading={productsQuery.isPending}
+            unavailable={isError}
             className="hidden sm:block"
           />
         }

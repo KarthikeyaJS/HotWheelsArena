@@ -45,22 +45,23 @@ export const productSelectors = {
 } as const;
 
 /**
- * One product by slug. Served instantly from the cached catalogue when available, else queried.
+ * One product by slug. Seeded instantly from the cached catalogue (as `initialData`, as fresh as
+ * the list), but every (re)fetch reads the server — so invalidating `['products']` (e.g. after a
+ * review changes the rating) updates the detail instead of re-serving the old cached list entry.
  * `data === null` → not found (render the 404 state).
  */
 export function useProduct(slug: string | undefined): UseQueryResult<Product | null> {
   const queryClient = useQueryClient();
-  const fromList = (): Product | undefined =>
-    slug
-      ? queryClient
-          .getQueryData<Product[]>(queryKeys.productList())
-          ?.find((product) => product.slug === slug)
-      : undefined;
 
   return useQuery<Product | null>({
     queryKey: queryKeys.product(slug ?? ''),
-    queryFn: slug ? async () => fromList() ?? fetchProductBySlug(slug) : skipToken,
-    initialData: fromList,
+    queryFn: slug ? () => fetchProductBySlug(slug) : skipToken,
+    initialData: () =>
+      slug
+        ? queryClient
+            .getQueryData<Product[]>(queryKeys.productList())
+            ?.find((product) => product.slug === slug)
+        : undefined,
     initialDataUpdatedAt: () => queryClient.getQueryState(queryKeys.productList())?.dataUpdatedAt,
     staleTime: STALE_TIMES.products,
   });
@@ -68,8 +69,9 @@ export function useProduct(slug: string | undefined): UseQueryResult<Product | n
 
 /**
  * Products for a list of ids, in the given order (missing / retired ones are skipped). Uses the
- * cached catalogue first, then fetches the rest individually (e.g. inactive cars in a garage).
- * Keeps the previous result while `ids` change.
+ * catalogue first (cached while fresh; refetched — or joined — once stale or invalidated), then
+ * fetches the rest individually (e.g. inactive cars in a garage). Keeps the previous result while
+ * `ids` change.
  */
 export function useProductsByIds(ids: readonly string[]): UseQueryResult<Product[]> {
   const queryClient = useQueryClient();
@@ -79,7 +81,7 @@ export function useProductsByIds(ids: readonly string[]): UseQueryResult<Product
     queryKey: queryKeys.productsByIds(uniqueIds),
     queryFn: async () => {
       if (uniqueIds.length === 0) return [];
-      const catalogue = await queryClient.ensureQueryData(productListQueryOptions);
+      const catalogue = await queryClient.fetchQuery(productListQueryOptions);
       const byId = new Map(catalogue.map((product) => [product.id, product]));
       const missing = uniqueIds.filter((id) => !byId.has(id));
       if (missing.length > 0) {

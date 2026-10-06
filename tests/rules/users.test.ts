@@ -145,6 +145,44 @@ describe('updating profiles', () => {
   });
 
   it.each([
+    ['a NUL character', 'Alice\u0000Racer'],
+    ['a BEL control character', 'Alice\u0007'],
+    ['a right-to-left override', 'Team \u202ElaiciffO'],
+    ['a zero-width space', 'Ali\u200Bce'],
+    ['a bidi isolate', 'Alice \u2066x\u2069'],
+    ['a byte-order mark', '\uFEFFAlice'],
+    ['a C1 control character', 'Alice\u0085'],
+    ['a left-to-right mark', 'Alice\u200E'],
+    ['hidden characters between line breaks', 'a\n\u202E\nb'],
+  ])('rejects a display name with %s', async (_label, displayName) => {
+    await assertFails(
+      db.alice.doc('users/alice').update({ displayName, updatedAt: serverTimestamp() }),
+    );
+  });
+
+  it.each([
+    ['Hindi text', 'अर्जुन मेहता'],
+    ['emoji', 'Alice 🏎️🔥'],
+    ['a check mark', 'Team ✓'],
+    ['a Marathi eyelash-ra (ZWJ)', 'मराठी दर्\u200Dया'],
+    ['a ZWNJ half form', 'क्\u200Cष'],
+    ['a family emoji (ZWJ sequence)', 'Alice \u{1F468}\u200D\u{1F469}\u200D\u{1F467}'],
+    ['a line break (TAB / LF are allowed, as in shared/text.ts)', 'Alice\nRacer'],
+  ])('accepts a display name with %s', async (_label, displayName) => {
+    await assertSucceeds(
+      db.alice.doc('users/alice').update({ displayName, updatedAt: serverTimestamp() }),
+    );
+  });
+
+  it('the owner cannot set the server-only statsSyncedAt stamp', async () => {
+    await assertFails(
+      db.alice
+        .doc('users/alice')
+        .update({ statsSyncedAt: serverTimestamp(), updatedAt: serverTimestamp() }),
+    );
+  });
+
+  it.each([
     ['an http (non-TLS) photo URL', 'http://example.com/me.png'],
     ['a javascript: photo URL', 'javascript:alert(1)'],
     ['a non-string photo URL', 7],

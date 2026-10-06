@@ -3,6 +3,8 @@ import type { z } from 'zod';
 import { INDIAN_STATES, isValidPincode, normalizeIndianPhone } from './india.js';
 import {
   AddressSchema,
+  DocIdSchema,
+  HIDDEN_CHARACTERS_MESSAGE,
   NewsletterSchema,
   PaymentResultSchema,
   PlaceOrderRequestSchema,
@@ -70,6 +72,108 @@ describe('AddressSchema', () => {
   ])('rejects invalid %s (%s)', (field, value) => {
     const result = AddressSchema.safeParse({ ...validAddress, [field]: value });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('AddressSchema hidden characters', () => {
+  it.each([
+    ['NUL', 'U+0000'],
+    ['RLO', 'U+202E'],
+    ['ZWSP', 'U+200B'],
+  ])('rejects line1 containing %s (%s)', (_name, codePoint) => {
+    const char = String.fromCodePoint(Number.parseInt(codePoint.slice(2), 16));
+    const result = AddressSchema.safeParse({ ...validAddress, line1: `12, MG ${char}Road` });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe(HIDDEN_CHARACTERS_MESSAGE);
+    expect(result.error?.issues[0]?.path).toEqual(['line1']);
+  });
+
+  it.each(['name', 'line1', 'line2', 'landmark', 'city'] as const)(
+    'checks %s for control / bidi / zero-width characters',
+    (field) => {
+      const result = AddressSchema.safeParse({
+        ...validAddress,
+        [field]: 'Bengaluru\u2066x\u2069',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.path).toEqual([field]);
+    },
+  );
+
+  it('accepts ordinary and Hindi address text', () => {
+    expect(AddressSchema.safeParse({ ...validAddress, line1: 'Flat 4, MG Road' }).success).toBe(
+      true,
+    );
+    expect(
+      AddressSchema.safeParse({
+        ...validAddress,
+        name: 'अर्जुन मेहता',
+        line1: 'फ्लैट 4, एमजी रोड',
+        landmark: 'मंदिर के पास',
+        city: 'बेंगलुरु',
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe('AddressSchema joiners (ZWNJ / ZWJ are allowed)', () => {
+  it('accepts a Marathi eyelash-ra, a Malayalam chillu and a ZWNJ half form', () => {
+    const result = AddressSchema.safeParse({
+      ...validAddress,
+      name: 'दर्\u200Dया पाटील',
+      line1: 'फ्लैट 4, क्\u200Cष रोड',
+      landmark: 'അവന്\u200D സ്കൂൾ',
+      city: 'पुणे',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('still rejects bidi marks next to a joiner', () => {
+    const result = AddressSchema.safeParse({ ...validAddress, line1: 'दर्\u200Dया \u200ERoad' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe(HIDDEN_CHARACTERS_MESSAGE);
+  });
+});
+
+describe('DocIdSchema', () => {
+  it.each([
+    '.',
+    '..',
+    '__x__',
+    '__',
+    '___',
+    '__a__',
+    'a/b',
+    'a b',
+    'a.b',
+    '',
+    '   ',
+    'x'.repeat(129),
+  ])('rejects %j', (id) => {
+    expect(DocIdSchema.safeParse(id).success).toBe(false);
+  });
+
+  it.each(['porsche-911-gt3-rs', 'As5rVIGx77iXmitTi3vh', '_draft', 'a__b', '__a', 'x'.repeat(128)])(
+    'accepts %j',
+    (id) => {
+      expect(DocIdSchema.safeParse(id).success).toBe(true);
+    },
+  );
+
+  it('trims before validating', () => {
+    expect(DocIdSchema.parse('  porsche-911-gt3-rs ')).toBe('porsche-911-gt3-rs');
+  });
+
+  it('guards the callable product ids', () => {
+    const base = { address: validAddress, payment: validPayment };
+    for (const productId of ['__x__', '.']) {
+      expect(
+        PlaceOrderRequestSchema.safeParse({ ...base, items: [{ productId, qty: 1 }] }).success,
+      ).toBe(false);
+      expect(
+        SubmitReviewSchema.safeParse({ productId, rating: 4, text: 'Beautiful casting!' }).success,
+      ).toBe(false);
+    }
   });
 });
 

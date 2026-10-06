@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { padNumber } from '@/lib/format';
 import type { OrderTotals, SiteSettings } from '@/types';
 import { FreeShippingMeter } from './FreeShippingMeter';
+import { orderLineLimitMessage } from './reconcile';
 import { TotalsBreakdown } from './TotalsBreakdown';
 import { TrustNotes } from './TrustNotes';
 
@@ -21,6 +22,8 @@ export interface CartSummaryProps {
   onRetryVerify: () => void;
   /** Sold-out / unavailable lines block the checkout. */
   hasBlockers: boolean;
+  /** Lines over the per-order limit (MAX_ORDER_LINES); > 0 blocks the checkout. */
+  lineLimitExcess: number;
   className?: string;
 }
 
@@ -32,15 +35,20 @@ export function CartSummary({
   verifyError,
   onRetryVerify,
   hasBlockers,
+  lineLimitExcess,
   className,
 }: CartSummaryProps) {
   const hintId = useId();
-  const canCheckout = !hasBlockers && totals.itemCount > 0;
+  const overLimit = lineLimitExcess > 0;
+  const canCheckout = !hasBlockers && !overLimit && totals.itemCount > 0;
   const hint = hasBlockers
     ? 'Remove sold-out or unavailable cars to start your engine.'
-    : verifyError
-      ? "We couldn't re-check live prices — they're verified again at checkout."
-      : null;
+    : overLimit
+      ? orderLineLimitMessage(lineLimitExcess)
+      : verifyError
+        ? "We couldn't re-check live prices — they're verified again at checkout."
+        : null;
+  const hintIsBlocking = hasBlockers || overLimit;
 
   return (
     <section
@@ -107,7 +115,11 @@ export function CartSummary({
           {hint ? (
             <p
               id={hintId}
-              className={cn('text-center text-xs', hasBlockers ? 'text-danger-ink' : 'text-muted')}
+              role={overLimit ? 'alert' : undefined}
+              className={cn(
+                'text-center text-xs',
+                hintIsBlocking ? 'text-danger-ink' : 'text-muted',
+              )}
             >
               {hint}
             </p>

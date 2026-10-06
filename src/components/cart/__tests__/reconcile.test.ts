@@ -113,7 +113,7 @@ describe('reconcileCart', () => {
 
     // What useReconciledCart does: store.reconcile + apply the settings cap.
     const store = useCartStore.getState();
-    store.reconcile(products);
+    store.reconcile(products, Date.now());
     useCartStore
       .getState()
       .items.filter((line) => line.qty > cap)

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CartItem } from '@/types';
 import {
+  INVALID_ORDER_FALLBACK,
   NETWORK_ERROR_MESSAGE,
   UNAUTHENTICATED_MESSAGE,
   classifyPlaceOrderError,
@@ -28,6 +29,25 @@ describe('classifyPlaceOrderError', () => {
     expect(classifyPlaceOrderError(functionsError('out-of-range', 'Too many')).kind).toBe(
       'order-changed',
     );
+  });
+
+  it('treats invalid-argument as an order that cannot be placed (no "we refreshed prices")', () => {
+    expect(
+      classifyPlaceOrderError(
+        functionsError('invalid-argument', 'An order can hold at most 20 different cars'),
+      ),
+    ).toEqual({
+      kind: 'invalid-order',
+      message: 'An order can hold at most 20 different cars',
+      keepPayment: false,
+    });
+    // Without a usable server message → a friendly fallback, still not "order-changed".
+    const bare = classifyPlaceOrderError(functionsError('invalid-argument', ''));
+    expect(bare).toEqual({
+      kind: 'invalid-order',
+      message: INVALID_ORDER_FALLBACK,
+      keepPayment: false,
+    });
   });
 
   it('keeps the payment for an expired session', () => {

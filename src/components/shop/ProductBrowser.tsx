@@ -156,6 +156,7 @@ export function ProductBrowser({
           <ResultsToolbar
             headingId={headingId}
             count={count}
+            unavailable={isError && !loading}
             sort={sort}
             sortOptions={sortOptions}
             onSortChange={controller.setSort}

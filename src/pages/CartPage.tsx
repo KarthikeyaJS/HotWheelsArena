@@ -233,6 +233,7 @@ export default function CartPage() {
                 verifyError={cart.verifyError}
                 onRetryVerify={cart.retryVerify}
                 hasBlockers={cart.hasBlockers}
+                lineLimitExcess={cart.lineLimitExcess}
               />
             </ErrorBoundary>
           </div>

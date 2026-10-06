@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeProduct } from '@/components/product/__tests__/fixtures';
-import { BRAND_NAME } from '@/config/brand';
+import { BRAND_NAME, BRAND_PRODUCT_LINE } from '@/config/brand';
 import { absoluteUrl } from '@/config/site';
 import {
   buildProductDetailJsonLd,
@@ -48,7 +48,9 @@ describe('product SEO helpers', () => {
       sku: 'twin-mill-orange',
       description: 'A legendary twin-engine concept.',
       image: [absoluteUrl('/placeholders/supercar-orange.svg')],
-      brand: { '@type': 'Brand', name: 'Hot Rod Co' },
+      // The toy line is the brand; the real car's make + model go in `model` (and the name).
+      brand: { '@type': 'Brand', name: BRAND_PRODUCT_LINE },
+      model: 'Hot Rod Co Twin Mill',
       offers: {
         '@type': 'Offer',
         price: '1299.00',
@@ -58,6 +60,21 @@ describe('product SEO helpers', () => {
       },
       aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.5', reviewCount: 12 },
     });
+  });
+
+  it('never uses the real car maker as the brand, and omits model when make/model are empty', () => {
+    const porsche = buildProductDetailJsonLd(
+      makeProduct({ make: ' Porsche ', model: '911 GT3 RS' }),
+    );
+    expect(porsche.brand).toEqual({ '@type': 'Brand', name: BRAND_PRODUCT_LINE });
+    expect(porsche.model).toBe('Porsche 911 GT3 RS');
+
+    expect(buildProductDetailJsonLd(makeProduct({ make: '', model: 'Twin Mill' })).model).toBe(
+      'Twin Mill',
+    );
+    const unnamed = buildProductDetailJsonLd(makeProduct({ make: ' ', model: '' }));
+    expect(unnamed).not.toHaveProperty('model');
+    expect(unnamed.brand).toEqual({ '@type': 'Brand', name: BRAND_PRODUCT_LINE });
   });
 
   it('marks sold-out cars OutOfStock and omits aggregateRating without ratings', () => {

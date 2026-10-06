@@ -45,7 +45,9 @@ export function Navbar() {
             condensed ? 'h-[60px]' : 'h-[76px]',
           )}
         >
-          <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
+          {/* The left cluster may shrink (and the wordmark text drops to sr-only below 360px)
+              so the header never overflows a 320px viewport (WCAG 1.4.10 reflow). */}
+          <div className="flex min-w-0 shrink items-center gap-1 sm:gap-2">
             <IconButton
               label="Open menu"
               icon={<Menu />}
@@ -54,7 +56,7 @@ export function Navbar() {
               aria-expanded={mobileNavOpen}
               className="-ml-2 lg:hidden"
             />
-            <Logo size={condensed ? 'sm' : 'md'} />
+            <Logo size={condensed ? 'sm' : 'md'} textClassName="max-[359px]:sr-only" />
           </div>
 
           <NavLinks className="mx-auto hidden lg:block" />

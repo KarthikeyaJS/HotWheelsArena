@@ -48,6 +48,10 @@ All global options are in `src/config.ts`: region `asia-south1` and `maxInstance
 ### `placeOrder`
 
 - **Request:** `PlaceOrderRequest` = `{ items: [{ productId, qty }] (1–20 unique lines, qty 1–10), address: Address, payment: PaymentResult }`.
+  Product ids must pass the shared `DocIdSchema` (`A–Z a–z 0–9 _ -`, 1–128 chars, no reserved
+  `__…__` ids), and the address text fields must not contain control, zero-width-space or bidi
+  characters ("Remove hidden or control characters"; ZWNJ/ZWJ are allowed for Indic spellings
+  and emoji sequences); both fail with `invalid-argument`.
 - **Response:** `PlaceOrderResponse` = `{ orderId, xpEarned, badgesUnlocked, level, leveledUp, total }`.
 - **Idempotency:** each verified payment gets a marker at
   `processedPayments/{provider}_{transactionId}`. A retry with the same payment returns the
@@ -95,7 +99,8 @@ Everything below happens in **one Firestore transaction**:
 ### `submitReview`
 
 - **Request:** `{ productId, rating (int 1–5), text (10–1000 chars after trimming) }`. **Response:** `{ reviewId }` (the caller's uid).
-- The text is sanitised (control, zero-width and bidi characters removed, newlines normalised) and
+- The text is sanitised (control, zero-width-space and bidi characters removed, ZWNJ/ZWJ kept,
+  newlines normalised) and
   then checked again against the shared rules.
 - `verifiedBuyer` is `true` if the caller has a non-cancelled order containing the product. It
   checks `productIds`, and falls back to `items` for older orders.
@@ -108,7 +113,13 @@ Everything below happens in **one Firestore transaction**:
     the old rating for the new one. The running sum is recovered from `avg × count` (averages are
     stored with 4 decimals), so the numbers stay exact.
 - Name and photo come from the profile, then the ID token, then "Collector". The email is never
-  used.
+  used. The name is cleaned with the shared `stripUnsafeText` (control, zero-width-space and bidi
+  characters removed; ZWNJ/ZWJ kept), runs of whitespace become one space and it is capped at 80 characters; a
+  name with nothing visible left falls through to the next source. Only Google account photos
+  (`https://lh3.googleusercontent.com/…`, also `lh4`–`lh6`) are kept; anything else is `null`.
+- `productId` must be a valid document id (shared `DocIdSchema`: `A–Z a–z 0–9 _ -`, 1–128 chars,
+  not a reserved `__…__` id), so `.`, `..` or `__x__` fail with `invalid-argument` before any
+  Firestore read.
 - **Errors:** `unauthenticated`, `invalid-argument`, `not-found`, `failed-precondition`, `aborted`, `internal`.
 
 ### `subscribeNewsletter`
@@ -122,6 +133,15 @@ Everything below happens in **one Firestore transaction**:
   Raw IPs are never stored. Over the limit it returns `resource-exhausted` ("…take a lap and try
   again in about N minutes."). If the IP can't be determined, the limit is skipped and a warning is
   logged.
+- **Which IP** (`lib/net.ts`): Google's front end _appends_ the address of the peer that connected
+  to it to `X-Forwarded-For` and does not verify the entries a caller sent before it, so the client
+  IP is the **right-most** entry (`CLIENT_IP_TRUSTED_HOPS = 0`, direct callable traffic). Earlier
+  entries are ignored, so a caller cannot pick a fresh bucket by sending its own header. If an
+  external load balancer or another trusted proxy is ever put in front of the functions, set
+  `CLIENT_IP_TRUSTED_HOPS` to the number of entries it appends after Google's. When the header has
+  too few entries, or the chosen entry is not an IP address, the socket address is used (never
+  `req.ip`, which with `trust proxy` is the left-most, caller-controlled entry). IPv6 clients are
+  keyed by their /64 (`rateLimitKeyForIp`), because one subscriber line usually holds a whole /64.
 - **Errors:** `invalid-argument`, `resource-exhausted`, `aborted`, `internal`.
 
 ### `onUserCreate`
@@ -134,14 +154,22 @@ profile on the next sign-in.
 
 - Runs on every write to `users/{uid}/garage/{productId}`.
 - Skips favourite toggles, and any other change that doesn't touch creation, deletion or quantity.
-- Otherwise it runs a transaction: it reads the profile, the full garage, the active series and
-  every garage product, then recalculates stats. `ordersPlaced` and `totalSpent` are kept.
+- Otherwise it runs a transaction. It reads **only the profile** first: if the profile's
+  `statsSyncedAt` is strictly later than the event's commit time (`event.time`), a recompute that
+  committed after this garage write has already seen it (transactions are serializable), so the
+  event is skipped after that single read ("superseded by a later recompute, skipped"). Bursts of
+  garage writes and re-delivered events therefore collapse to about one full recompute.
+- Otherwise it reads the full garage, the active series and every garage product, then
+  recalculates stats. `ordersPlaced` and `totalSpent` are kept.
 - It awards `xpReward` **only for badges not already on the profile**, and recalculates the level.
 - It **never removes badges or XP** when cars are removed.
-- If nothing changed, it writes nothing. That makes re-delivered events, and the garage writes made
-  by `placeOrder`, harmless.
-- If the profile doesn't exist yet, it merges `{ uid, role, xp, level, badges, stats, createdAt, updatedAt }`
-  and lets `ensureUserProfile` fill in the name, email and photo later.
+- Every full recompute stamps the server-only `statsSyncedAt` (server timestamp). If nothing else
+  changed, that stamp is the only write, so re-delivered events and the garage writes made by
+  `placeOrder` stay harmless. Clients can never write `statsSyncedAt`: the profile rules only let
+  them change `displayName`, `photoURL` and `updatedAt`.
+- If the profile doesn't exist yet, it merges `{ uid, role, xp, level, badges, stats, statsSyncedAt, createdAt, updatedAt }`
+  and lets `ensureUserProfile` fill in the name, email and photo later. A missing profile with an
+  empty garage gets no write at all.
 
 ---
 
@@ -245,8 +273,8 @@ callable over HTTP and checks the trigger (see `scripts/README.md`).
    `already-subscribed`. The rate limit (6th attempt from one IP within 10 minutes →
    `resource-exhausted`) keys on the client IP, which the Functions emulator does not expose — it
    logs "client IP unavailable, rate limit skipped" and lets the call through. To exercise the
-   limit locally, send an `X-Forwarded-For` header (as `npm run smoke` does); in production
-   Google's front end sets it.
+   limit locally, send an `X-Forwarded-For` header (as `npm run smoke` does); its right-most entry
+   is the key. In production Google's front end appends the real client IP to that header.
 
 `npm run shell` opens `firebase functions:shell` against the emulators, where you can call
 callables directly.
@@ -264,6 +292,13 @@ Recommended in production:
 - Enable a Firestore **TTL policy** on `rateLimits.expiresAt`, so old rate-limit windows are
   cleaned up automatically.
 - Set `ALLOW_TEST_PAYMENTS=false` once a real gateway is live.
+- Register the web app with **App Check** and then enforce it: `enforceAppCheck: true` on the
+  callables (above all `subscribeNewsletter`, which needs no sign-in) and App Check enforcement
+  for Firestore (keeps scripted clients from flooding the garage writes that trigger
+  `onGarageWrite`). This is configuration plus one option per `onCall`; the client needs the App
+  Check SDK initialised first.
+- If a load balancer or other trusted proxy is added in front of the functions, update
+  `CLIENT_IP_TRUSTED_HOPS` in `src/lib/net.ts` (see `subscribeNewsletter`).
 
 `processedPayments` and `rateLimits` are functions-only collections. The rules deny all client
 access.

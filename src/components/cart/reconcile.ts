@@ -3,7 +3,7 @@
  * so displayed totals and the payment amount always match what `placeOrder` will compute
  * server-side (`computeOrderTotals` over current prices).
  */
-import { MAX_QTY_PER_ITEM, clampQty } from '@shared/commerce';
+import { MAX_ORDER_LINES, MAX_QTY_PER_ITEM, clampQty } from '@shared/commerce';
 import { primaryImageOf } from '@/lib/product';
 import type { CartItem, Product } from '@/types';
 
@@ -252,6 +252,19 @@ export function mergeNoticeChanges(
     merged.set(key, { ...change, kind, from });
   }
   return [...merged.values()];
+}
+
+/**
+ * How many lines an order is over `MAX_ORDER_LINES` (the limit `placeOrder` enforces) — 0 when
+ * it fits. Checked before any payment is taken.
+ */
+export function orderLineExcess(lineCount: number): number {
+  return Math.max(0, lineCount - MAX_ORDER_LINES);
+}
+
+/** Copy shown while an order has too many different cars (`excess` = lines to remove). */
+export function orderLineLimitMessage(excess: number): string {
+  return `An order can hold at most ${MAX_ORDER_LINES} different cars — remove ${excess} to start your engine.`;
 }
 
 /** `items` → `{ productId, qty }[]` for `placeOrder`. */

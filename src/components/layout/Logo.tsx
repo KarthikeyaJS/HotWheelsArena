@@ -12,6 +12,11 @@ export interface LogoProps {
   asLink?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
   className?: string;
+  /**
+   * Extra classes for the wordmark text, e.g. `max-[359px]:sr-only` in the Navbar so the header
+   * reflows at 320px. The link's accessible name ("<brand> — home") is unaffected.
+   */
+  textClassName?: string;
 }
 
 const TEXT_SIZES: Readonly<Record<LogoSize, string>> = {
@@ -47,9 +52,10 @@ function LogoMark({ size }: { size: LogoSize }) {
 
 /**
  * Wordmark: orange stripe mark + `BRAND_LOGO_TEXT` in Orbitron. Links home by default
- * (accessible name "<brand> — home").
+ * (accessible name "<brand> — home"). The wrapper is `min-w-0` (not shrink-0) so a tight flex
+ * row can shrink it; the stripe mark itself never shrinks.
  */
-export function Logo({ size = 'md', asLink = true, onClick, className }: LogoProps) {
+export function Logo({ size = 'md', asLink = true, onClick, className, textClassName }: LogoProps) {
   const content = (
     <>
       <LogoMark size={size} />
@@ -57,6 +63,7 @@ export function Logo({ size = 'md', asLink = true, onClick, className }: LogoPro
         className={cn(
           'font-display font-black uppercase leading-none tracking-[0.14em] text-fg',
           TEXT_SIZES[size],
+          textClassName,
         )}
       >
         {BRAND_LOGO_TEXT}
@@ -65,7 +72,7 @@ export function Logo({ size = 'md', asLink = true, onClick, className }: LogoPro
   );
 
   const classes = cn(
-    'group/logo inline-flex min-w-0 shrink-0 items-center gap-2.5 rounded-md transition-[font-size] duration-300',
+    'group/logo inline-flex min-w-0 items-center gap-2.5 rounded-md transition-[font-size] duration-300',
     className,
   );
 

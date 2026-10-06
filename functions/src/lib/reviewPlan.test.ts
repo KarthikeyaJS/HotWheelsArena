@@ -12,13 +12,15 @@ import {
 
 describe('prepareReviewText', () => {
   it('sanitises and returns valid text', () => {
-    expect(prepareReviewText('  Superb casting,​ crisp tampos!  ')).toBe(
+    expect(prepareReviewText('  Superb casting,\u200B crisp tampos!  ')).toBe(
       'Superb casting, crisp tampos!',
     );
   });
 
   it('re-validates after sanitising with the shared review rules', () => {
-    const error = captureAppError(() => prepareReviewText('Nice​​​​​​!'));
+    const error = captureAppError(() =>
+      prepareReviewText('Nice\u200B\u200B\u200B\u200B\u200B\u200B!'),
+    );
     expect(error.code).toBe('invalid-argument');
     expect(error.message).toBe('Tell other collectors a bit more (at least 10 characters)');
   });
@@ -52,8 +54,70 @@ describe('resolveReviewer', () => {
 
   it("prefers the profile's display name and photo", () => {
     expect(
-      resolveReviewer({ displayName: 'Garage Asha', photoURL: 'https://example.com/p.png' }, token),
-    ).toEqual({ displayName: 'Garage Asha', photoURL: 'https://example.com/p.png' });
+      resolveReviewer(
+        { displayName: 'Garage Asha', photoURL: 'https://lh3.googleusercontent.com/a/abc' },
+        token,
+      ),
+    ).toEqual({ displayName: 'Garage Asha', photoURL: 'https://lh3.googleusercontent.com/a/abc' });
+  });
+
+  it('strips control / bidi / zero-width characters and collapses whitespace in the name', () => {
+    const noToken = { displayName: null, photoURL: null };
+    expect(
+      resolveReviewer({ displayName: 'Team ✓\u202E\u0000\nlaiciffO' }, noToken).displayName,
+    ).toBe('Team ✓ laiciffO');
+    expect(
+      resolveReviewer({ displayName: '  Asha\u200B \t\r\n  Rao\uFEFF ' }, noToken).displayName,
+    ).toBe('Asha Rao');
+    expect(resolveReviewer({ displayName: 'शानदार 🏎️' }, noToken).displayName).toBe('शानदार 🏎️');
+  });
+
+  it('keeps ZWNJ / ZWJ in the name (Indic spellings, emoji ZWJ sequences)', () => {
+    const noToken = { displayName: null, photoURL: null };
+    expect(resolveReviewer({ displayName: 'दर्\u200Dया पाटील' }, noToken).displayName).toBe(
+      'दर्\u200Dया पाटील',
+    );
+    expect(
+      resolveReviewer({ displayName: 'Asha \u{1F468}\u200D\u{1F469}\u200D\u{1F467}' }, noToken)
+        .displayName,
+    ).toBe('Asha \u{1F468}\u200D\u{1F469}\u200D\u{1F467}');
+    expect(resolveReviewer({ displayName: 'क्\u200Cष \u200F' }, noToken).displayName).toBe(
+      'क्\u200Cष',
+    );
+  });
+
+  it('falls back to the default name when the name is made only of invisible characters', () => {
+    const noToken = { displayName: null, photoURL: null };
+    expect(resolveReviewer({ displayName: '\u202E\u200B\u0000 \n' }, noToken).displayName).toBe(
+      'Collector',
+    );
+    expect(resolveReviewer({}, { displayName: '\u2066\u2069', photoURL: null }).displayName).toBe(
+      'Collector',
+    );
+    // An unusable profile name falls through to the (clean) token name first.
+    expect(resolveReviewer({ displayName: '\u200B\u200B' }, token).displayName).toBe('Token Name');
+  });
+
+  it('keeps only Google account photos', () => {
+    const noToken = { displayName: null, photoURL: null };
+    expect(
+      resolveReviewer({ photoURL: 'https://res.cloudinary.com/x/y.png' }, noToken).photoURL,
+    ).toBeNull();
+    expect(resolveReviewer({ photoURL: 'https://example.com/p.png' }, noToken).photoURL).toBeNull();
+    expect(
+      resolveReviewer({ photoURL: 'http://lh3.googleusercontent.com/a/abc' }, noToken).photoURL,
+    ).toBeNull();
+    expect(
+      resolveReviewer({ photoURL: 'https://lh3.googleusercontent.com.evil.test/a' }, noToken)
+        .photoURL,
+    ).toBeNull();
+    expect(
+      resolveReviewer({ photoURL: 'https://lh3.googleusercontent.com/a/abc' }, noToken).photoURL,
+    ).toBe('https://lh3.googleusercontent.com/a/abc');
+    // An off-site profile photo falls through to the token's Google photo.
+    expect(resolveReviewer({ photoURL: 'https://example.com/p.png' }, token).photoURL).toBe(
+      'https://lh3.googleusercontent.com/t',
+    );
   });
 
   it('falls back to the token, then to "Collector" — never the email', () => {

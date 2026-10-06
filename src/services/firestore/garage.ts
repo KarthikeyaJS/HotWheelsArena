@@ -7,20 +7,13 @@
  *  - delete: allowed
  * `source: 'purchase'` entries are written only by `placeOrder`.
  */
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
+import { collection, deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { COLLECTIONS, SUBCOLLECTIONS } from '@shared/constants';
 import { MAX_GARAGE_QUANTITY } from '@shared/gamification';
 import type { GarageEntry } from '@shared/types';
 import { db } from '@/config/firebase';
 import { garageEntryConverter } from './converters';
+import { getDocsOnline } from './serverReads';
 
 export const garageCollection = (uid: string) =>
   collection(db, COLLECTIONS.users, uid, SUBCOLLECTIONS.garage).withConverter(garageEntryConverter);
@@ -30,7 +23,7 @@ const garageDocRef = (uid: string, productId: string) =>
 
 /** Newest additions first. */
 export async function fetchGarage(uid: string): Promise<GarageEntry[]> {
-  const snapshot = await getDocs(garageCollection(uid));
+  const snapshot = await getDocsOnline(garageCollection(uid));
   return snapshot.docs
     .map((document) => document.data())
     .sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));

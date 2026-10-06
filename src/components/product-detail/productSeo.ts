@@ -42,17 +42,22 @@ export function productOgImage(product: Product): string {
 }
 
 /**
- * schema.org Product: name, image, description, sku (= id), brand (= the car's make), offers
- * (price, INR, InStock / OutOfStock, url) and aggregateRating when the car has ratings.
- * Builds on the shared `buildProductJsonLd` and overrides brand + description.
+ * schema.org Product: name, image, description, sku (= id), brand (= the die-cast product line,
+ * `BRAND_PRODUCT_LINE` — we sell the toy, not the real car), model (= "<make> <model>" of the real
+ * car, omitted when both are empty), offers (price, INR, InStock / OutOfStock, url) and
+ * aggregateRating when the car has ratings. Builds on the shared `buildProductJsonLd` (keeping its
+ * brand) and overrides the description with the generated fallback copy.
  */
 export function buildProductDetailJsonLd(product: Product): JsonLd {
   const base = buildProductJsonLd(product);
+  const model = [product.make, product.model]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' ');
   return {
     ...base,
     description: truncateDescription(productDescription(product), 300),
-    brand: { '@type': 'Brand', name: product.make.trim() || BRAND_PRODUCT_LINE },
-    model: product.model || undefined,
+    ...(model ? { model } : {}),
   };
 }
 

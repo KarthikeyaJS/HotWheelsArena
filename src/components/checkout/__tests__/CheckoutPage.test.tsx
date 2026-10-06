@@ -46,11 +46,13 @@ const mocks = vi.hoisted(() => ({
   saveAddress: vi.fn(() => Promise.resolve('address-1')),
   refetch: vi.fn(() => Promise.resolve()),
   signIn: vi.fn(),
+  /** Overrides the catalogue for a test (null → PRODUCTS). */
+  catalogue: null as Product[] | null,
 }));
 
 vi.mock('@/hooks/useProducts', () => ({
   useProducts: () => ({
-    data: PRODUCTS,
+    data: mocks.catalogue ?? PRODUCTS,
     isPending: false,
     isFetching: false,
     isStale: false,
@@ -174,6 +176,7 @@ beforeEach(() => {
   mocks.placeOrder.mockReset();
   mocks.saveAddress.mockClear();
   mocks.refetch.mockClear();
+  mocks.catalogue = null;
   useToastStore.getState().clear();
   useCartNoticeStore.getState().dismiss();
   useCartStore.setState({ items: [makeCartItem(gt3), makeCartItem(mauler)] });
@@ -238,11 +241,13 @@ describe('CheckoutPage', () => {
       payment: payment('success'),
     });
     const state = JSON.parse(screen.getByTestId('success-state').textContent ?? 'null') as {
+      uid: string;
       response: PlaceOrderResponse;
       items: unknown[];
       paymentMethod: string;
       totals: { total: number };
     };
+    expect(state.uid).toBe('uid-1'); // scoped to the collector who placed it
     expect(state.response).toEqual(RESPONSE);
     expect(state.items).toHaveLength(2);
     expect(state.paymentMethod).toBe('card');
@@ -310,5 +315,56 @@ describe('CheckoutPage', () => {
       '/shop',
     );
     await waitFor(() => expect(screen.queryByText('elsewhere')).not.toBeInTheDocument());
+  });
+
+  it('blocks an order with more than 20 different cars before any payment', async () => {
+    const user = userEvent.setup();
+    const many = Array.from({ length: 21 }, (_, index) =>
+      makeProduct({ id: `car-${index + 1}`, name: `Car ${index + 1}`, price: 149 }),
+    );
+    mocks.catalogue = many;
+    useCartStore.setState({ items: many.map((product) => makeCartItem(product)) });
+    renderCheckout();
+    await reachReview(user);
+
+    const alert = screen
+      .getAllByRole('alert')
+      .find((element) => /at most 20 different cars/i.test(element.textContent ?? ''));
+    expect(alert).toHaveTextContent(
+      'An order can hold at most 20 different cars — remove 1 to start your engine.',
+    );
+    expect(
+      within(alert as HTMLElement).getByRole('link', { name: /fix pit stop/i }),
+    ).toHaveAttribute('href', '/cart');
+    const place = screen.getByTestId('place-order');
+    expect(place).toBeDisabled();
+    await user.click(place);
+    expect(mocks.createPayment).not.toHaveBeenCalled();
+    expect(mocks.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it("shows Couldn't place this order (no retry, no refresh) when the server rejects the request", async () => {
+    const user = userEvent.setup();
+    mocks.createPayment.mockResolvedValue(payment('success'));
+    mocks.placeOrder.mockRejectedValueOnce(
+      Object.assign(new Error('An order can hold at most 20 different cars'), {
+        code: 'functions/invalid-argument',
+      }),
+    );
+    renderCheckout();
+    await reachReview(user);
+
+    await user.click(screen.getByTestId('place-order'));
+    const panel = await screen.findByRole('alert', { name: /couldn't place this order/i });
+    expect(panel).toHaveTextContent('An order can hold at most 20 different cars');
+    expect(within(panel).queryByRole('button', { name: /confirm order again/i })).toBeNull();
+    expect(within(panel).getByRole('link', { name: /back to pit stop/i })).toHaveAttribute(
+      'href',
+      '/cart',
+    );
+    expect(screen.queryByText(/your order was updated/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/we refreshed prices/i)).not.toBeInTheDocument();
+    expect(mocks.refetch).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: /review & place order/i })).toBeInTheDocument();
   });
 });

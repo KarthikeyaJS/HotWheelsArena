@@ -1,0 +1,101 @@
+/*
+ * Metric-matched fallback faces for the Google web fonts (index.html loads Orbitron, Inter and
+ * JetBrains Mono with `display=swap`).
+ *
+ * Until a web font arrives, text renders in a local font scaled with `size-adjust` so the same
+ * text takes the same width (and therefore wraps the same way), with ascent/descent overrides
+ * matching the web font's vertical metrics. The swap to the web font then barely moves anything:
+ * no layout shift (CLS) from the hero copy, the header nav or the headings.
+ *
+ * Each family lists its web font first, then this fallback (tailwind.config.ts `fontFamily`). If
+ * a local font is missing (e.g. Linux without Arial), its face is skipped and the next fallback in
+ * the stack applies, as before.
+ *
+ * Values were measured in Chromium with canvas `measureText` over the app's own strings
+ * (uppercase display headings and nav labels, body copy, HUD readouts):
+ *   size-adjust      = web font width / local font width
+ *   ascent-override  = web font ascent / size-adjust (Orbitron 1.011 em, Inter 0.969, JBM 1.02)
+ *   descent-override = web font descent / size-adjust (Orbitron 0.243 em, Inter 0.241, JBM 0.30)
+ * Re-measure if the Google font versions or the families change.
+ */
+
+/* Orbitron (display: h1–h3, nav, HUD headings). 400 covers the 500 weight. 700/900 use Arial
+   Black, the heavy fallback the stack already used, with a small scale. */
+@font-face {
+  font-family: 'Orbitron Fallback';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Arial'), local('ArialMT');
+  size-adjust: 118.04%;
+  ascent-override: 85.65%;
+  descent-override: 20.59%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Orbitron Fallback';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Arial Black'), local('Arial-Black');
+  size-adjust: 104.79%;
+  ascent-override: 96.48%;
+  descent-override: 23.19%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Orbitron Fallback';
+  font-style: normal;
+  font-weight: 900;
+  src: local('Arial Black'), local('Arial-Black');
+  size-adjust: 105.06%;
+  ascent-override: 96.23%;
+  descent-override: 23.13%;
+  line-gap-override: 0%;
+}
+
+/* Inter (body). 400 covers 500; 700 covers 600. */
+@font-face {
+  font-family: 'Inter Fallback';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Arial'), local('ArialMT');
+  size-adjust: 106.43%;
+  ascent-override: 91.05%;
+  descent-override: 22.64%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Arial Bold'), local('Arial-BoldMT');
+  size-adjust: 102.14%;
+  ascent-override: 94.87%;
+  descent-override: 23.6%;
+  line-gap-override: 0%;
+}
+
+/* JetBrains Mono (prices, specs, HUD). JetBrains Mono advances 0.6 em; Consolas 0.55 em. */
+@font-face {
+  font-family: 'JetBrains Mono Fallback';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Consolas');
+  size-adjust: 108.87%;
+  ascent-override: 93.69%;
+  descent-override: 27.56%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono Fallback';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Consolas Bold'), local('Consolas-Bold');
+  size-adjust: 108.87%;
+  ascent-override: 93.69%;
+  descent-override: 27.56%;
+  line-gap-override: 0%;
+}

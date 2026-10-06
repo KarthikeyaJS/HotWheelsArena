@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_SITE_SETTINGS } from '@shared/commerce';
 import { makeProduct, ROUTER_FUTURE } from '@/components/product/__tests__/fixtures';
+import { BRAND_PRODUCT_LINE } from '@/config/brand';
 import { ROUTES } from '@/config/routes';
 import ProductPage from '@/pages/ProductPage';
 import type { Product, Review, Series } from '@/types';
@@ -150,7 +151,8 @@ describe('ProductPage', () => {
       '@type': 'Product',
       name: 'Twin Mill',
       sku: 'twin-mill-orange',
-      brand: { name: 'Hot Rod Co' },
+      brand: { name: BRAND_PRODUCT_LINE },
+      model: 'Hot Rod Co Twin Mill',
       offers: { priceCurrency: 'INR', availability: 'https://schema.org/InStock' },
       aggregateRating: { reviewCount: 1 },
     });

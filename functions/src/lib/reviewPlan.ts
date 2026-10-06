@@ -5,7 +5,7 @@
  * rating to the product aggregate; editing replaces the text / rating and swaps the old rating
  * for the new one, so `ratingAvg` / `ratingCount` stay exact for both paths.
  */
-import { SubmitReviewSchema } from '../../../shared/index.js';
+import { SubmitReviewSchema, stripUnsafeText } from '../../../shared/index.js';
 import { AppError } from './errors.js';
 import {
   readObject,
@@ -64,19 +64,46 @@ export interface Reviewer {
 }
 
 /**
+ * Avatars a public review may show: Google account photos only (what sign-in provides). Anything
+ * else, e.g. an arbitrary https URL set on the profile, would let a reviewer point every visitor's
+ * browser at an image host of their choosing.
+ */
+const REVIEWER_PHOTO_URL = /^https:\/\/lh[3-6]\.googleusercontent\.com\//;
+
+/** Reviewer name without control / invisible characters, whitespace collapsed ('' if nothing is left). */
+function cleanReviewerName(value: string | null | undefined): string {
+  return stripUnsafeText(value ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanReviewerPhoto(value: string | null | undefined): string | null {
+  const url = (value ?? '').trim();
+  return REVIEWER_PHOTO_URL.test(url) ? url : null;
+}
+
+/**
  * Public identity shown on the review: the profile's display name / photo (what the collector
  * sees in the app), falling back to the sign-in token, then "Collector". Never the email.
+ *
+ * Names are stripped of control / invisible characters (the shared `stripUnsafeText`), runs of
+ * whitespace (including line breaks) become one space, and the result is capped at 80 characters.
+ * Only Google account photos are kept.
  */
 export function resolveReviewer(
   profileData: RawData | undefined,
   caller: { displayName: string | null; photoURL: string | null },
 ): Reviewer {
   const name =
-    readString(profileData?.displayName).trim() ||
-    caller.displayName?.trim() ||
+    cleanReviewerName(readString(profileData?.displayName)) ||
+    cleanReviewerName(caller.displayName) ||
     DEFAULT_DISPLAY_NAME;
-  const photo = readString(profileData?.photoURL).trim() || caller.photoURL?.trim() || null;
-  return { displayName: name.slice(0, MAX_REVIEWER_NAME), photoURL: photo };
+  const photo =
+    cleanReviewerPhoto(readString(profileData?.photoURL)) ?? cleanReviewerPhoto(caller.photoURL);
+  return {
+    displayName: Array.from(name).slice(0, MAX_REVIEWER_NAME).join('').trimEnd(),
+    photoURL: photo,
+  };
 }
 
 /** `products/{productId}/reviews/{uid}`. */

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { getFriendlyErrorMessage } from '@/lib/errors';
 import { mutationKeys, queryKeys } from '@/lib/queryKeys';
@@ -13,6 +13,7 @@ import {
 import { useGarageStore, type GarageMirrorEntry } from '@/store/garageStore';
 import { toast } from '@/store/toastStore';
 import type { GarageEntry, Product } from '@/types';
+import { garageQueryOptions } from './useGarage';
 import { useRequireAuthAction } from './useRequireAuthAction';
 
 /** A product id, or any object with `id` (+ optional `name` for toast copy). */
@@ -102,6 +103,40 @@ const refOf = (product: ProductRef): { productId: string; name?: string } =>
     ? { productId: product }
     : { productId: product.id, ...(product.name ? { name: product.name } : {}) };
 
+type ResolvedGarageEntry = Pick<GarageEntry, 'isFavorite' | 'quantity'> | undefined;
+
+/**
+ * `uid`'s garage entry for `productId`: from the mirror once it is hydrated, else from the garage
+ * query (joins UserDataSync's in-flight fetch right after sign-in). Rejects when the garage can't
+ * be read — the caller then writes nothing.
+ */
+function resolveGarageEntry(
+  queryClient: QueryClient,
+  uid: string,
+  productId: string,
+): ResolvedGarageEntry | Promise<ResolvedGarageEntry> {
+  const store = useGarageStore.getState();
+  if (store.garageHydrated) return store.garage[productId];
+  return queryClient
+    .ensureQueryData(garageQueryOptions(uid))
+    .then((entries) => entries.find((entry) => entry.productId === productId));
+}
+
+/** False when `change` would not change `entry` (or can't apply to it). */
+function shouldPersist(change: GarageChange, entry: ResolvedGarageEntry): boolean {
+  switch (change.type) {
+    case 'add':
+      return !entry;
+    case 'favorite':
+      return entry !== undefined && entry.isFavorite !== change.isFavorite;
+    case 'remove':
+    case 'quantity':
+      return entry !== undefined;
+    default:
+      return false;
+  }
+}
+
 export interface UseGarageActionsOptions {
   /** Show success toasts (errors are always toasted). Default true. */
   toasts?: boolean;
@@ -124,7 +159,8 @@ export interface GarageActions {
 /**
  * Optimistic garage mutations: updates the TanStack cache AND `garageStore` immediately, rolls
  * both back (and toasts) on failure, then refetches the garage once no other garage mutation is
- * running. Signed-out calls open the SignInPrompt and run after sign-in.
+ * running. Signed-out calls open the SignInPrompt and run after sign-in, deciding from the
+ * collector's real garage (mirror or query), so re-parking a parked car is a quiet no-op.
  */
 export function useGarageActions(options: UseGarageActionsOptions = {}): GarageActions {
   const showToasts = options.toasts ?? true;
@@ -181,21 +217,22 @@ export function useGarageActions(options: UseGarageActionsOptions = {}): GarageA
       requireAuth(() => {
         const uid = getCurrentUid();
         if (!uid) return;
-        const mirror = useGarageStore.getState().garage[ref.productId];
-        if (change.type === 'add' && mirror) return;
-        if (change.type !== 'add' && !mirror && useGarageStore.getState().garageHydrated) {
-          if (change.type === 'favorite') {
+        const apply = (entry: ResolvedGarageEntry): void => {
+          if (!entry && change.type === 'favorite') {
             toast({
               title: 'Not in your garage yet',
               description: 'Park the car in your garage to mark it as a favorite.',
             });
+            return;
           }
-          return;
-        }
-        mutate({ ...change, ...ref, uid });
+          if (shouldPersist(change, entry)) mutate({ ...change, ...ref, uid });
+        };
+        const entry = resolveGarageEntry(queryClient, uid, ref.productId);
+        if (entry instanceof Promise) return entry.then(apply);
+        return apply(entry);
       }, reason);
     },
-    [mutate, requireAuth],
+    [mutate, queryClient, requireAuth],
   );
 
   const addToGarage = useCallback(

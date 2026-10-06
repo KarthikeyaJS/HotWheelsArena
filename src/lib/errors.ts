@@ -1,8 +1,9 @@
 /**
  * Error normalisation → friendly, racing-themed messages. Never show raw SDK errors to users.
+ *
+ * Entry-chunk module: it must not import zod (ZodErrors are recognised structurally).
  */
 import { FirebaseError } from 'firebase/app';
-import { ZodError } from 'zod';
 
 /** Error with a string `code` (FirebaseError, FunctionsError, AuthError…). */
 interface CodedError {
@@ -17,6 +18,39 @@ function isCodedError(error: unknown): error is CodedError {
     'code' in error &&
     typeof (error as { code: unknown }).code === 'string'
   );
+}
+
+/** The shape of a zod `ZodError` that this module relies on. */
+interface ZodLikeError extends Error {
+  issues: readonly unknown[];
+}
+
+/**
+ * Structural `ZodError` check (`name === 'ZodError'` plus an `issues` array). An
+ * `instanceof ZodError` would pull zod into the entry chunk; schemas live in lazy chunks.
+ */
+function isZodError(error: unknown): error is ZodLikeError {
+  return (
+    error instanceof Error &&
+    error.name === 'ZodError' &&
+    Array.isArray((error as { issues?: unknown }).issues)
+  );
+}
+
+/** The first issue's message of a ZodError, if it has one. */
+function firstIssueMessage(error: ZodLikeError): string | null {
+  const [first] = error.issues;
+  if (typeof first !== 'object' || first === null) return null;
+  const { message } = first as { message?: unknown };
+  return typeof message === 'string' && message.trim() !== '' ? message : null;
+}
+
+/**
+ * An HttpsError thrown by one of our callables: the Functions SDK reports it as
+ * `functions/<code>` with the message our server wrote for humans.
+ */
+function isCallableError(error: unknown): error is CodedError {
+  return isCodedError(error) && error.code.startsWith('functions/');
 }
 
 /**
@@ -59,7 +93,12 @@ const FRIENDLY_MESSAGES: Readonly<Record<string, string>> = {
     'An account already exists with this email using a different sign-in method.',
 };
 
-/** Codes whose server message is written for humans (HttpsError thrown by our functions). */
+/**
+ * Codes whose server message is written for humans — but only when the error comes from our
+ * callables (raw code `functions/<code>`, see `isCallableError`). Firestore / SDK errors with the
+ * same codes (e.g. `invalid-argument` "Invalid document reference…") carry internal text and get
+ * the friendly copy or the fallback instead.
+ */
 const PASS_THROUGH_CODES = new Set([
   'invalid-argument',
   'failed-precondition',
@@ -86,13 +125,13 @@ export function getFriendlyErrorMessage(
   error: unknown,
   fallback: string = GENERIC_MESSAGE,
 ): string {
-  if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? fallback;
+  if (isZodError(error)) {
+    return firstIssueMessage(error) ?? fallback;
   }
 
   const code = getErrorCode(error);
   if (code) {
-    if (PASS_THROUGH_CODES.has(code) && isCodedError(error)) {
+    if (PASS_THROUGH_CODES.has(code) && isCallableError(error)) {
       const serverMessage = cleanFirebaseMessage(error.message);
       if (serverMessage) return serverMessage;
     }

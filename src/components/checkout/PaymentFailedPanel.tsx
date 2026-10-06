@@ -1,6 +1,15 @@
-import { CreditCard, LogIn, RotateCcw, WifiOff, XOctagon } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CreditCard,
+  LogIn,
+  RotateCcw,
+  WifiOff,
+  XOctagon,
+} from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
+import { ROUTES } from '@/config/routes';
 import { cn } from '@/lib/cn';
 import type { PlaceOrderErrorKind } from './checkoutErrors';
 
@@ -17,7 +26,10 @@ export interface PaymentFailedPanelProps {
 
 const DECLINED_MESSAGE = 'Payment declined in test mode — try again or pick another method.';
 
-/** Friendly retry panel after a declined payment or a failed confirmation (focus moves here). */
+/**
+ * Friendly retry panel after a declined payment or a failed confirmation (focus moves here).
+ * An `invalid-order` error can't succeed by retrying, so it offers "Back to pit stop" instead.
+ */
 export function PaymentFailedPanel({
   variant,
   errorKind,
@@ -33,8 +45,9 @@ export function PaymentFailedPanel({
   }, [variant, message]);
 
   const declined = variant === 'declined';
-  const needsSignIn = errorKind === 'unauthenticated';
-  const Icon = declined ? XOctagon : needsSignIn ? LogIn : WifiOff;
+  const needsSignIn = !declined && errorKind === 'unauthenticated';
+  const invalidOrder = !declined && errorKind === 'invalid-order';
+  const Icon = declined ? XOctagon : needsSignIn ? LogIn : invalidOrder ? AlertTriangle : WifiOff;
 
   return (
     <section
@@ -64,25 +77,35 @@ export function PaymentFailedPanel({
               ? 'Payment declined'
               : needsSignIn
                 ? 'Pit pass expired'
-                : "Couldn't confirm your order"}
+                : invalidOrder
+                  ? "Couldn't place this order"
+                  : "Couldn't confirm your order"}
           </h3>
           <p className="mt-1.5 text-sm text-muted">{declined ? DECLINED_MESSAGE : message}</p>
           {declined && message && message !== DECLINED_MESSAGE ? (
             <p className="mt-1 text-xs text-muted">Test bank: {message}</p>
           ) : null}
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            {needsSignIn && onSignIn ? (
-              <Button leftIcon={<LogIn />} onClick={onSignIn}>
-                Sign in again
+            {invalidOrder ? (
+              <Button to={ROUTES.cart} leftIcon={<ArrowLeft />}>
+                Back to pit stop
               </Button>
             ) : (
-              <Button leftIcon={<RotateCcw />} onClick={onRetry}>
-                {declined ? 'Try again' : 'Confirm order again'}
-              </Button>
+              <>
+                {needsSignIn && onSignIn ? (
+                  <Button leftIcon={<LogIn />} onClick={onSignIn}>
+                    Sign in again
+                  </Button>
+                ) : (
+                  <Button leftIcon={<RotateCcw />} onClick={onRetry}>
+                    {declined ? 'Try again' : 'Confirm order again'}
+                  </Button>
+                )}
+                <Button variant="outline" leftIcon={<CreditCard />} onClick={onChangeMethod}>
+                  Pick another method
+                </Button>
+              </>
             )}
-            <Button variant="outline" leftIcon={<CreditCard />} onClick={onChangeMethod}>
-              Pick another method
-            </Button>
           </div>
         </div>
       </div>

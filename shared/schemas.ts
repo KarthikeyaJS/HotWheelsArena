@@ -6,22 +6,34 @@
 import { z } from 'zod';
 import { MAX_ORDER_LINES, MAX_QTY_PER_ITEM } from './commerce.js';
 import { INDIAN_PHONE_REGEX, INDIAN_PINCODE_REGEX, isIndianState } from './india.js';
+import { hasUnsafeText } from './text.js';
 import { PAYMENT_METHODS, PAYMENT_MODES, PAYMENT_PROVIDER_IDS, PAYMENT_STATUSES } from './types.js';
 
-/** Firestore document id: 1–128 chars, no `/`. */
+/**
+ * Firestore document id as this app creates them (slugs and auto-ids): 1–128 chars of
+ * `A–Z a–z 0–9 _ -`, and not a reserved id that starts and ends with `__` (`__x__`, also `__` and
+ * `___`). `/`, `.` and `..` are rejected too, so a bad id fails validation instead of reaching
+ * Firestore.
+ */
 export const DocIdSchema = z
   .string()
   .trim()
   .min(1, 'Missing id')
   .max(128, 'Id is too long')
-  .regex(/^[^/]+$/, 'Invalid id');
+  .regex(/^(?!(?:__.*__|___?)$)[A-Za-z0-9_-]+$/, 'Invalid id');
+
+export const HIDDEN_CHARACTERS_MESSAGE = 'Remove hidden or control characters';
+
+/** Address text must not carry control / invisible characters (see `shared/text.ts`). */
+const isVisibleText = (value: string): boolean => !hasUnsafeText(value);
 
 export const AddressSchema = z.object({
   name: z
     .string()
     .trim()
     .min(2, 'Enter the full name (at least 2 characters)')
-    .max(80, 'Name must be 80 characters or fewer'),
+    .max(80, 'Name must be 80 characters or fewer')
+    .refine(isVisibleText, HIDDEN_CHARACTERS_MESSAGE),
   phone: z
     .string()
     .trim()
@@ -31,10 +43,26 @@ export const AddressSchema = z.object({
     .string()
     .trim()
     .min(5, 'Enter house / flat number and street')
-    .max(120, 'Address line must be 120 characters or fewer'),
-  line2: z.string().trim().max(120, 'Address line must be 120 characters or fewer').optional(),
-  landmark: z.string().trim().max(80, 'Landmark must be 80 characters or fewer').optional(),
-  city: z.string().trim().min(2, 'Enter your city').max(60, 'City must be 60 characters or fewer'),
+    .max(120, 'Address line must be 120 characters or fewer')
+    .refine(isVisibleText, HIDDEN_CHARACTERS_MESSAGE),
+  line2: z
+    .string()
+    .trim()
+    .max(120, 'Address line must be 120 characters or fewer')
+    .refine(isVisibleText, HIDDEN_CHARACTERS_MESSAGE)
+    .optional(),
+  landmark: z
+    .string()
+    .trim()
+    .max(80, 'Landmark must be 80 characters or fewer')
+    .refine(isVisibleText, HIDDEN_CHARACTERS_MESSAGE)
+    .optional(),
+  city: z
+    .string()
+    .trim()
+    .min(2, 'Enter your city')
+    .max(60, 'City must be 60 characters or fewer')
+    .refine(isVisibleText, HIDDEN_CHARACTERS_MESSAGE),
   state: z
     .string()
     .trim()

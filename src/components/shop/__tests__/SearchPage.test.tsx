@@ -147,6 +147,18 @@ describe('SearchPage', () => {
     expect(currentUrl).toBe('/search');
   });
 
+  it('shows a neutral results label and the retry state while the catalogue is unreachable', () => {
+    mocks.products.data = undefined;
+    mocks.products.isError = true;
+    renderSearch('/search?q=porsche');
+    expect(
+      screen.getByRole('heading', { level: 2, name: /^machines unavailable$/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /loading machines/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+    expect(screen.queryByText('No machines on this track')).not.toBeInTheDocument();
+  });
+
   it('keeps the query when clearing filters that hide every result', async () => {
     const user = userEvent.setup();
     renderSearch('/search?q=porsche&color=green');

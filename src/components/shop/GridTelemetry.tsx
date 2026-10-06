@@ -18,6 +18,11 @@ export interface GridTelemetryProps {
   title?: string;
   meta?: ReactNode;
   loading?: boolean;
+  /**
+   * The catalogue couldn't load (error state): every readout shows a neutral `—` (announced as
+   * "unavailable") and the meta reads `NO SIGNAL`, instead of misleading zeros.
+   */
+  unavailable?: boolean;
   className?: string;
 }
 
@@ -27,12 +32,14 @@ export function GridTelemetry({
   title = 'Grid telemetry',
   meta = 'LIVE',
   loading = false,
+  unavailable = false,
   className,
 }: GridTelemetryProps) {
+  const showUnavailable = unavailable && !loading;
   return (
     <HudPanel
       title={title}
-      meta={meta}
+      meta={showUnavailable ? 'NO SIGNAL' : meta}
       padding="sm"
       className={cn('bg-surface/80', className)}
       aria-busy={loading || undefined}
@@ -48,6 +55,19 @@ export function GridTelemetry({
                 <span className="hud text-muted">{item.label}</span>
                 <Skeleton className="h-7 w-14 rounded" />
               </div>
+            ) : showUnavailable ? (
+              <HudReadout
+                label={item.label}
+                value={
+                  <>
+                    <span aria-hidden="true">—</span>
+                    <span className="sr-only">unavailable</span>
+                  </>
+                }
+                tone="default"
+                size="md"
+                className="[&>span:last-child]:text-xl [&>span:last-child]:text-muted sm:[&>span:last-child]:text-2xl"
+              />
             ) : (
               <HudReadout
                 label={item.label}

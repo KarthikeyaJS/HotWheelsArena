@@ -1,6 +1,7 @@
 import { AlertTriangle, ArrowLeft, Flag, Pencil, RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { orderLineLimitMessage } from '@/components/cart/reconcile';
 import { TotalsBreakdown } from '@/components/cart/TotalsBreakdown';
 import { AddressBlock } from '@/components/orders/AddressBlock';
 import { OrderLinesList } from '@/components/orders/OrderLinesList';
@@ -29,6 +30,8 @@ export interface ReviewStepProps {
   onRetryVerify: () => void;
   /** Sold-out / unavailable lines in the cart. */
   hasBlockers: boolean;
+  /** Lines over the per-order limit (MAX_ORDER_LINES); > 0 blocks PLACE ORDER. */
+  lineLimitExcess: number;
   /** Server said the order changed (prices / stock / COD) — shown above the order. */
   orderNotice: string | null;
   /** A successful test payment is held for this attempt (retry won't charge again). */
@@ -52,12 +55,14 @@ export function ReviewStep({
   verifyError,
   onRetryVerify,
   hasBlockers,
+  lineLimitExcess,
   orderNotice,
   hasHeldPayment,
   failurePanel,
 }: ReviewStepProps) {
   const MethodIcon = paymentMethodIcon(method);
-  const blocked = hasBlockers || lines.length === 0;
+  const overLimit = lineLimitExcess > 0;
+  const blocked = hasBlockers || overLimit || lines.length === 0;
   const canPlace = !blocked && !verifyError;
 
   return (
@@ -89,6 +94,21 @@ export function ReviewStep({
           <p className="flex items-start gap-2 text-sm text-fg">
             <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-danger-ink" />
             Some cars in your pit stop are sold out or no longer available.
+          </p>
+          <Button to={ROUTES.cart} variant="outline" size="sm" leftIcon={<ArrowLeft />}>
+            Fix pit stop
+          </Button>
+        </div>
+      ) : null}
+
+      {overLimit ? (
+        <div
+          role="alert"
+          className="flex flex-col gap-3 rounded-xl border border-danger/45 bg-danger/[0.05] p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="flex items-start gap-2 text-sm text-fg">
+            <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-danger-ink" />
+            {orderLineLimitMessage(lineLimitExcess)}
           </p>
           <Button to={ROUTES.cart} variant="outline" size="sm" leftIcon={<ArrowLeft />}>
             Fix pit stop

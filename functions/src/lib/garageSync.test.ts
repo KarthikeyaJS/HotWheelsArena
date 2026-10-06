@@ -1,10 +1,14 @@
+import { Timestamp } from 'firebase-admin/firestore';
 import { describe, expect, it } from 'vitest';
 import { EMPTY_USER_STATS, type UserStats } from '../../../shared/index.js';
 import { NOW, findUndefinedPaths } from '../testing/fixtures.js';
 import {
   affectsStats,
   garageQuantityOf,
+  garageWriteCommitBoundMs,
+  isSuperseded,
   planGarageSync,
+  timeUpperBoundMs,
   type GarageSyncInput,
 } from './garageSync.js';
 import type { StatsProduct } from './stats.js';
@@ -70,9 +74,10 @@ describe('affectsStats', () => {
 });
 
 describe('planGarageSync', () => {
-  it('plans no write when the profile already matches the garage (skip no-op writes)', () => {
+  it('only stamps statsSyncedAt when the profile already matches the garage', () => {
     const plan = planGarageSync(input({}), NOW);
-    expect(plan.write).toBeNull();
+    expect(plan.changed).toBe(false);
+    expect(plan.write).toEqual({ kind: 'stamp', data: { statsSyncedAt: NOW } });
     expect(plan.stats).toEqual(baseStats);
   });
 
@@ -96,8 +101,10 @@ describe('planGarageSync', () => {
         badges: ['first-ride', 'treasure-hunter'],
         stats: { ...baseStats, carsOwned: 2, uniqueCars: 2, rareCars: 1 },
         updatedAt: NOW,
+        statsSyncedAt: NOW,
       },
     });
+    expect(plan.changed).toBe(true);
     expect(plan.leveledUp).toBe(true);
 
     // Re-delivery of the same event after the write: nothing left to do.
@@ -116,7 +123,8 @@ describe('planGarageSync', () => {
       }),
       NOW,
     );
-    expect(replay.write).toBeNull();
+    expect(replay.changed).toBe(false);
+    expect(replay.write).toEqual({ kind: 'stamp', data: { statsSyncedAt: NOW } });
     expect(replay.xpEarned).toBe(0);
   });
 
@@ -141,6 +149,7 @@ describe('planGarageSync', () => {
         badges: ['first-ride', 'treasure-hunter'],
         stats: baseStats,
         updatedAt: NOW,
+        statsSyncedAt: NOW,
       },
     });
     expect(plan.badgesUnlocked).toEqual([]);
@@ -166,7 +175,8 @@ describe('planGarageSync', () => {
       totalSpent: 1800,
     });
     expect(plan.badgesUnlocked).toEqual(['master-collector']);
-    expect(plan.write?.data.xp).toBe(800);
+    expect(plan.write?.kind).toBe('update');
+    expect(plan.write?.kind === 'update' ? plan.write.data.xp : null).toBe(800);
     expect(plan.level).toBe(6);
   });
 
@@ -174,7 +184,14 @@ describe('planGarageSync', () => {
     const plan = planGarageSync(input({ profileData: profile({ level: 9 }) }), NOW);
     expect(plan.write).toEqual({
       kind: 'update',
-      data: { xp: 300, level: 3, badges: ['first-ride'], stats: baseStats, updatedAt: NOW },
+      data: {
+        xp: 300,
+        level: 3,
+        badges: ['first-ride'],
+        stats: baseStats,
+        updatedAt: NOW,
+        statsSyncedAt: NOW,
+      },
     });
   });
 
@@ -191,13 +208,112 @@ describe('planGarageSync', () => {
         stats: { ...EMPTY_USER_STATS, carsOwned: 1, uniqueCars: 1, racingCars: 1 },
         createdAt: NOW,
         updatedAt: NOW,
+        statsSyncedAt: NOW,
       },
     });
     expect(findUndefinedPaths(plan.write)).toEqual([]);
   });
 
-  it('writes nothing for a missing profile with an empty garage', () => {
+  it('writes nothing for a missing profile with an empty garage (no stamp-only profile)', () => {
     const plan = planGarageSync(input({ profileData: undefined, garage: [] }), NOW);
     expect(plan.write).toBeNull();
+    expect(plan.changed).toBe(false);
+  });
+
+  it('always stamps statsSyncedAt whenever a profile write is planned', () => {
+    const cases: GarageSyncInput[] = [
+      input({}),
+      input({ profileData: profile({ level: 9 }) }),
+      input({ garage: [{ productId: 'gem', quantity: 2 }] }),
+      input({ profileData: undefined }),
+      input({ profileData: profile({ statsSyncedAt: Timestamp.fromMillis(1) }) }),
+    ];
+    for (const syncInput of cases) {
+      const plan = planGarageSync(syncInput, NOW);
+      expect(plan.write?.data.statsSyncedAt).toBe(NOW);
+    }
+  });
+});
+
+describe('timeUpperBoundMs', () => {
+  const base = Date.parse('2026-10-06T12:00:38Z');
+
+  it('rounds a truncated time up to the end of its precision', () => {
+    // The Firestore emulator sends whole seconds: 38Z covers [38.000, 39.000).
+    expect(timeUpperBoundMs('2026-10-06T12:00:38Z')).toBe(base + 1000);
+    expect(timeUpperBoundMs('2026-10-06T12:00:38.2Z')).toBe(base + 300);
+    expect(timeUpperBoundMs('2026-10-06T12:00:38.25Z')).toBe(base + 260);
+    expect(timeUpperBoundMs('2026-10-06T12:00:38.250Z')).toBe(base + 251);
+    expect(timeUpperBoundMs('2026-10-06T12:00:38.250999999Z')).toBe(base + 251);
+    expect(timeUpperBoundMs('2026-10-06T17:30:38.25+05:30')).toBe(base + 260);
+  });
+
+  it('is NaN for anything that is not an RFC 3339 date-time', () => {
+    expect(timeUpperBoundMs('not a time')).toBeNaN();
+    expect(timeUpperBoundMs('2026-10-06')).toBeNaN();
+    expect(timeUpperBoundMs('')).toBeNaN();
+  });
+});
+
+describe('garageWriteCommitBoundMs', () => {
+  it("uses the written document's updateTime (truncated to ms, so + 1)", () => {
+    const updateTime = new Timestamp(1_791_288_038, 196_640_000);
+    expect(garageWriteCommitBoundMs(updateTime, '2026-10-06T12:00:38Z')).toBe(
+      updateTime.toMillis() + 1,
+    );
+  });
+
+  it('falls back to the upper bound of the event time for deletes (no after document)', () => {
+    expect(garageWriteCommitBoundMs(undefined, '2026-10-06T12:00:38Z')).toBe(
+      Date.parse('2026-10-06T12:00:39Z'),
+    );
+    expect(garageWriteCommitBoundMs(undefined, 'garbage')).toBeNaN();
+  });
+});
+
+describe('isSuperseded', () => {
+  // The garage write committed at 12:00:38.196640 (document updateTime).
+  const writeTime = new Timestamp(Date.parse('2026-10-06T12:00:38Z') / 1000, 196_640_000);
+  const bound = garageWriteCommitBoundMs(writeTime, '2026-10-06T12:00:38Z');
+  const syncedAt = (seconds: number, nanos: number) => ({
+    statsSyncedAt: new Timestamp(writeTime.seconds + seconds, nanos),
+  });
+
+  it('is true only when the last full recompute provably committed after the write', () => {
+    expect(isSuperseded(syncedAt(0, 197_000_000), bound)).toBe(true); // next millisecond
+    expect(isSuperseded(syncedAt(60, 0), bound)).toBe(true);
+  });
+
+  it('is false for a recompute in the same millisecond or earlier (it may predate the write)', () => {
+    expect(isSuperseded(syncedAt(0, 196_999_999), bound)).toBe(false); // same ms, later µs
+    expect(isSuperseded(syncedAt(0, 196_640_000), bound)).toBe(false);
+    expect(isSuperseded(syncedAt(0, 100_000_000), bound)).toBe(false);
+    expect(isSuperseded(syncedAt(-1, 900_000_000), bound)).toBe(false);
+  });
+
+  it('never trusts a whole-second event time for a recompute inside that second', () => {
+    // Regression (emulator): a delete at 38.300 reported as "…:38Z" must not be skipped by a
+    // recompute stamped at 38.251, which may have run before the delete.
+    const deleteBound = garageWriteCommitBoundMs(undefined, '2026-10-06T12:00:38Z');
+    expect(isSuperseded(syncedAt(0, 251_000_000), deleteBound)).toBe(false);
+    expect(isSuperseded(syncedAt(0, 999_999_999), deleteBound)).toBe(false);
+    expect(isSuperseded(syncedAt(1, 0), deleteBound)).toBe(true);
+  });
+
+  it('is false when the stamp is missing or not a Timestamp', () => {
+    const future = writeTime.toMillis() + 1000;
+    expect(isSuperseded(undefined, bound)).toBe(false);
+    expect(isSuperseded(profile(), bound)).toBe(false);
+    expect(isSuperseded({ statsSyncedAt: future }, bound)).toBe(false);
+    expect(isSuperseded({ statsSyncedAt: '2099-01-01T00:00:00Z' }, bound)).toBe(false);
+    expect(isSuperseded({ statsSyncedAt: new Date(future) }, bound)).toBe(false);
+    expect(isSuperseded({ statsSyncedAt: null }, bound)).toBe(false);
+  });
+
+  it('is false when the commit bound is not a finite number', () => {
+    const stamp = syncedAt(60, 0);
+    expect(isSuperseded(stamp, Number.NaN)).toBe(false);
+    expect(isSuperseded(stamp, garageWriteCommitBoundMs(undefined, 'not a time'))).toBe(false);
+    expect(isSuperseded(stamp, Number.POSITIVE_INFINITY)).toBe(false);
   });
 });

@@ -58,11 +58,17 @@ describe('sanitizeReviewText', () => {
   });
 
   it('strips control, zero-width and bidi override characters', () => {
-    expect(sanitizeReviewText('Nice\u0000 paint​ job‮!\u0007')).toBe('Nice paint job!');
+    expect(sanitizeReviewText('Nice\u0000 paint\u200B job\u202E!\u0007')).toBe('Nice paint job!');
   });
 
   it('collapses long runs of blank lines and trailing spaces before newlines', () => {
     expect(sanitizeReviewText('Line one   \n\n\n\n\nLine two')).toBe('Line one\n\nLine two');
+  });
+
+  it('keeps ZWNJ / ZWJ (Marathi eyelash-ra, emoji ZWJ sequences)', () => {
+    expect(sanitizeReviewText('दर्\u200Dया 🏎️ \u{1F468}\u200D\u{1F469}\u200D\u{1F467}')).toBe(
+      'दर्\u200Dया 🏎️ \u{1F468}\u200D\u{1F469}\u200D\u{1F467}',
+    );
   });
 
   it('keeps emoji and Indian scripts intact', () => {

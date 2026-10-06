@@ -142,9 +142,10 @@ export function useJsonLd(id: string, data: JsonLd | JsonLd[] | null): void {
 
 /**
  * schema.org Product with Offer (+ AggregateRating when rated). `brand` is the product line
- * (`BRAND_PRODUCT_LINE`). Note: the product page (`components/product-detail/productSeo.ts` →
- * `buildProductDetailJsonLd`) builds on this and overrides `brand` with the car's make and the
- * description with its generated fallback copy.
+ * (`BRAND_PRODUCT_LINE`) — the die-cast toy's brand, never the real car maker. Note: the product
+ * page (`components/product-detail/productSeo.ts` → `buildProductDetailJsonLd`) builds on this,
+ * keeps `brand`, adds `model` ("<make> <model>" of the real car) and overrides the description
+ * with its generated fallback copy.
  */
 export function buildProductJsonLd(product: Product): JsonLd {
   const url = absoluteUrl(productPath(product.slug));

@@ -5,11 +5,12 @@
  * place order → success (order id, XP earned, FIRST RIDE badge, no celebration modal on top)
  * → /orders lists it → /orders/<id> detail → /garage shows the cars as PURCHASED.
  */
-import type { Page } from '@playwright/test';
 import {
   addProductToCart,
   cartButton,
+  choosePaymentMethod,
   expect,
+  fillAddress,
   gotoRoute,
   signIn,
   test,
@@ -62,17 +63,6 @@ const SCENARIOS: readonly Scenario[] = [
   },
 ];
 
-async function fillAddress(page: Page, phone: string, pincode: string): Promise<void> {
-  await page.getByRole('textbox', { name: /^Full name/ }).fill('Arjun Racer');
-  await page.getByRole('textbox', { name: /^Mobile number/ }).fill(phone);
-  await page
-    .getByRole('textbox', { name: /^House \/ flat no\. and street/ })
-    .fill('42 Pit Lane, Bay 7');
-  await page.getByRole('textbox', { name: /^PIN code/ }).fill(pincode);
-  await page.getByRole('textbox', { name: /^City/ }).fill('Bengaluru');
-  await page.getByRole('combobox', { name: /^State \/ UT/ }).selectOption({ label: 'Karnataka' });
-}
-
 for (const scenario of SCENARIOS) {
   test(`checkout with ${scenario.method.toUpperCase()}: cart → address → payment → review → success → orders → garage`, async ({
     page,
@@ -117,7 +107,7 @@ for (const scenario of SCENARIOS) {
     await expect(page.getByText(/test mode/i).first()).toBeVisible();
 
     // 4. Address: Indian-format validation, then a valid address.
-    await fillAddress(page, '12345', '0123');
+    await fillAddress(page, { phone: '12345', pincode: '0123' });
     await page.getByRole('button', { name: /continue to payment/i }).click();
     await expect(
       page.getByText('Enter a valid 10-digit mobile number starting with 6–9'),
@@ -134,12 +124,7 @@ for (const scenario of SCENARIOS) {
 
     // 5. Payment method (cosmetic test UI; nothing is collected).
     // Card-style radios: the native input is visually hidden inside its label.
-    const methodRadio = page.getByRole('radio', { name: scenario.methodLabel });
-    await page
-      .locator('label')
-      .filter({ has: page.getByRole('radio', { name: scenario.methodLabel }) })
-      .click();
-    await expect(methodRadio).toBeChecked();
+    await choosePaymentMethod(page, scenario.methodLabel);
     await page.getByRole('button', { name: /review order/i }).click();
 
     // 6. Review → place order.

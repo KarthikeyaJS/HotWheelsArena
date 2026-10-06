@@ -8,6 +8,8 @@
  * - `signIn()` uses the dev-only emulator hook `window.__hwaTest.signIn` (src/dev/testHooks.ts);
  *   `uniqueEmail()` gives every test its own collector so tests stay independent on the shared
  *   emulator database.
+ * - `seedCart()` writes the persisted Pit Stop cart directly; `fillAddress()` and
+ *   `choosePaymentMethod()` drive the checkout form (shared by the checkout and a11y specs).
  */
 import { test as base, expect, type Locator, type Page, type TestInfo } from '@playwright/test';
 
@@ -45,6 +47,8 @@ declare global {
 
 /** Persist key of the UI prefs store (src/store/uiStore.ts, zustand persist version 1). */
 const PREFS_KEY = 'hwa-prefs-v1';
+/** Persist key of the Pit Stop cart (src/store/cartStore.ts, zustand persist version 1). */
+const CART_KEY = 'hwa-cart-v1';
 /** Set by `setTheme()` so the per-project init script stops forcing the project theme. */
 const THEME_LOCK_KEY = 'hwa-e2e-theme-lock';
 
@@ -200,4 +204,59 @@ export function escapeRegExp(value: string): string {
 /** True for the 375px project. */
 export function isMobileProject(testInfo: TestInfo): boolean {
   return testInfo.project.name === 'mobile';
+}
+
+/** A persisted cart line (src/types CartItem); the app reconciles it with the live catalogue. */
+export interface CartSeedLine {
+  productId: string;
+  slug: string;
+  name: string;
+  price: number;
+  qty: number;
+  stock: number;
+  image?: string;
+}
+
+/**
+ * Writes the persisted Pit Stop cart straight to localStorage (no product-page round trips).
+ * Takes effect on the next full page load (`page.goto`). Opens `/` first on a blank page.
+ */
+export async function seedCart(page: Page, lines: readonly CartSeedLine[]): Promise<void> {
+  if (page.url() === 'about:blank') await page.goto('/');
+  await page.evaluate(
+    ({ cartKey, items }) => {
+      window.localStorage.setItem(
+        cartKey,
+        JSON.stringify({ state: { items, catalogueSyncedAt: 0 }, version: 1 }),
+      );
+    },
+    {
+      cartKey: CART_KEY,
+      items: lines.map((line) => ({ image: '/placeholders/car-generic.svg', ...line })),
+    },
+  );
+}
+
+/** Fills the checkout address form (valid Indian address unless phone / PIN are overridden). */
+export async function fillAddress(
+  page: Page,
+  { phone = '9876543210', pincode = '560001' }: { phone?: string; pincode?: string } = {},
+): Promise<void> {
+  await page.getByRole('textbox', { name: /^Full name/ }).fill('Arjun Racer');
+  await page.getByRole('textbox', { name: /^Mobile number/ }).fill(phone);
+  await page
+    .getByRole('textbox', { name: /^House \/ flat no\. and street/ })
+    .fill('42 Pit Lane, Bay 7');
+  await page.getByRole('textbox', { name: /^PIN code/ }).fill(pincode);
+  await page.getByRole('textbox', { name: /^City/ }).fill('Bengaluru');
+  await page.getByRole('combobox', { name: /^State \/ UT/ }).selectOption({ label: 'Karnataka' });
+}
+
+/** Picks a card-style payment method on the checkout payment step (the radio is visually hidden). */
+export async function choosePaymentMethod(page: Page, label: RegExp): Promise<void> {
+  await page
+    .locator('label')
+    .filter({ has: page.getByRole('radio', { name: label }) })
+    .click();
+  await expect(page.getByRole('radio', { name: label })).toBeChecked();
 }

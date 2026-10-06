@@ -142,6 +142,47 @@ describe('addresses — creating', () => {
   });
 
   it.each([
+    ['name', 'Arjun\u0000 Mehta'],
+    ['line1', '221B MG \u202ERoad'],
+    ['line1', '221B MG\u200B Road'],
+    ['line1', '221B\n\u202E\nMG Road'],
+    ['line1', '221B MG\u200F Road'],
+    ['line2', 'Indiranagar\uFEFF'],
+    ['landmark', 'Near the \u2066metro\u2069'],
+    ['city', 'Bengaluru\u0007'],
+  ])('rejects hidden characters in %s (%j)', async (field, value) => {
+    await assertFails(
+      db.alice.collection('users/alice/addresses').add(addressWrite({ [field]: value })),
+    );
+  });
+
+  it('accepts ZWJ / ZWNJ in address text (Marathi eyelash-ra, Malayalam chillu, half forms)', async () => {
+    await assertSucceeds(
+      db.alice.collection('users/alice/addresses').add(
+        addressWrite({
+          name: 'दर्\u200Dया पाटील',
+          line1: 'फ्लैट 4, क्\u200Cष रोड',
+          landmark: 'അവന്\u200D സ്കൂൾ',
+          city: 'पुणे',
+        }),
+      ),
+    );
+  });
+
+  it('accepts Hindi address text', async () => {
+    await assertSucceeds(
+      db.alice.collection('users/alice/addresses').add(
+        addressWrite({
+          name: 'अर्जुन मेहता',
+          line1: 'फ्लैट 4, एमजी रोड',
+          landmark: 'मंदिर के पास',
+          city: 'बेंगलुरु',
+        }),
+      ),
+    );
+  });
+
+  it.each([
     'name',
     'phone',
     'pincode',

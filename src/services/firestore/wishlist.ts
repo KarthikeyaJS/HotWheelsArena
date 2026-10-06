@@ -3,11 +3,12 @@
  * Client write contract: create exactly { productId (== doc id), addedAt: serverTimestamp };
  * no updates; delete allowed.
  */
-import { collection, deleteDoc, doc, getDocs, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { COLLECTIONS, SUBCOLLECTIONS } from '@shared/constants';
 import type { WishlistEntry } from '@shared/types';
 import { db } from '@/config/firebase';
 import { wishlistEntryConverter } from './converters';
+import { getDocsOnline } from './serverReads';
 
 export const wishlistCollection = (uid: string) =>
   collection(db, COLLECTIONS.users, uid, SUBCOLLECTIONS.wishlist).withConverter(
@@ -19,7 +20,7 @@ const wishlistDocRef = (uid: string, productId: string) =>
 
 /** Newest first. */
 export async function fetchWishlist(uid: string): Promise<WishlistEntry[]> {
-  const snapshot = await getDocs(wishlistCollection(uid));
+  const snapshot = await getDocsOnline(wishlistCollection(uid));
   return snapshot.docs
     .map((document) => document.data())
     .sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));

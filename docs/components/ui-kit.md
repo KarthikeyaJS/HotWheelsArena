@@ -281,7 +281,7 @@ toast({
 
 ### `ErrorState`
 
-`title?` (`"ENGINE TROUBLE"`), `error?: unknown` (→ `getFriendlyErrorMessage`), `message?` (wins), `onRetry?`, `retryLabel?` (`"Try again"`), `retrying?` (loading on the button), `compact?` (inline row), `titleAs?`. `role="alert"`.
+`title?` (`"ENGINE TROUBLE"`), `error?: unknown` (→ `getFriendlyErrorMessage`: friendly copy per code; a server message is shown verbatim only for our callables' `functions/<code>` HttpsErrors, never raw Firestore SDK text), `message?` (wins), `onRetry?`, `retryLabel?` (`"Try again"`), `retrying?` (loading on the button), `compact?` (inline row), `titleAs?`. `role="alert"`.
 
 ```tsx
 <ErrorState error={query.error} onRetry={() => void query.refetch()} retrying={query.isFetching} />
@@ -573,10 +573,19 @@ Pure helpers: `diffBadgeSnapshots(prev, next)`, `snapshotFromProfile(profile)`.
 - `ErrorBoundary({ fallback?, label?, onError?, onReset?, resetKeys? })` — default fallback is a compact `ErrorState` ("<label> stalled" + Try again).
 - `RouteFallback({ label?, fullScreen?, className? })` — racing loader (`aria-busy`).
 - `PageStub({ title, eyebrow?, description?, children? })` — now built on `Container` + `SectionHeading`.
-- `RootLayout` — core glue, unchanged.
+- `RootLayout` — core glue: `AppLayout` + `RouteAnnouncer` + `ScrollRestoration`.
+
+### `RouteAnnouncer` (new, WF3; mounted once in `RootLayout` — never mount it elsewhere)
+
+No props. Renders `<div id="route-announcer" role="status" aria-live="polite" aria-atomic="true" class="sr-only">`. On a
+pathname change (not the initial load, not a load-time `<Navigate replace>` redirect, not search/hash-only updates) it waits
+until no `[aria-busy="true"]` remains inside `#main-content` and `document.title` has changed (or `ROUTE_SETTLE_TIMEOUT_MS`
+= 3 s), then announces `document.title`. If focus was lost (`<body>`, null or a detached node) it focuses `#main-content`
+with `preventScroll`; a still-mounted control (nav link, palette/drawer return target) keeps focus. No heavy dependencies
+(no framer-motion); one MutationObserver + one timer, both cleaned up on the next navigation and on unmount.
 
 ---
 
 ## Tests
 
-`npx vitest run src/components` — Tabs (keyboard / roving tabindex / manual mode), Modal (labelling, focus in, Esc, trap, focus return, backdrop, data-autofocus), QuantityStepper (clamping, typing, keys, disabled), RangeSlider (ARIA, arrows, PageUp/Down, Home/End, min distance, commit, disabled), Button/IconButton, StarRatingInput/StarRating, Toaster (live regions, dismiss, auto-dismiss + hover pause, sticky), DataState, badge snapshot diffing and BadgeWatcher (no toasts on first load / user switch).
+`npx vitest run src/components` — Tabs (keyboard / roving tabindex / manual mode), Modal (labelling, focus in, Esc, trap, focus return, backdrop, data-autofocus), QuantityStepper (clamping, typing, keys, disabled), RangeSlider (ARIA, arrows, PageUp/Down, Home/End, min distance, commit, disabled), Button/IconButton, StarRatingInput/StarRating, Toaster (live regions, dismiss, auto-dismiss + hover pause, sticky), DataState, RouteAnnouncer (no text on first load, announces after a pathname change, waits for `aria-busy` loaders, 3 s fallback, ignores search/hash-only changes and load redirects, focus repair only when focus was lost), badge snapshot diffing and BadgeWatcher (no toasts on first load / user switch).

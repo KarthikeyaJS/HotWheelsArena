@@ -99,10 +99,13 @@ export default function CheckoutPage() {
   }, [step, previousStep, reduceMotion]);
 
   const settings = cart.settings;
+  const uid = user?.uid ?? '';
   const handleSuccess = useCallback(
     (response: PlaceOrderResponse, input: PlaceOrderInput) => {
       const totals = computeOrderTotals(input.lines, settings);
       const state: OrderSuccessState = {
+        // Scopes the hand-off to this collector ('' never matches, so it would fall back safely).
+        uid,
         response,
         items: input.lines.map((line) => ({
           productId: line.productId,
@@ -125,7 +128,7 @@ export default function CheckoutPage() {
       navigate(orderSuccessPath(response.orderId), { replace: true, state });
       useCartStore.getState().clear();
     },
-    [navigate, settings],
+    [navigate, settings, uid],
   );
 
   const { refresh } = cart;
@@ -152,7 +155,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = (): void => {
     if (!address || !method || cart.hasBlockers || cart.purchasable.length === 0) return;
-    if (cart.verifyError || cart.isVerifying) return;
+    if (cart.lineLimitExcess > 0 || cart.verifyError || cart.isVerifying) return;
     setOrderNotice(null);
     setChargeAmount(cart.totals.total);
     void flow.placeOrder({
@@ -298,6 +301,7 @@ export default function CheckoutPage() {
                     verifyError={cart.verifyError}
                     onRetryVerify={cart.retryVerify}
                     hasBlockers={cart.hasBlockers}
+                    lineLimitExcess={cart.lineLimitExcess}
                     orderNotice={orderNotice}
                     hasHeldPayment={flow.hasHeldPayment}
                     failurePanel={failurePanel}

@@ -212,10 +212,12 @@ export default function OrderSuccessPage() {
   const { orderId = '' } = useParams<{ orderId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const uid = user?.uid ?? null;
+  // Only the collector who placed the order sees the hand-off state (shared device safety).
   const successState = useMemo(
-    () => readOrderSuccessState(location.state, orderId),
-    [location.state, orderId],
+    () => readOrderSuccessState(location.state, orderId, uid),
+    [location.state, orderId, uid],
   );
   // Celebrate only on the first arrival from the checkout (not after a reload / back-forward).
   const [celebrate] = useState(() => successState !== null && successState.celebrated !== true);

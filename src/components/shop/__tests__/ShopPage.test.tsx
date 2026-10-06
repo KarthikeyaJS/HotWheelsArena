@@ -200,4 +200,34 @@ describe('ShopPage', () => {
     await user.click(screen.getByRole('button', { name: /try again/i }));
     expect(mocks.products.refetch).toHaveBeenCalled();
   });
+
+  it('shows neutral placeholders (no loading label, no zeros) while the catalogue is unreachable', () => {
+    mocks.products.data = undefined;
+    mocks.products.isPending = false;
+    mocks.products.isError = true;
+    mocks.products.error = new Error('unavailable');
+    renderShop();
+
+    // Results toolbar: "— machines", announced as "machines unavailable" — not "Loading machines".
+    expect(
+      screen.getByRole('heading', { level: 2, name: /^machines unavailable$/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /loading machines/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /^\d+\s*machines?$/i })).not.toBeInTheDocument();
+
+    // Header telemetry: every readout is a dash marked "unavailable", and the meta isn't LIVE.
+    expect(screen.getByText('NO SIGNAL')).toBeInTheDocument();
+    expect(screen.queryByText('LIVE')).not.toBeInTheDocument();
+    for (const label of ['In view', 'Makes', 'From']) {
+      const readout = screen.getByText(label).closest('li');
+      expect(readout).not.toBeNull();
+      const cell = within(readout as HTMLElement);
+      expect(cell.getByText('unavailable')).toBeInTheDocument();
+      expect(cell.queryByText(/^0$/)).not.toBeInTheDocument();
+    }
+
+    // The error state itself, never the empty state.
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+    expect(screen.queryByText('This bay is empty')).not.toBeInTheDocument();
+  });
 });

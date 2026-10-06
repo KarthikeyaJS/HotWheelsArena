@@ -112,7 +112,9 @@ describe('CommandPalette', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Search the garage' });
     const input = within(dialog).getByRole('combobox', { name: 'Search the garage' });
-    expect(input).toHaveFocus();
+    // The dialog is lazy and useFocusTrap focuses the input in a passive effect, which can still
+    // be pending when findByRole resolves (under full-suite load): wait for it.
+    await waitFor(() => expect(input).toHaveFocus());
     expect(input).toHaveAttribute('aria-expanded', 'true');
     expect(input).toHaveAttribute('aria-controls', screen.getByRole('listbox').id);
     // Blank query: quick links + categories, nothing active yet.

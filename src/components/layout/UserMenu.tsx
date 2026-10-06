@@ -93,9 +93,23 @@ export function UserMenu({ className }: UserMenuProps) {
   }, [open]);
 
   if (status === 'loading') {
+    // The skeleton covers an invisible, disabled copy of the signed-out "Sign in" button, so it
+    // reserves that button's exact width: when auth resolves for a signed-out visitor, the
+    // header's right cluster (and with it the centred nav) doesn't jump (layout shift).
     return (
-      <span className={cn('inline-flex', className)}>
-        <Skeleton variant="circle" className="h-9 w-9" />
+      <span className={cn('relative inline-flex', className)}>
+        <span className="invisible inline-flex">
+          <GoogleSignInButton
+            size="sm"
+            variant="outline"
+            label="Sign in"
+            loadingText={null}
+            disabled
+            tabIndex={-1}
+            className="whitespace-nowrap"
+          />
+        </span>
+        <Skeleton className="absolute inset-0 h-full w-full rounded-full" />
         <span className="sr-only">Checking your pit pass…</span>
       </span>
     );

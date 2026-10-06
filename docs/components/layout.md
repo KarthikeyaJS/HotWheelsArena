@@ -27,6 +27,16 @@ Root route element (rendered by core's `RootLayout`). Order: `PageBackdrop` → 
 Global overlays are mounted **once** here — never mount them again in a page:
 `MobileDrawer`, `CommandPalette`, `SignInPrompt`, `Toaster`, `BadgeWatcher`, `ScanlinesOverlay`.
 
+`<main>` is at least `calc(100svh - var(--header-height))` tall (`min-h-[…]`, on top of `flex-1`). While a lazy page, the
+`RequireAuth` gate or a short skeleton is on screen the footer therefore starts below the fold, so nothing jumps when the
+page lands (this removed a ≈0.45 CLS on cold loads). Short pages (404, empty cart) push the footer just below the fold;
+browsers without `svh` ignore the declaration and keep the plain `flex-1` behaviour.
+
+Route announcements live one level up: `RootLayout` (core glue, `src/components/common`) renders `AppLayout`, then
+`RouteAnnouncer` (visually hidden polite `#route-announcer`: announces `document.title` once a new pathname has settled
+and moves focus to `#main-content` only when navigation dropped it — see ARCHITECTURE §12 "Router", "Route announcements + focus"),
+then `ScrollRestoration`.
+
 The wrapper is `relative isolate bg-bg`, so the fixed `PageBackdrop` (`-z-10`, faint grid + skid marks + top glow) sits above
 the page colour and below content. Pages that want a solid section simply give it a background.
 
@@ -37,7 +47,7 @@ orange `ScrollProgress` line on its bottom edge.
 
 | Width        | Contents                                                                                                                    |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `< sm`       | hamburger · logo · search icon · cart                                                                                       |
+| `< sm`       | hamburger · logo · search icon · cart (below 360px the wordmark text is `sr-only`, leaving the stripe mark)                 |
 | `sm`–`md`    | + wishlist, account (sign-in button / avatar menu); `md` adds theme + sound toggles                                         |
 | `lg` (1024+) | hamburger hidden; centre `NavLinks`; search icon · cart · theme · sound · account (wishlist moves to the account menu here) |
 | `xl` (1280+) | + wishlist, search trigger with the `Ctrl K` / `⌘K` hint; `2xl` shows the full "Search the garage…" pill                    |
@@ -49,9 +59,12 @@ The CRT scanlines toggle lives in the account menu, the mobile drawer and the fo
 `NAV_LINKS` with `isNavLinkActive` → `aria-current="page"` + orange underline stripe. Uses plain `Link`s because `NavLink`
 ignores the query string (`/shop` vs `/shop?view=new`). `<nav aria-label="Primary">`.
 
-### `Logo` — `size?: 'sm' | 'md' | 'lg'`, `asLink?` (true), `onClick?`
+### `Logo` — `size?: 'sm' | 'md' | 'lg'`, `asLink?` (true), `onClick?`, `textClassName?`
 
 Orange stripe mark + `BRAND_LOGO_TEXT` (Orbitron). As a link its accessible name is `"<BRAND_NAME> — home"`.
+`textClassName` is merged into the wordmark text span; the Navbar passes `max-[359px]:sr-only` so the header row fits a
+320px viewport (WCAG 1.4.10 reflow) while the link keeps its name. The wrapper is `min-w-0` (it may shrink in a tight
+flex row; the Navbar's left cluster is `shrink` too) and the stripe mark never shrinks. Footer and drawer logos pass nothing.
 
 ### `SkipLink` — `targetId?` (`'main-content'`), `children?` (`'Skip to content'`)
 
@@ -97,7 +110,9 @@ Settings row used by the three toggles (`icon`, `label`, `value`, `onClick`, `ki
 
 ### `UserMenu`
 
-- `status === 'loading'` → avatar skeleton.
+- `status === 'loading'` → a pill skeleton laid over an invisible, disabled copy of the signed-out "Sign in" button, so it
+  reserves that button's exact width and the header (and the centred nav) doesn't shift when auth resolves; an sr-only
+  "Checking your pit pass…" label stands in for the button.
 - Signed out → `GoogleSignInButton` (`size="sm"`, outline, "Sign in", compact loading state).
 - Signed in → WAI-ARIA **menu button**: avatar (Google photo, initials fallback) + level chip (`07`). Menu: name/email,
   `LevelBadge` + XP bar + "160 XP to LEVEL 08", links **My Garage · Orders · Wishlist · Achievements**, `ScanlinesToggle`,

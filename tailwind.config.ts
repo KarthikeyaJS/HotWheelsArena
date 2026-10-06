@@ -30,9 +30,19 @@ export default {
         ring: token('ring'),
       },
       fontFamily: {
-        display: ['Orbitron', 'Eurostile', '"Arial Black"', 'system-ui', 'sans-serif'],
+        // Each web font is followed by its metric-matched local fallback (src/styles/fonts.css),
+        // so the `display=swap` font swap causes no layout shift.
+        display: [
+          'Orbitron',
+          '"Orbitron Fallback"',
+          'Eurostile',
+          '"Arial Black"',
+          'system-ui',
+          'sans-serif',
+        ],
         sans: [
           'Inter',
+          '"Inter Fallback"',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
@@ -44,6 +54,7 @@ export default {
         ],
         mono: [
           '"JetBrains Mono"',
+          '"JetBrains Mono Fallback"',
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',

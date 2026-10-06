@@ -49,7 +49,7 @@ export function TotalsBreakdown({
         <dt className="text-muted">
           Subtotal
           {totals.itemCount !== undefined ? (
-            <span className="text-muted/90"> · {pluralize(totals.itemCount, 'car')}</span>
+            <span className="text-muted"> · {pluralize(totals.itemCount, 'car')}</span>
           ) : null}
         </dt>
         <dd className="font-mono tabular-nums text-fg">{formatINR(totals.subtotal)}</dd>

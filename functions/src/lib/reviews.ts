@@ -1,6 +1,7 @@
 /**
  * Review helpers: rating aggregation (create + edit) and text sanitising.
  */
+import { stripUnsafeText } from '../../../shared/index.js';
 import type { RatingAggregate } from './firestoreData.js';
 
 /** Stored averages keep 4 decimals so the integer rating sum can be recovered exactly. */
@@ -40,27 +41,12 @@ export function applyReviewToAggregate(
 }
 
 /**
- * C0/C1 control characters except TAB (0x09) and LF (0x0A), zero-width characters, bidi
- * embeddings/overrides/isolates and the BOM.
+ * Normalises newlines, strips control / invisible characters (the shared `stripUnsafeText`) and
+ * collapses blank-line runs.
  */
-function isUnsafeCodePoint(code: number): boolean {
-  return (
-    code <= 0x08 ||
-    (code >= 0x0b && code <= 0x1f) ||
-    (code >= 0x7f && code <= 0x9f) ||
-    (code >= 0x200b && code <= 0x200f) ||
-    (code >= 0x202a && code <= 0x202e) ||
-    (code >= 0x2066 && code <= 0x2069) ||
-    code === 0xfeff
-  );
-}
-
-/** Normalises newlines, strips control / invisible characters and collapses blank-line runs. */
 export function sanitizeReviewText(text: string): string {
   const normalized = text.normalize('NFC').replace(/\r\n?/g, '\n');
-  const visible = Array.from(normalized)
-    .filter((char) => !isUnsafeCodePoint(char.codePointAt(0) ?? 0))
-    .join('');
+  const visible = stripUnsafeText(normalized);
   return visible
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')

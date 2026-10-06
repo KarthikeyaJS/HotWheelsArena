@@ -25,7 +25,14 @@ export function AppLayout() {
       <SkipLink />
       <Navbar />
 
-      <main id="main-content" tabIndex={-1} className="relative flex-1 focus:outline-none">
+      {/* The viewport-tall min-height keeps the footer below the fold while a lazy page,
+          auth gate or data skeleton is pending, so it never jumps down when the page lands
+          (CLS). Browsers without `svh` drop the declaration and keep flex-1 behaviour. */}
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative min-h-[calc(100svh-var(--header-height))] flex-1 focus:outline-none"
+      >
         <Suspense fallback={<RouteFallback />}>
           <Outlet />
         </Suspense>

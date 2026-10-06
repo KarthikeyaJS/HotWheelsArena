@@ -23,8 +23,19 @@ import 'firebase/compat/firestore';
 firebase.firestore.setLogLevel('error');
 
 export const PROJECT_ID = 'demo-hotwheelsarena';
-export const FIRESTORE_HOST = '127.0.0.1';
-export const FIRESTORE_PORT = 8080;
+
+/**
+ * Emulator address: `FIRESTORE_EMULATOR_HOST` (`host:port`, set by `firebase emulators:exec`, so
+ * the suite also runs against an emulator on another port), else the default 127.0.0.1:8080.
+ */
+function emulatorAddress(): { host: string; port: number } {
+  const match = /^(.+):(\d+)$/.exec(process.env.FIRESTORE_EMULATOR_HOST?.trim() ?? '');
+  return match?.[1] && match[2]
+    ? { host: match[1], port: Number(match[2]) }
+    : { host: '127.0.0.1', port: 8080 };
+}
+
+export const { host: FIRESTORE_HOST, port: FIRESTORE_PORT } = emulatorAddress();
 
 export const RULES_FILE = new URL('../../firestore.rules', import.meta.url);
 

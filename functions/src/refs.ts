@@ -78,10 +78,8 @@ export async function getAllInTransaction(
   return snapshots;
 }
 
-/** Everything needed to recompute a collector's stats, read inside one transaction. */
-export interface CollectorState {
-  /** Raw `users/{uid}` data (`undefined` when the profile does not exist). */
-  profileData: RawData | undefined;
+/** The garage side of a collector's stats inputs, read inside one transaction. */
+export interface GarageState {
   /** Full garage keyed by product id. */
   garage: Map<string, GarageRecord>;
   /** Active series. */
@@ -90,18 +88,22 @@ export interface CollectorState {
   products: Map<string, ProductRecord | null>;
 }
 
+/** Everything needed to recompute a collector's stats, read inside one transaction. */
+export interface CollectorState extends GarageState {
+  /** Raw `users/{uid}` data (`undefined` when the profile does not exist). */
+  profileData: RawData | undefined;
+}
+
 /**
- * Reads the collector's profile, FULL garage (`transaction.get` on the collection) and the
- * active series, then every referenced product document — all inside `transaction`, so the
- * computed stats are consistent with what the transaction writes.
+ * Reads the collector's FULL garage (`transaction.get` on the collection) and the active series,
+ * then every referenced product document, inside `transaction` (no profile read).
  */
-export async function readCollectorState(
+export async function readGarageState(
   transaction: Transaction,
   uid: string,
   extraProductIds: readonly string[] = [],
-): Promise<CollectorState> {
-  const [userSnapshot, garageSnapshot, seriesSnapshot] = await Promise.all([
-    transaction.get(userRef(uid)),
+): Promise<GarageState> {
+  const [garageSnapshot, seriesSnapshot] = await Promise.all([
     transaction.get(garageCollection(uid)),
     transaction.get(activeSeriesQuery()),
   ]);
@@ -120,5 +122,22 @@ export async function readCollectorState(
     ]),
   );
 
-  return { profileData: dataOf(userSnapshot), garage, series, products };
+  return { garage, series, products };
+}
+
+/**
+ * Reads the collector's profile, FULL garage (`transaction.get` on the collection) and the
+ * active series, then every referenced product document — all inside `transaction`, so the
+ * computed stats are consistent with what the transaction writes.
+ */
+export async function readCollectorState(
+  transaction: Transaction,
+  uid: string,
+  extraProductIds: readonly string[] = [],
+): Promise<CollectorState> {
+  const [userSnapshot, garageState] = await Promise.all([
+    transaction.get(userRef(uid)),
+    readGarageState(transaction, uid, extraProductIds),
+  ]);
+  return { profileData: dataOf(userSnapshot), ...garageState };
 }

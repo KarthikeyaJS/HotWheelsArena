@@ -6,6 +6,7 @@ import {
   type UseMutationResult,
   type UseQueryResult,
 } from '@tanstack/react-query';
+import { DocIdSchema } from '@shared/schemas';
 import { ANONYMOUS_UID, STALE_TIMES, mutationKeys, queryKeys } from '@/lib/queryKeys';
 import { getCurrentUid } from '@/services/auth';
 import { fetchOrder, fetchOrders } from '@/services/firestore/orders';
@@ -23,6 +24,17 @@ export function useOrders(): UseQueryResult<Order[]> {
   });
 }
 
+/**
+ * True when a route param can be a Firestore order id. Anything else (`a/b`, reserved `__x__`,
+ * surrounding spaces…) can never exist, so it resolves "not found" without a read — the SDK would
+ * otherwise throw raw "Invalid document reference…" errors. This module is lazy-only (orders /
+ * checkout pages), so importing zod here does not touch the entry chunk.
+ */
+function isOrderId(orderId: string): boolean {
+  const parsed = DocIdSchema.safeParse(orderId);
+  return parsed.success && parsed.data === orderId;
+}
+
 /** One order (instant from the cached list when present). `data === null` → not found / not yours. */
 export function useOrder(orderId: string | undefined): UseQueryResult<Order | null> {
   const uid = useUid();
@@ -36,7 +48,10 @@ export function useOrder(orderId: string | undefined): UseQueryResult<Order | nu
 
   return useQuery<Order | null>({
     queryKey: queryKeys.order(uid ?? ANONYMOUS_UID, orderId ?? ''),
-    queryFn: uid && orderId ? () => fetchOrder(orderId) : skipToken,
+    queryFn:
+      uid && orderId
+        ? () => (isOrderId(orderId) ? fetchOrder(orderId) : Promise.resolve(null))
+        : skipToken,
     initialData: fromList,
     initialDataUpdatedAt: () =>
       uid ? queryClient.getQueryState(queryKeys.orders(uid))?.dataUpdatedAt : undefined,

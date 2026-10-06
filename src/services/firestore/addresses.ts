@@ -3,19 +3,13 @@
  * Document shape: { name, phone, pincode, line1, line2, landmark, city, state, isDefault,
  * createdAt, updatedAt } — line2 / landmark are always strings ('' when empty).
  */
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  serverTimestamp,
-  writeBatch,
-} from 'firebase/firestore';
+import { collection, deleteDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { COLLECTIONS, SUBCOLLECTIONS } from '@shared/constants';
 import { AddressSchema } from '@shared/schemas';
 import type { Address, SavedAddress } from '@shared/types';
 import { db } from '@/config/firebase';
 import { savedAddressConverter } from './converters';
+import { getDocsOnline } from './serverReads';
 
 export const MAX_SAVED_ADDRESSES = 10;
 
@@ -29,7 +23,7 @@ const rawAddressesCollection = (uid: string) =>
 
 /** Default address first, then most recently updated. */
 export async function fetchAddresses(uid: string): Promise<SavedAddress[]> {
-  const snapshot = await getDocs(addressesCollection(uid));
+  const snapshot = await getDocsOnline(addressesCollection(uid));
   return snapshot.docs
     .map((document) => document.data())
     .sort(

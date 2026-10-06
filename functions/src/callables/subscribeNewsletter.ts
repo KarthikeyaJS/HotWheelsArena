@@ -5,6 +5,8 @@
  * `NewsletterSchema`; the document id is `sha256(email)`, so an address is stored at most once
  * (a repeat returns `already-subscribed`). Sign-ups are rate-limited per client IP (stored only
  * as a salted hash in the functions-only `rateLimits` collection): 5 attempts per 10 minutes.
+ * The client IP is the `X-Forwarded-For` entry Google's front end appended (see `lib/net.ts`);
+ * IPv6 clients share one bucket per /64.
  *
  * Request: `{ email }`. Response: `{ status: 'subscribed' | 'already-subscribed' }`.
  * Errors: invalid-argument · resource-exhausted · aborted.
@@ -23,7 +25,7 @@ import { parseInput, withErrorHandling } from '../lib/callable.js';
 import { emailDocId, normalizeEmail } from '../lib/email.js';
 import { AppError } from '../lib/errors.js';
 import { readObject } from '../lib/firestoreData.js';
-import { extractClientIp } from '../lib/net.js';
+import { extractClientIp, rateLimitKeyForIp } from '../lib/net.js';
 import {
   NEWSLETTER_SCOPE,
   buildRateLimitDoc,
@@ -51,8 +53,15 @@ export async function handleSubscribeNewsletter(
   );
   const subscriberRef = newsletterRef(emailDocId(email));
 
-  const clientIp = extractClientIp(request.rawRequest.headers, request.rawRequest.ip);
-  const limitRef = clientIp ? rateLimitRef(rateLimitDocId(NEWSLETTER_SCOPE, clientIp)) : null;
+  // Fallback = the socket address, never `rawRequest.ip`: with `trust proxy` that is the left-most
+  // (caller-controlled) X-Forwarded-For entry.
+  const clientIp = extractClientIp(
+    request.rawRequest.headers,
+    request.rawRequest.socket?.remoteAddress,
+  );
+  const limitRef = clientIp
+    ? rateLimitRef(rateLimitDocId(NEWSLETTER_SCOPE, rateLimitKeyForIp(clientIp)))
+    : null;
   if (!limitRef) logger.warn('subscribeNewsletter: client IP unavailable, rate limit skipped');
   const nowMs = Date.now();
 
