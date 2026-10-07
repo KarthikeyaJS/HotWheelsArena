@@ -44,7 +44,8 @@ It is a React 18 + Vite + TypeScript single-page app on Firebase (Google sign-in
 - **Pit Stop cart and checkout**: GST-inclusive totals, free-shipping progress, Indian address validation (phone, PIN code, state), test-mode payments (card / UPI / COD). Orders are priced and created **only** by the `placeOrder` Cloud Function.
 - **My Garage**: owned cars (manual or auto-added after purchase), favourites, duplicates tracker, missing cars per series, collection value, wishlist, achievements and stats.
 - **Gamification**: 25 collector levels, XP for orders and badges, five badges (First Ride, Speed Demon, Treasure Hunter, Garage Builder, Master Collector), awarded server-side with live unlock toasts.
-- **Admin-ready backend**: admin custom claim, every admin-editable document in Firestore with `createdAt`/`updatedAt` and `isActive` soft-delete flags, strict security rules with 310+ emulator tests.
+- **Performance and accessibility**: route-level code splitting (zod, GSAP and Howler stay out of the ~60 kB gzip entry chunk); metric-matched local fallbacks for the web fonts (`src/styles/fonts.css`) so the font swap moves nothing; Lighthouse desktop about 94 on Home and 96–97 on Shop and a product page, CLS ≤ 0.003, and 100 for accessibility, best practices and SEO (production build against the emulators). Route changes are announced to screen readers, the layout reflows at 320 px, and axe finds no serious issues in either theme.
+- **Admin-ready backend**: admin custom claim, every admin-editable document in Firestore with `createdAt`/`updatedAt` and `isActive` soft-delete flags, strict security rules with 320+ emulator tests.
 
 ## Tech stack
 
