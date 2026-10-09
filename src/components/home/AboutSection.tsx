@@ -18,7 +18,7 @@ interface AboutPoint {
 }
 
 /**
- * NEWSLETTER / ABOUT (`#about`, the last scroll-track station) — "JOIN THE PIT CREW" drop-alert
+ * NEWSLETTER / ABOUT (`#about`, the last home section) — "JOIN THE PIT CREW" drop-alert
  * sign-up (NewsletterForm → `subscribeNewsletter` callable) plus a short about strip.
  */
 export function AboutSection() {
@@ -28,7 +28,8 @@ export function AboutSection() {
   const points: readonly AboutPoint[] = [
     {
       icon: Truck,
-      title: `Free shipping over ${formatINR(settings.shippingThreshold)}`,
+      // Free at or above the threshold (shared/commerce.ts), so "from", not "over".
+      title: `Free shipping from ${formatINR(settings.shippingThreshold)}`,
       text: 'Collector-safe packing on every order, shipped across India.',
     },
     {

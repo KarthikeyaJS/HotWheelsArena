@@ -100,6 +100,8 @@ export function GarageTeaserSection() {
   const headingId = sectionHeadingId(HOME_SECTION_IDS.garage);
 
   const resolving = status === 'loading' || (signedIn && (isProfileLoading || !profile));
+  const panelTitle =
+    signedIn && profile ? `${firstName(profile.displayName)}'s garage` : 'Sample garage';
   const stats: GarageTeaserStats =
     signedIn && profile
       ? garageTeaserStats(profile, garage.isLoading || garage.isError ? null : garage.cars)
@@ -156,9 +158,7 @@ export function GarageTeaserSection() {
           <HudPanel
             as="section"
             aria-label={signedIn ? 'Your garage status' : 'Sample garage status'}
-            title={
-              signedIn && profile ? `${firstName(profile.displayName)}'s garage` : 'Sample garage'
-            }
+            title={<span title={panelTitle}>{panelTitle}</span>}
             meta={
               <span className="flex items-center gap-1.5">
                 <span
@@ -169,7 +169,8 @@ export function GarageTeaserSection() {
               </span>
             }
             padding="lg"
-            className="overflow-hidden bg-surface/80 shadow-card"
+            // p-5 below 640px: at 320px the title and the meta fit on one line without truncating.
+            className="overflow-hidden bg-surface/80 p-5 shadow-card sm:p-8"
           >
             <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-center">
               <Speedometer

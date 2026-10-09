@@ -1,4 +1,6 @@
 /** Pure helpers for the wishlist grid (shared by /wishlist and the garage WISHLIST tab). */
+import { MAX_QTY_PER_ITEM } from '@shared/commerce';
+import { formatNumber } from '@/lib/format';
 import { compareByRarityDesc } from '@/lib/product';
 import type { Product } from '@/types';
 
@@ -40,4 +42,24 @@ export function sortWishlist(
     }
   };
   return [...products].sort((a, b) => Number(!a.isActive) - Number(!b.isActive) || compare(a, b));
+}
+
+/** Result of moving one wishlisted car to the pit stop. */
+export type MoveOutcome = 'moved' | 'sold-out' | 'unavailable' | 'capped';
+
+/**
+ * Toast for a car that could not be moved. Every refusal used to say "Max per collector reached",
+ * even for a sold-out or retired car, or one capped by its stock rather than the per-order cap.
+ */
+export function blockedMoveToast(
+  outcome: Exclude<MoveOutcome, 'moved'>,
+  product: Pick<Product, 'name' | 'stock'>,
+): { title: string; description: string } {
+  if (outcome === 'sold-out') return { title: 'Sold out', description: product.name };
+  if (outcome === 'unavailable') {
+    return { title: 'No longer available', description: product.name };
+  }
+  return product.stock < MAX_QTY_PER_ITEM
+    ? { title: `Only ${formatNumber(product.stock)} in stock`, description: product.name }
+    : { title: 'Max per collector reached', description: product.name };
 }

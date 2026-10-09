@@ -307,6 +307,9 @@ export function HorizontalRail<T>(props: HorizontalRailProps<T>) {
     : undefined;
   const slideWidth = typeof itemWidth === 'number' ? `${itemWidth}px` : itemWidth;
   const controlsVisible = showControls && edges.overflowing;
+  // A scrollable region must be keyboard-focusable (axe "scrollable-region-focusable") so arrow
+  // keys can scroll it; it is only focusable while it actually overflows.
+  const trackTabIndex = edges.overflowing ? 0 : undefined;
   const animateEntrance = !reduceMotion;
 
   const trackClasses = cn(
@@ -362,10 +365,7 @@ export function HorizontalRail<T>(props: HorizontalRailProps<T>) {
         id={trackId}
         role="group"
         aria-label={`${label}: ${total} ${total === 1 ? 'car' : 'cars'}`}
-        // A scrollable region must be keyboard-focusable (axe "scrollable-region-focusable") so
-        // arrow keys can scroll it; it is only focusable while it actually overflows.
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-        tabIndex={edges.overflowing ? 0 : undefined}
+        tabIndex={trackTabIndex}
         className={trackClasses}
         style={trackStyle}
         onPointerDown={handlePointerDown}

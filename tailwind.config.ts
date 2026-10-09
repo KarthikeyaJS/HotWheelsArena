@@ -71,7 +71,6 @@ export default {
         content: '1280px',
       },
       zIndex: {
-        track: '5',
         header: '40',
         overlay: '45',
         drawer: '50',
@@ -133,18 +132,6 @@ export default {
           '0%, 100%': { opacity: '0.55', filter: 'drop-shadow(0 0 0 rgb(var(--accent) / 0))' },
           '50%': { opacity: '1', filter: 'drop-shadow(0 0 12px rgb(var(--accent) / 0.55))' },
         },
-        float: {
-          '0%, 100%': { transform: 'translate3d(0, 0, 0)' },
-          '50%': { transform: 'translate3d(0, -8px, 0)' },
-        },
-        'headlight-flicker': {
-          '0%': { opacity: '0' },
-          '8%': { opacity: '0.9' },
-          '12%': { opacity: '0.15' },
-          '20%': { opacity: '1' },
-          '26%': { opacity: '0.35' },
-          '34%, 100%': { opacity: '1' },
-        },
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out both',
@@ -155,8 +142,6 @@ export default {
         'stripe-slide': 'stripe-slide 0.35s cubic-bezier(0.22, 1, 0.36, 1) both',
         'speed-line': 'speed-line 1.4s linear infinite',
         'glow-pulse': 'glow-pulse 2.4s ease-in-out infinite',
-        float: 'float 6s ease-in-out infinite',
-        'headlight-flicker': 'headlight-flicker 0.9s ease-out both',
       },
     },
   },

@@ -153,7 +153,7 @@ The card shows:
 - A brushed-metal texture and a pulsing yellow spotlight behind the car.
 - A **LIMITED EDITION** chip and the edition number `#001/500` (`limitedEditionInfo`).
 - The meta line (`HW LEGENDS · 2025 SERIES`) and the name.
-- "Only **37** remaining" with "93% claimed", above an animated, striped `ProgressBar tone="highlight"`. The bar fills to `editionSize − stock` out of `editionSize`, and its `aria-valuetext` is "463 of 500 claimed, 37 remaining". Values are static from the product doc.
+- "Only **37** remaining" with "93% claimed", above an animated, striped `ProgressBar tone="highlight"`. The bar fills to `editionSize − stock` out of `editionSize`, and its `aria-valuetext` is "463 of 500 claimed, 37 remaining". Values are static from the product doc. Below 360px the decorative "93% claimed" label is hidden (the card is too narrow for both labels on one line, and some cards wrapped while others did not); the bar still shows the share.
 - `PriceTag` (lg), a ♡ button, and the CTA **VIEW EDITION →** linking to the product.
 
 The card is a flex column whose details column grows and whose price/CTA row is pushed to the bottom (`mt-auto`), so price rows and CTAs line up across a grid row even when a name wraps to two lines (horizontal layout keeps its centred details from `md`).
@@ -223,15 +223,15 @@ Behaviour:
 | `onAdded`   | `(r: AddToCartResult) => void` |              | Called after every click, e.g. BUY NOW → navigate to checkout                     |
 | `className` | `string`                       |              | Classes on the wrapper                                                            |
 
-Clicking calls `useCartStore.getState().addItem(toCartItem(product), qty)`. It then toasts **"Added to your pit stop"** (or "Max per collector reached" when capped), plays `useSound()('click')`, and runs a 1–2px engine shake.
+Clicking calls `useCartStore.getState().addItem(toCartItem(product), qty)`. It then toasts **"Added to your pit stop"** (or, when capped, "Max per collector reached" — or **"Only N in stock"** when the product's stock is below `MAX_QTY_PER_ITEM` and is the real cap), plays `useSound()('click')`, and runs a 1–2px engine shake.
 
-| State      | Visible            | Accessible name                                | Enabled  |
-| ---------- | ------------------ | ---------------------------------------------- | -------- |
-| idle       | `+ CART`           | `Add {name} to cart`                           | yes      |
-| just added | `✓ ADDED` (1.4s)   | `Added – {name} is in your pit stop (n)`       | yes      |
-| in cart    | `+ IN PIT STOP ×n` | `In pit stop (n) – add another {name} to cart` | yes (+1) |
-| at max     | `MAX IN CART`      | `Max in cart – …`                              | no       |
-| sold out   | `SOLD OUT`         | `Sold out – {name}`                            | no       |
+| State      | Visible            | Accessible name                                                                              | Enabled                                                                                               |
+| ---------- | ------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| idle       | `+ CART`           | `Add {name} to cart`                                                                         | yes                                                                                                   |
+| just added | `✓ ADDED` (1.4s)   | `Added – {name} is in your pit stop (n)`                                                     | yes                                                                                                   |
+| in cart    | `+ IN PIT STOP ×n` | `In pit stop (n) – add another {name} to cart`                                               | yes (+1)                                                                                              |
+| at max     | `MAX IN CART`      | `Max in cart – {n} × {name} is the limit per collector` (stock cap: `…, every one in stock`) | no — `aria-disabled` via `focusableWhenDisabled`, so a keyboard user adding the last unit keeps focus |
+| sold out   | `SOLD OUT`         | `Sold out – {name}`                                                                          | no                                                                                                    |
 
 `data-state` is `idle | in-cart | max | sold-out`.
 

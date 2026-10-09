@@ -78,3 +78,48 @@ describe('AddCarDialog', () => {
     expect(screen.getByText('No cars match')).toBeInTheDocument();
   });
 });
+
+describe('AddCarDialog focus', () => {
+  function renderControlled(owned: Map<string, number>, hideParked = false) {
+    const props = {
+      open: true,
+      onClose: vi.fn(),
+      catalogue: CATALOGUE,
+      isLoading: false,
+      error: null,
+      onRetry: vi.fn(),
+      onAdd: vi.fn(),
+      onAddCopy: vi.fn(),
+    };
+    const view = render(<AddCarDialog {...props} ownedCopies={owned} />);
+    if (hideParked) fireEvent.click(screen.getByRole('checkbox', { name: 'Hide parked cars' }));
+    return {
+      ...props,
+      update: (next: Map<string, number>) =>
+        view.rerender(<AddCarDialog {...props} ownedCopies={next} />),
+    };
+  }
+
+  it('keeps focus on the row action when "Park it" turns into "+1 copy"', () => {
+    const dialog = renderControlled(new Map());
+    const park = screen.getByRole('button', { name: 'Park it — McLaren 750S' });
+    park.focus();
+    fireEvent.click(park);
+    expect(dialog.onAdd).toHaveBeenCalledWith(expect.objectContaining({ id: 'mclaren-750s' }));
+    dialog.update(new Map([['mclaren-750s', 1]]));
+
+    // Before: a different <button> replaced it and focus dropped to <body>.
+    expect(screen.getByRole('button', { name: '+1 copy — McLaren 750S' })).toHaveFocus();
+  });
+
+  it('moves focus to the next row when "Hide parked cars" removes the parked one', () => {
+    const dialog = renderControlled(new Map(), true);
+    const park = screen.getByRole('button', { name: 'Park it — McLaren 750S' });
+    park.focus();
+    fireEvent.click(park);
+    dialog.update(new Map([['mclaren-750s', 1]]));
+
+    expect(screen.queryByRole('button', { name: /McLaren 750S/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Park it — Porsche 911 GT3 RS' })).toHaveFocus();
+  });
+});

@@ -1,17 +1,9 @@
 import { memo, useId, type CSSProperties } from 'react';
 import { cn } from '@/lib/cn';
-import {
-  HERO_CAR_FLOOR_Y as FLOOR_Y,
-  HERO_CAR_HEADLIGHT,
-  HERO_CAR_VIEWBOX,
-  HERO_CAR_WHEELS,
-} from './heroCarGeometry';
 
 /**
- * The hero car: an inline React SVG adapted from `public/placeholders/hero-car.svg`, so its parts
- * can be animated independently by the hero scroll sequence. Parts are tagged with `data-car`:
- * `body`, `wheel-rear`, `wheel-front`, `wheel-blur`, `headlights` (+ `beam`, `glow`, `flare`)
- * and `shadow`.
+ * The hero car: a static inline React SVG adapted from `public/placeholders/hero-car.svg`
+ * (inline rather than an `<img>` so it can follow the theme tokens). Nothing in it animates.
  *
  * Colours are derived from the theme tokens (`--metal`, `--on-accent` as a constant ink,
  * `--accent`, `--accent-2`) with `color-mix()`, so the car reads as brushed silver in both the
@@ -27,6 +19,11 @@ const LIGHT = 'white';
 const shade = (metalPercent: number): string =>
   `color-mix(in srgb, ${METAL} ${metalPercent}%, ${INK})`;
 const SPECULAR = `color-mix(in srgb, ${METAL} 45%, ${LIGHT})`;
+
+/** SVG user-space viewport (the car is drawn in the source file's inner coordinates). */
+export const HERO_CAR_VIEWBOX = { x: 40, y: 170, width: 800, height: 270 } as const;
+/** Floor line — the showroom reflection mirrors around it. */
+const FLOOR_Y = 362;
 
 const stop = (color: string, opacity = 1): CSSProperties => ({
   stopColor: color,
@@ -46,7 +43,10 @@ export interface HeroCarProps {
   reflection?: boolean;
 }
 
-/** Decorative (aria-hidden); the hero headline carries the meaning. Memoized: it never re-renders. */
+/**
+ * Decorative (aria-hidden); the hero headline carries the meaning. Memoized: it never re-renders.
+ * Sized by its container's width (the viewBox fixes the aspect ratio, 800:270).
+ */
 export const HeroCar = memo(function HeroCar({ className, reflection = true }: HeroCarProps) {
   const uid = useId().replace(/:/g, '');
   const ids = {
@@ -59,7 +59,7 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
     beam: `hc-beam-${uid}`,
     clip: `hc-clip-${uid}`,
     wheel: `hc-wheel-${uid}`,
-    blur: `hc-blur-${uid}`,
+    floor: `hc-floor-${uid}`,
     car: `hc-car-${uid}`,
     reflectionFade: `hc-refl-fade-${uid}`,
     reflectionMask: `hc-refl-mask-${uid}`,
@@ -184,9 +184,18 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
         >
           <rect x={x} y={FLOOR_Y} width={width} height={80} fill={`url(#${ids.reflectionFade})`} />
         </mask>
-        <filter id={ids.blur} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.6" />
-        </filter>
+        <linearGradient
+          id={ids.floor}
+          gradientUnits="userSpaceOnUse"
+          x1={x}
+          y1="0"
+          x2={x + width}
+          y2="0"
+        >
+          <stop offset="0" style={stop(METAL, 0)} />
+          <stop offset="0.5" style={stop(METAL, 0.45)} />
+          <stop offset="1" style={stop(METAL, 0)} />
+        </linearGradient>
         <clipPath id={ids.clip}>
           <path d={SHELL_PATH} />
         </clipPath>
@@ -214,6 +223,9 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
           <circle r="3.5" className="fill-accent" />
         </g>
       </defs>
+
+      {/* Showroom floor line, fading out at both ends. */}
+      <rect x={x} y={FLOOR_Y} width={width} height="1.2" fill={`url(#${ids.floor})`} />
 
       {/* Contact shadow — soft in the showroom, deep in the garage. */}
       <g data-car="shadow">
@@ -244,30 +256,6 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
         <g data-car="wheel-front">
           <use href={`#${ids.wheel}`} transform="translate(590 310) scale(1.04)" />
         </g>
-        {/* Motion blur discs, faded in by the scroll sequence as the car picks up speed. */}
-        <g data-car="wheel-blur" opacity="0" filter={`url(#${ids.blur})`}>
-          {[HERO_CAR_WHEELS.rear, HERO_CAR_WHEELS.front].map((wheel) => (
-            <g key={wheel.x} transform={`translate(${wheel.x} ${wheel.y})`}>
-              <circle r="38" style={{ fill: shade(22) }} opacity="0.85" />
-              <circle
-                r="28"
-                fill="none"
-                strokeWidth="11"
-                style={{ stroke: shade(70) }}
-                opacity="0.7"
-              />
-              <circle
-                r="37.5"
-                fill="none"
-                strokeWidth="1.6"
-                className="stroke-accent"
-                opacity="0.8"
-              />
-              <circle r="8" style={{ fill: shade(60) }} />
-            </g>
-          ))}
-        </g>
-
         <g data-car="body">
           <path d={SHELL_PATH} fill={`url(#${ids.paint})`} />
           <path d={SHELL_PATH} fill={`url(#${ids.sheen})`} />
@@ -363,8 +351,8 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
         </g>
       </g>
 
-      {/* Headlights: flicker on at load (CSS), flare with the scroll sequence (GSAP). */}
-      <g data-car="headlights" className="animate-headlight-flicker [animation-delay:450ms]">
+      {/* Headlights: a static beam and glow (no animation). */}
+      <g data-car="headlights">
         <path
           data-car="beam"
           d="M728 286L846 246V344L728 298Z"
@@ -386,29 +374,6 @@ export const HeroCar = memo(function HeroCar({ className, reflection = true }: H
           strokeWidth="1.5"
           style={{ fill: LIGHT, stroke: INK }}
         />
-        <g data-car="flare" opacity="0">
-          <ellipse
-            cx={HERO_CAR_HEADLIGHT.x}
-            cy={HERO_CAR_HEADLIGHT.y}
-            rx="92"
-            ry="1.6"
-            opacity="0.85"
-            style={{ fill: LIGHT }}
-          />
-          <circle
-            cx={HERO_CAR_HEADLIGHT.x}
-            cy={HERO_CAR_HEADLIGHT.y}
-            r="7"
-            style={{ fill: LIGHT }}
-          />
-          <circle
-            cx={HERO_CAR_HEADLIGHT.x}
-            cy={HERO_CAR_HEADLIGHT.y}
-            r="16"
-            opacity="0.35"
-            className="fill-accent"
-          />
-        </g>
       </g>
     </svg>
   );

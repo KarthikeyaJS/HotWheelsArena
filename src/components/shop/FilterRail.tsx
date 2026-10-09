@@ -1,4 +1,5 @@
 import { RotateCcw } from 'lucide-react';
+import { useRef } from 'react';
 import { RarityChip } from '@/components/ui/RarityChip';
 import { FACET_VISIBLE_LIMIT } from '@/config/shop';
 import type { ProductFiltersController } from '@/hooks/useProductFilters';
@@ -53,6 +54,7 @@ export function FilterRail({
 }: FilterRailProps) {
   const { filters, toggle, activeCount } = controller;
   const headingId = `${idPrefix}-heading`;
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const groupId = (name: string): string => `${idPrefix}-${name}`;
   const selectedMakes = facets.make.filter((option) => option.selected).map((o) => o.label);
 
@@ -65,7 +67,12 @@ export function FilterRail({
     <div className={cn('flex flex-col', className)}>
       {showHeading ? (
         <div className="flex items-center gap-3 border-b border-line pb-3">
-          <h2 id={headingId} className="font-display text-sm font-bold tracking-hud text-fg">
+          <h2
+            id={headingId}
+            ref={headingRef}
+            tabIndex={-1}
+            className="rounded-sm font-display text-sm font-bold tracking-hud text-fg"
+          >
             Filters
           </h2>
           {activeCount > 0 ? (
@@ -77,7 +84,11 @@ export function FilterRail({
           {activeCount > 0 ? (
             <button
               type="button"
-              onClick={onClearAll}
+              onClick={() => {
+                onClearAll();
+                // The button is swapped for "Tune the grid": keep keyboard focus in the rail.
+                headingRef.current?.focus();
+              }}
               className="ml-auto inline-flex min-h-8 items-center gap-1.5 rounded-sm font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70"
             >
               <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" />
@@ -137,7 +148,9 @@ export function FilterRail({
             const year = seriesYear(option);
             return (
               <>
-                <span className="truncate">{seriesLabel(option)}</span>
+                <span className="truncate" title={seriesLabel(option)}>
+                  {seriesLabel(option)}
+                </span>
                 {year ? (
                   <span className="shrink-0 font-mono text-[11px] text-muted">
                     &apos;{String(year).slice(-2)}
@@ -165,10 +178,14 @@ export function FilterRail({
           limit={FACET_VISIBLE_LIMIT.color}
           noun="colors"
           columns={2}
+          // The desktop rail is too narrow for two columns until xl (names clipped to "Bl…").
+          listClassName="lg:grid-cols-1 xl:grid-cols-2"
           renderLabel={(option) => (
             <>
               <ColorSwatch color={option.value} />
-              <span className="truncate">{option.label}</span>
+              <span className="truncate" title={option.label}>
+                {option.label}
+              </span>
             </>
           )}
         />

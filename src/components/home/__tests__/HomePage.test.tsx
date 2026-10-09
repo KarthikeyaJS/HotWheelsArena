@@ -8,13 +8,7 @@ import { useGarageStore } from '@/store/garageStore';
 import type { Product } from '@/types';
 import { HOME_PRODUCTS, ROUTER_FUTURE, stubMatchMedia } from './homeFixtures';
 
-const loaders = vi.hoisted(() => ({
-  loadScrollGsap: vi.fn(() => new Promise<never>(() => undefined)),
-  loadMotionPathGsap: vi.fn(() => new Promise<never>(() => undefined)),
-}));
 const requireAuth = vi.hoisted(() => vi.fn());
-
-vi.mock('@/components/hero/loadGsap', () => loaders);
 
 vi.mock('@/hooks/useProducts', () => {
   const selectors = {
@@ -112,14 +106,10 @@ function renderHome() {
 }
 
 beforeEach(() => {
-  loaders.loadScrollGsap.mockClear();
-  loaders.loadMotionPathGsap.mockClear();
   requireAuth.mockReset();
   useCartStore.setState({ items: [] });
   useGarageStore.getState().reset();
   Element.prototype.scrollIntoView = vi.fn();
-  // jsdom has no canvas: ParticleField copes with a null context.
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 });
 
 afterEach(() => {
@@ -175,6 +165,8 @@ describe('HomePage', () => {
       '1,240 XP',
     );
     expect(screen.getByRole('region', { name: /join the pit crew/i })).toBeInTheDocument();
+    // Free at or above the threshold, so the About point must not say "over ₹999".
+    expect(screen.getByText('Free shipping from ₹999')).toBeInTheDocument();
   });
 
   it('scrolls to the collection from the hero CTA and moves focus there', async () => {
@@ -196,56 +188,48 @@ describe('HomePage', () => {
     );
   });
 
-  it('reduced motion: static hero, no GSAP import, no scroll-track, instant jumps', async () => {
-    restoreMatchMedia = stubMatchMedia([
-      'min-width: 1024px',
-      'min-width: 1360px',
-      'prefers-reduced-motion: reduce',
-    ]);
-    const user = userEvent.setup();
+  it('renders the simple static hero: headline, copy, both CTAs and the static car', () => {
     renderHome();
-    expect(document.getElementById('hero')).toHaveAttribute('data-sequence', 'static');
-    expect(loaders.loadScrollGsap).not.toHaveBeenCalled();
-    expect(loaders.loadMotionPathGsap).not.toHaveBeenCalled();
+    const hero = screen.getByRole('region', { name: /hot wheels/i });
+    expect(hero).toHaveAttribute('id', 'hero');
+    expect(
+      within(hero).getByText(/numbered vault drops for indian hot wheels collectors/i),
+    ).toBeVisible();
+    // Live catalogue count in the eyebrow (5 cars in the fixture catalogue).
+    expect(hero).toHaveTextContent(/5 machines parked/i);
+
+    const explore = within(hero).getByRole('link', { name: /explore collection/i });
+    expect(explore).toHaveAttribute('href', '#collection');
+    expect(within(hero).getByRole('link', { name: /enter the vault/i })).toHaveAttribute(
+      'href',
+      '/vault',
+    );
+
+    // One decorative, static car: no animation classes anywhere in the hero.
+    const car = hero.querySelector('[data-hero="car"] svg');
+    expect(car).toHaveAttribute('aria-hidden', 'true');
+    expect(hero.querySelector('[class*="animate-"]')).toBeNull();
+    // Not a pinned / scroll-driven stage: no sticky stage, no extra-tall section, no sequence data.
+    expect(hero.querySelector('.sticky')).toBeNull();
+    expect(hero.className).not.toMatch(/svh/);
+    expect(hero).not.toHaveAttribute('data-sequence');
+  });
+
+  it('has no page scroll-track or "jump to section" navigation, even on wide desktops', () => {
+    restoreMatchMedia = stubMatchMedia(['min-width: 1024px', 'min-width: 1360px']);
+    renderHome();
     expect(screen.queryByTestId('scroll-track')).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Page sections' })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('link', { name: /explore collection/i }));
-    expect(document.getElementById('collection')?.scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'start',
-    });
+    expect(screen.queryByRole('button', { name: /^jump to/i })).not.toBeInTheDocument();
   });
 
-  it('mobile / tablet: static hero without GSAP or the scroll-track', () => {
-    renderHome();
-    expect(document.getElementById('hero')).toHaveAttribute('data-sequence', 'static');
-    expect(loaders.loadScrollGsap).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('scroll-track')).not.toBeInTheDocument();
-  });
-
-  it('wide desktop: loads the GSAP sequence lazily and renders the scroll-track station nav', async () => {
-    restoreMatchMedia = stubMatchMedia(['min-width: 1024px', 'min-width: 1360px']);
+  it('reduced motion: Explore Collection jumps instantly', async () => {
+    restoreMatchMedia = stubMatchMedia(['prefers-reduced-motion: reduce']);
     const user = userEvent.setup();
     renderHome();
-    expect(document.getElementById('hero')).toHaveAttribute('data-sequence', 'scroll');
-    expect(loaders.loadScrollGsap).toHaveBeenCalledTimes(1);
-
-    const nav = screen.getByRole('navigation', { name: 'Page sections' });
-    const stations = within(nav).getAllByRole('button');
-    expect(stations.map((button) => button.getAttribute('aria-label'))).toEqual([
-      'Jump to Hero',
-      'Jump to Collection',
-      'Jump to New arrivals',
-      'Jump to Vault',
-      'Jump to Garage',
-      'Jump to About',
-    ]);
-    expect(stations.filter((button) => button.hasAttribute('aria-current'))).toHaveLength(1);
-
-    await user.click(within(nav).getByRole('button', { name: 'Jump to Vault' }));
-    const vault = document.getElementById('vault');
-    expect(vault?.scrollIntoView).toHaveBeenCalled();
-    expect(vault).toHaveFocus();
+    await user.click(screen.getByRole('link', { name: /explore collection/i }));
+    const collection = document.getElementById('collection');
+    expect(collection?.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(collection).toHaveFocus();
   });
 });

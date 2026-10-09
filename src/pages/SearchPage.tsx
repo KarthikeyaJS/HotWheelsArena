@@ -57,6 +57,7 @@ export default function SearchPage() {
   /* Inline field ↔ ?q= (debounced). `lastWritten` tells our own URL writes apart from outside
      changes (back button, palette, suggestion links), which reset the draft. */
   const [draft, setDraft] = useState(q);
+  const inputRef = useRef<HTMLInputElement>(null);
   const lastWrittenRef = useRef(q);
   useEffect(() => {
     if (q !== lastWrittenRef.current) {
@@ -132,6 +133,7 @@ export default function SearchPage() {
       >
         <div className="flex max-w-3xl flex-col gap-6">
           <SearchInput
+            ref={inputRef}
             size="lg"
             value={draft}
             onChange={setDraft}
@@ -167,7 +169,11 @@ export default function SearchPage() {
                 model, series or colour.
               </>
             }
-            onClear={() => submit('')}
+            onClear={() => {
+              submit('');
+              // The empty state (and this button) is replaced by the landing: focus the field.
+              inputRef.current?.focus();
+            }}
             clearLabel="Clear search"
             browseAll
           >
@@ -188,7 +194,7 @@ export default function SearchPage() {
               pageSize={PAGE_SIZE}
               gridLabel={`Search results for ${q}`}
               onClearAll={() => controller.clearAll()}
-              renderEmpty={() => (
+              renderEmpty={({ clearAll }) => (
                 <ShopEmptyState
                   title="No machines on this track"
                   description={
@@ -197,7 +203,7 @@ export default function SearchPage() {
                       two to bring them back.
                     </>
                   }
-                  onClear={() => controller.clearAll()}
+                  onClear={clearAll}
                 />
               )}
             />

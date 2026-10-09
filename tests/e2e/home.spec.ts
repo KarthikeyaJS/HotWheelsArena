@@ -1,9 +1,10 @@
 /**
- * (c) Home: sections in spec order, category card → /shop?category=…, reduced-motion run
- * (static hero, no GSAP pin spacer, no scroll-track, no errors) and the scroll sequence on
- * desktop. (k) Newsletter: subscribe → success; same email again → already subscribed.
+ * (c) Home: sections in spec order, the simple static hero (not pinned, Explore Collection
+ * scrolls to #collection, the next section is a short scroll away), category card →
+ * /shop?category=…, a reduced-motion run (instant jump, no scroll-track, no errors).
+ * (k) Newsletter: subscribe → success; same email again → already subscribed.
  */
-import { expect, gotoRoute, isMobileProject, test, uniqueEmail } from './fixtures';
+import { expect, gotoRoute, test, uniqueEmail } from './fixtures';
 
 const SPEC_ORDER = [
   'hero',
@@ -36,6 +37,116 @@ test.describe('home', () => {
     await expect(page.getByRole('heading', { name: /choose your ride/i })).toBeVisible();
   });
 
+  test('the hero is static: not pinned, no scroll-track', async ({ page }) => {
+    await gotoRoute(page, '/');
+    const hero = page.locator('section#hero');
+    await expect(hero.getByRole('link', { name: /explore collection/i })).toBeVisible();
+    await expect(hero.getByRole('link', { name: /enter the vault/i })).toHaveAttribute(
+      'href',
+      '/vault',
+    );
+    await expect(hero.locator('[data-hero="car"] svg')).toBeVisible();
+
+    // Modest height: shorter than the viewport, no sticky stage inside.
+    const viewport = page.viewportSize();
+    const heroBox = await hero.boundingBox();
+    expect(heroBox?.height ?? Infinity).toBeLessThan(viewport?.height ?? 0);
+    const stickyInside = await hero.evaluate(
+      (section) =>
+        Array.from(section.querySelectorAll<HTMLElement>('*')).filter(
+          (element) => getComputedStyle(element).position === 'sticky',
+        ).length,
+    );
+    expect(stickyInside, 'no sticky stage in the hero').toBe(0);
+
+    // Not pinned: the hero scrolls away with the page, pixel for pixel.
+    const before = await hero.evaluate((section) => section.getBoundingClientRect().top);
+    await page.evaluate(() => window.scrollTo(0, 200));
+    await expect
+      .poll(() => hero.evaluate((section) => section.getBoundingClientRect().top))
+      .toBeCloseTo(before - 200, 0);
+
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    await expect(page.getByTestId('scroll-track')).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Page sections' })).toHaveCount(0);
+  });
+
+  test('the next section is visible after a short scroll', async ({ page }) => {
+    await gotoRoute(page, '/');
+    await page.evaluate(() => window.scrollTo(0, 300));
+    await expect(page.getByRole('heading', { name: /choose your ride/i })).toBeInViewport();
+  });
+
+  test('Explore Collection scrolls to #collection and moves focus there', async ({ page }) => {
+    await gotoRoute(page, '/');
+    await page
+      .locator('section#hero')
+      .getByRole('link', { name: /explore collection/i })
+      .click();
+    const collection = page.locator('section#collection');
+    await expect(collection).toBeFocused();
+    await expect(page.getByRole('heading', { name: /choose your ride/i })).toBeInViewport();
+    // The section top settles just under the sticky header (scroll-padding-top).
+    await expect
+      .poll(() => collection.evaluate((section) => Math.round(section.getBoundingClientRect().top)))
+      .toBeLessThan(120);
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test('Choose Your Ride: names never truncate and titles line up per row', async ({
+    page,
+  }, testInfo) => {
+    // The project viewport (1440 / 375) plus the two narrowest layouts, checked once.
+    const widths = testInfo.project.name === 'desktop-dark' ? [320, 1024, 1440] : [null];
+    await gotoRoute(page, '/');
+    for (const width of widths) {
+      if (width !== null) await page.setViewportSize({ width, height: 900 });
+      await page.locator('section#collection').scrollIntoViewIfNeeded();
+      const cards = await page.locator('#collection a[data-category]').evaluateAll((links) =>
+        links.map((link) => {
+          const title = link.querySelector('h3');
+          const rect = title?.getBoundingClientRect();
+          return {
+            slug: link.getAttribute('data-category') ?? '',
+            row: Math.round(link.getBoundingClientRect().top),
+            titleTop: Math.round(rect?.top ?? -1),
+            truncated: title ? title.scrollWidth > title.clientWidth : true,
+          };
+        }),
+      );
+      expect(cards).toHaveLength(6);
+      const label = `at ${width ?? 'project'} px`;
+      expect(
+        cards.filter((card) => card.truncated).map((card) => card.slug),
+        label,
+      ).toEqual([]);
+      const rows = new Map<number, number[]>();
+      for (const card of cards) rows.set(card.row, [...(rows.get(card.row) ?? []), card.titleTop]);
+      for (const titleTops of rows.values()) {
+        expect(new Set(titleTops).size, `titles share one line per row ${label}`).toBe(1);
+      }
+    }
+  });
+
+  test('Just off the track: compact cards keep their labels whole at 320px', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-dark', 'one narrow-viewport check is enough');
+    await page.setViewportSize({ width: 320, height: 800 });
+    await gotoRoute(page, '/');
+    const rail = page.getByRole('region', { name: 'New arrivals' });
+    await rail.scrollIntoViewIfNeeded();
+    const firstSlide = rail.locator('[aria-roledescription="slide"]').first();
+    await expect(firstSlide).toBeVisible();
+    const clipped = await firstSlide.evaluate((slide) =>
+      Array.from(slide.querySelectorAll<HTMLElement>('*'))
+        .filter((element) => getComputedStyle(element).textOverflow === 'ellipsis')
+        .filter((element) => element.scrollWidth > element.clientWidth)
+        .map((element) => element.textContent?.trim() ?? ''),
+    );
+    expect(clipped, 'no ellipsis-truncated label in the first card').toEqual([]);
+  });
+
   test('a category card opens the shop filtered by that category', async ({ page }) => {
     await gotoRoute(page, '/');
     const card = page.locator('main a[data-category="off-road"]');
@@ -46,46 +157,28 @@ test.describe('home', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
-  test('desktop runs the GSAP scroll sequence', async ({ page }, testInfo) => {
-    test.skip(isMobileProject(testInfo), 'the scroll sequence is desktop-only (≥1024px)');
-    await gotoRoute(page, '/');
-    const hero = page.locator('section#hero');
-    await expect(hero).toHaveAttribute('data-sequence', 'scroll');
-    // Scrub through the hand-off: the car leaves, the next section rises; no errors on the way.
-    for (const y of [300, 700, 1100, 1500]) {
-      await page.evaluate((top) => window.scrollTo(0, top), y);
-      await page.waitForTimeout(250);
-    }
-    await expect(page.getByRole('heading', { name: /choose your ride/i })).toBeInViewport();
-    const gsapLoaded = await page.evaluate(() =>
-      performance
-        .getEntriesByType('resource')
-        .some((entry) => /\.vite\/deps\/gsap/i.test(entry.name)),
-    );
-    expect(gsapLoaded, 'GSAP is lazy-loaded for the desktop sequence').toBe(true);
-  });
-
   test.describe('reduced motion', () => {
     test.use({ reducedMotion: 'reduce' });
 
-    test('static hero, no pinned GSAP spacer, no scroll-track and no errors', async ({ page }) => {
+    test('instant jump, no scroll-track and no errors', async ({ page }) => {
       await gotoRoute(page, '/');
-      await expect(page.locator('section#hero')).toHaveAttribute('data-sequence', 'static');
+      await page
+        .locator('section#hero')
+        .getByRole('link', { name: /explore collection/i })
+        .click();
+      // behavior: 'auto' → the jump is immediate, no smooth-scroll frames in between.
+      const top = await page
+        .locator('section#collection')
+        .evaluate((section) => Math.round(section.getBoundingClientRect().top));
+      expect(top).toBeLessThan(120);
+
       await page.evaluate(async () => {
         for (let y = 0; y < document.documentElement.scrollHeight; y += 600) {
           window.scrollTo(0, y);
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
       });
-      await expect(page.locator('.pin-spacer')).toHaveCount(0);
       await expect(page.getByRole('navigation', { name: 'Page sections' })).toHaveCount(0);
-      const gsapLoaded = await page.evaluate(() =>
-        performance
-          .getEntriesByType('resource')
-          // Vite serves the gsap package (core + plugins) as prebundled deps: .vite/deps/gsap*.js
-          .some((entry) => /\.vite\/deps\/gsap/i.test(entry.name)),
-      );
-      expect(gsapLoaded, 'GSAP is never loaded under reduced motion').toBe(false);
     });
   });
 

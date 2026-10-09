@@ -19,6 +19,8 @@ export interface FacetCheckboxListProps {
   columns?: 1 | 2;
   /** Shown when there are no options. */
   emptyMessage?: string;
+  /** Extra classes for the list grid (e.g. responsive column overrides). */
+  listClassName?: string;
   className?: string;
 }
 
@@ -36,6 +38,7 @@ export function FacetCheckboxList({
   getLabelText,
   columns = 1,
   emptyMessage = 'Nothing to filter here yet.',
+  listClassName,
   className,
 }: FacetCheckboxListProps) {
   const baseId = useId().replace(/:/g, '');
@@ -55,7 +58,10 @@ export function FacetCheckboxList({
 
   return (
     <div className={className}>
-      <ul id={listId} className={cn('grid gap-x-3', columns === 2 ? 'grid-cols-2' : 'grid-cols-1')}>
+      <ul
+        id={listId}
+        className={cn('grid gap-x-3', columns === 2 ? 'grid-cols-2' : 'grid-cols-1', listClassName)}
+      >
         {visible.map((option) => {
           const inputId = `facet-${baseId}-${option.value.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
           const labelText = getLabelText?.(option) ?? option.label;
@@ -96,7 +102,9 @@ export function FacetCheckboxList({
                   {renderLabel ? (
                     renderLabel(option)
                   ) : (
-                    <span className="truncate">{option.label}</span>
+                    <span className="truncate" title={option.label}>
+                      {option.label}
+                    </span>
                   )}
                 </span>
                 <span

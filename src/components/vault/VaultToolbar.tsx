@@ -24,6 +24,9 @@ export interface VaultToolbarProps {
   className?: string;
 }
 
+/** Id of the filter chip group (the page focuses its "All" chip after "Show all editions"). */
+export const VAULT_FILTER_GROUP_ID = 'vault-filter-group';
+
 const SORT_OPTIONS = VAULT_SORTS.map((sort) => ({ value: sort.id, label: sort.label }));
 
 /** Filter chips (All / Available / Sold out) with counts, sort-by-remaining select, live count. */
@@ -45,7 +48,12 @@ export function VaultToolbar({
         className,
       )}
     >
-      <div role="group" aria-label="Filter editions" className="flex flex-wrap gap-2">
+      <div
+        id={VAULT_FILTER_GROUP_ID}
+        role="group"
+        aria-label="Filter editions"
+        className="flex flex-wrap gap-2"
+      >
         {VAULT_FILTERS.map((option) => {
           const count = counts ? counts[option.id] : null;
           return (

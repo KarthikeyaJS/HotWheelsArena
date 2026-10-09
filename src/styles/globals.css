@@ -377,7 +377,6 @@
   .engine-shake,
   .animate-engine-shake,
   .animate-engine-idle,
-  .animate-float,
   .animate-speed-line,
   .animate-glow-pulse {
     animation: none !important;

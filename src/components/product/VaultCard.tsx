@@ -167,7 +167,9 @@ export function VaultCard({
                   </>
                 )}
               </p>
-              <p aria-hidden="true" className="tabular-nums text-muted">
+              {/* Below 360px the card is too narrow for both labels on one line (some cards wrapped,
+                  some did not); the bar below still shows the claimed share. */}
+              <p aria-hidden="true" className="tabular-nums text-muted max-[359px]:hidden">
                 {formatPercent(info.claimedPct)} claimed
               </p>
             </div>

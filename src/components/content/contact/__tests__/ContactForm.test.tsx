@@ -54,5 +54,7 @@ describe('ContactForm', () => {
 
     await user.click(screen.getByRole('button', { name: /write another/i }));
     expect(screen.getByLabelText(/your name/i)).toHaveValue('');
+    // The result panel (and its focused button) unmounts — focus lands on the first field.
+    expect(screen.getByLabelText(/your name/i)).toHaveFocus();
   });
 });

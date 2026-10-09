@@ -1,5 +1,5 @@
 import { Car, Copy, Plus, Star, Warehouse } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { DataState } from '@/components/common/DataState';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Button } from '@/components/ui/Button';
@@ -47,6 +47,7 @@ const FILTER_ICONS: Readonly<Record<CollectionFilter, typeof Car>> = {
 export function CollectionTab({ dashboard, onRemove, onAddCar, onHaveIt }: CollectionTabProps) {
   const [filter, setFilter] = useState<CollectionFilter>('all');
   const [sort, setSort] = useState<CollectionSort>('recent');
+  const filterGroupRef = useRef<HTMLDivElement>(null);
   const { cars, ownedIds, seriesList, catalogueById } = dashboard;
 
   const counts = useMemo(
@@ -100,7 +101,12 @@ export function CollectionTab({ dashboard, onRemove, onAddCar, onHaveIt }: Colle
               Your collection
             </h2>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div role="group" aria-label="Filter collection" className="flex flex-wrap gap-2">
+              <div
+                ref={filterGroupRef}
+                role="group"
+                aria-label="Filter collection"
+                className="flex flex-wrap gap-2"
+              >
                 {COLLECTION_FILTERS.map((option) => {
                   const Icon = FILTER_ICONS[option.id];
                   return (
@@ -153,7 +159,14 @@ export function CollectionTab({ dashboard, onRemove, onAddCar, onHaveIt }: Colle
                     : 'Own a car twice? Use the copies stepper on its card to log the spare.'
                 }
                 action={
-                  <Button variant="outline" onClick={() => setFilter('all')}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFilter('all');
+                      // This button unmounts with the empty state — keep focus on the ALL chip.
+                      filterGroupRef.current?.querySelector<HTMLElement>('button')?.focus();
+                    }}
+                  >
                     Show all cars
                   </Button>
                 }

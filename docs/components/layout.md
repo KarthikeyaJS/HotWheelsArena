@@ -233,32 +233,28 @@ const results = useMemo(() => searchProducts(index, q), [index, q]);
 
 Parents need `relative` (+ `overflow-hidden` for the moving ones). All respect `prefers-reduced-motion`.
 
-| Component          | Props                                                                                                                                                 | Notes                                                                                                                                 |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `GridBackground`   | `fade?` (true), `perspective?` (tilted garage floor), `glow?` (orange floor glow)                                                                     | CSS only (`.bg-grid`)                                                                                                                 |
-| `RacingLines`      | `count?` (3, max 8), `angle?` (−6°), `seed?`                                                                                                          | orange light-trails (last one red when ≥ 3) sweeping over faint guide rails; static streaks under reduced motion                      |
-| `SpeedLines`       | `intensity?: 'low' \| 'medium' \| 'high'`, `tone?: 'fg' \| 'accent'`, `band?: [start%, end%]`, `seed?`                                                | motion-blur streaks right → left; static & dimmer under reduced motion                                                                |
-| `ParticleField`    | `density?` (3.5 per 100k px²), `maxParticles?` (48), `accentRatio?` (0.22), `speed?` (1)                                                              | canvas; DPR-aware (≤ 2); pauses off-screen (IntersectionObserver) and in hidden tabs; theme colours; **renders nothing** when reduced |
-| `TireMarks`        | `variant?: 'curve' \| 'straight' \| 'drift'`                                                                                                          | SVG skid marks in `currentColor` (default `text-fg/[0.05]`; override colour/opacity via `className`)                                  |
-| `ScanlinesOverlay` | —                                                                                                                                                     | fixed CRT layer (`z-scanlines`); `useScanlinesActive()` (auto = dark only); mounted by AppLayout                                      |
-| `Speedometer`      | `value`, `max?` (320), `label?` (`SPEED`), `unit?` (`KM/H`), `size?: 'sm'\|'md'\|'lg'\|number` (140/200/280), `animate?` (true), `decorative?` (true) | ticks every `max/8`, red zone last 15%, needle sweeps in when scrolled into view                                                      |
-| `Tachometer`       | `rpm`, `redline?` (8000), `max?` (10000), `label?` (`RPM ×1000`), `size?`, `animate?`, `decorative?`                                                  | readout `RPM 8,200` (rounded to 50), red line zone                                                                                    |
-| `Gauge`            | base dial: `value`, `min?`, `max`, `majorStep`, `minorPerMajor?`, `dangerFrom?`, `label?`, `unit?`, `formatTick?`, `formatValue?`, …                  | build other dials (e.g. fuel, boost)                                                                                                  |
-| `HudPanel`         | `title?`, `titleAs?: 'p'\|'h2'\|'h3'\|'h4'`, `meta?`, `tone?: 'default'\|'accent'\|'highlight'`, `as?`, `padding?`, native attrs                      | bordered HUD frame with corner brackets; content stays accessible (`highlight` = vault/rare only)                                     |
+| Component          | Props                                                                                                                                                 | Notes                                                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `GridBackground`   | `fade?` (true), `perspective?` (tilted garage floor), `glow?` (orange floor glow)                                                                     | CSS only (`.bg-grid`)                                                                                            |
+| `RacingLines`      | `count?` (3, max 8), `angle?` (−6°), `seed?`                                                                                                          | orange light-trails (last one red when ≥ 3) sweeping over faint guide rails; static streaks under reduced motion |
+| `TireMarks`        | `variant?: 'curve' \| 'straight' \| 'drift'`                                                                                                          | SVG skid marks in `currentColor` (default `text-fg/[0.05]`; override colour/opacity via `className`)             |
+| `ScanlinesOverlay` | —                                                                                                                                                     | fixed CRT layer (`z-scanlines`); `useScanlinesActive()` (auto = dark only); mounted by AppLayout                 |
+| `Speedometer`      | `value`, `max?` (320), `label?` (`SPEED`), `unit?` (`KM/H`), `size?: 'sm'\|'md'\|'lg'\|number` (140/200/280), `animate?` (true), `decorative?` (true) | ticks every `max/8`, red zone last 15%, needle sweeps in when scrolled into view                                 |
+| `Tachometer`       | `rpm`, `redline?` (8000), `max?` (10000), `label?` (`RPM ×1000`), `size?`, `animate?`, `decorative?`                                                  | readout `RPM 8,200` (rounded to 50), red line zone                                                               |
+| `Gauge`            | base dial: `value`, `min?`, `max`, `majorStep`, `minorPerMajor?`, `dangerFrom?`, `label?`, `unit?`, `formatTick?`, `formatValue?`, …                  | build other dials (e.g. fuel, boost)                                                                             |
+| `HudPanel`         | `title?`, `titleAs?: 'p'\|'h2'\|'h3'\|'h4'`, `meta?`, `tone?: 'default'\|'accent'\|'highlight'`, `as?`, `padding?`, native attrs                      | bordered HUD frame with corner brackets; content stays accessible (`highlight` = vault/rare only)                |
 
 Set `decorative={false}` on a gauge when the reading is real content: it becomes `role="img"` with a name like
 "SPEED: 286 KM/H". Helpers: `gaugeGeometry.ts` (`polarToCartesian`, `describeArc`, `valueToAngle`, `gaugeTicks`),
 `useAnimatedNumber(target, ref, { enabled, duration, from })`, `seededRandom`.
 
-Hero example (home agent):
+Composition example (a decorative feature section; the home hero itself is static since 2026-10-08 and uses only `GridBackground`). `SpeedLines` and `ParticleField` were deleted with the hero's car scene (simplified at the user's request on 2026-10-08); `RacingLines` is the remaining moving effect:
 
 ```tsx
 <section className="relative isolate overflow-hidden">
   <GridBackground perspective glow />
   <TireMarks variant="curve" />
   <RacingLines count={4} />
-  <SpeedLines intensity="medium" band={[35, 85]} />
-  <ParticleField />…
   <HudPanel title="Telemetry" meta="LIVE">
     <Tachometer rpm={8200} size="sm" />
   </HudPanel>

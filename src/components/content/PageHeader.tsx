@@ -109,7 +109,7 @@ export function PageHeader({
             </p>
             <h1
               id={titleId}
-              className="mt-3 break-words text-[clamp(1.5rem,6.5vw,1.875rem)] text-fg sm:text-4xl lg:text-5xl"
+              className="mt-3 break-words text-[clamp(1.25rem,6.5vw,1.875rem)] text-fg sm:text-4xl lg:text-5xl"
             >
               {title}
             </h1>

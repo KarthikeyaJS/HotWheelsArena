@@ -27,7 +27,9 @@ export interface ResultsToolbarProps {
 
 /**
  * Results bar: `24 MACHINES` heading (with a polite live announcement when it changes), the
- * mobile FILTERS button (below `lg`) and the sort select.
+ * mobile FILTERS button (below `lg`) and the sort select. Phones: count + FILTERS share the
+ * first row and the sort select gets a full-width row, so labels like "Price: low to high" fit.
+ * The heading is focusable (`tabIndex=-1`): clearing filters hands keyboard focus to it.
  */
 export function ResultsToolbar({
   headingId,
@@ -44,12 +46,13 @@ export function ResultsToolbar({
   const noun = count === 1 ? 'machine' : 'machines';
 
   return (
-    <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:gap-4">
-      <div className="flex min-h-10 items-center">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-line pb-4 sm:flex sm:gap-4">
+      <div className="flex min-h-10 min-w-0 items-center">
         {unavailable ? (
           <h2
             id={headingId}
-            className="flex items-baseline gap-2 font-mono font-bold normal-case tracking-normal"
+            tabIndex={-1}
+            className="flex items-baseline gap-2 rounded-sm font-mono font-bold normal-case tracking-normal"
           >
             <span aria-hidden="true" className="text-2xl text-muted">
               —
@@ -61,7 +64,7 @@ export function ResultsToolbar({
           </h2>
         ) : count === null ? (
           <>
-            <h2 id={headingId} className="sr-only">
+            <h2 id={headingId} tabIndex={-1} className="sr-only">
               Loading machines
             </h2>
             <Skeleton className="h-6 w-36 rounded" />
@@ -69,7 +72,8 @@ export function ResultsToolbar({
         ) : (
           <h2
             id={headingId}
-            className="flex items-baseline gap-2 font-mono font-bold normal-case tracking-normal"
+            tabIndex={-1}
+            className="flex items-baseline gap-2 rounded-sm font-mono font-bold normal-case tracking-normal"
           >
             <span className="text-2xl tabular-nums text-fg">{formatNumber(count)}</span>
             <span className="text-xs uppercase tracking-hud text-muted">{noun}</span>
@@ -80,22 +84,22 @@ export function ResultsToolbar({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 sm:ml-auto">
-        <Button
-          variant="outline"
-          onClick={onOpenFilters}
-          leftIcon={<SlidersHorizontal />}
-          aria-haspopup="dialog"
-          aria-expanded={filtersOpen}
-          className="shrink-0 lg:hidden"
-        >
-          Filters
-          {filterCount > 0 ? (
-            <span className="ml-1 font-mono tabular-nums text-accent-ink">
-              ({filterCount})<span className="sr-only"> active</span>
-            </span>
-          ) : null}
-        </Button>
+      <Button
+        variant="outline"
+        onClick={onOpenFilters}
+        leftIcon={<SlidersHorizontal />}
+        aria-haspopup="dialog"
+        aria-expanded={filtersOpen}
+        className="shrink-0 sm:ml-auto lg:hidden"
+      >
+        Filters
+        {filterCount > 0 ? (
+          <span className="ml-1 font-mono tabular-nums text-accent-ink">
+            ({filterCount})<span className="sr-only"> active</span>
+          </span>
+        ) : null}
+      </Button>
+      <div className="col-span-2 flex min-w-0 items-center gap-2 lg:ml-auto">
         <label htmlFor={sortId} className="hud hidden shrink-0 text-muted sm:block">
           Sort by
         </label>

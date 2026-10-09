@@ -1,4 +1,5 @@
 import { RotateCcw } from 'lucide-react';
+import { useRef } from 'react';
 import { RangeSlider } from '@/components/ui/RangeSlider';
 import { PRICE_STEP } from '@/config/shop';
 import { formatINR } from '@/lib/format';
@@ -23,6 +24,7 @@ export function PriceFilter({
   onCommit,
   onReset,
 }: PriceFilterProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   if (!bounds) return <p className="text-xs text-muted">No prices to compare yet.</p>;
 
   const active = filters.priceMin !== null || filters.priceMax !== null;
@@ -30,7 +32,7 @@ export function PriceFilter({
   const single = bounds.min === bounds.max;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={rootRef} className="flex flex-col gap-3">
       <RangeSlider
         label="Price"
         hideLabel
@@ -48,7 +50,11 @@ export function PriceFilter({
       {active ? (
         <button
           type="button"
-          onClick={onReset}
+          onClick={() => {
+            onReset();
+            // "Reset price" disappears with the filter: hand focus to the minimum-price thumb.
+            rootRef.current?.querySelector<HTMLElement>('[role="slider"]')?.focus();
+          }}
           className="inline-flex min-h-8 items-center gap-1.5 self-start rounded-sm font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70"
         >
           <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" />

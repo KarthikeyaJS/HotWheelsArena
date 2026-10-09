@@ -152,8 +152,10 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
         <li className="flex items-start gap-3">
           <Truck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-accent-ink" />
           <span className="text-fg">
-            Free shipping over{' '}
-            <span className="font-mono font-semibold">{formatINR(settings.shippingThreshold)}</span>
+            {/* Free at or above the threshold (shared/commerce.ts), as the FAQ and policies say. */}
+            Free shipping on orders of{' '}
+            <span className="font-mono font-semibold">{formatINR(settings.shippingThreshold)}</span>{' '}
+            or more
             {settings.shippingFee > 0 ? (
               <span className="text-muted">
                 {' '}

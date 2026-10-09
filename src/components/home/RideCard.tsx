@@ -163,13 +163,18 @@ export const RideCard = memo(function RideCard({
 
         <div className="relative px-4 pb-4">
           <div className="flex flex-col gap-1">
-            <h3 className="truncate text-base text-fg sm:text-lg">{card.name}</h3>
+            {/* A step smaller where the bays are narrowest (two across below 360px, six across
+                at 1024–1279px), so "Off Road" never truncates. */}
+            <h3 className="truncate text-base text-fg max-[359px]:text-sm sm:text-lg lg:max-xl:text-base">
+              {card.name}
+            </h3>
             {card.count !== null ? (
               <span className="hud text-muted">
                 {padNumber(card.count)} {card.count === 1 ? 'car' : 'cars'}
               </span>
             ) : countLoading ? (
-              <Skeleton className="h-3 w-14 rounded-sm" />
+              // Same 16px line box as the `.hud` count it stands in for (no shift on load).
+              <Skeleton className="my-0.5 h-3 w-14 rounded-sm" />
             ) : null}
           </div>
           <div
@@ -179,7 +184,16 @@ export const RideCard = memo(function RideCard({
             )}
           >
             <div className="overflow-hidden">
-              <p className="mt-1.5 line-clamp-2 text-sm text-muted">{card.tagline}</p>
+              {/* Grid layout: every tagline reserves the same lines, so titles line up per row. */}
+              <p
+                className={cn(
+                  'mt-1.5 line-clamp-2 text-sm text-muted',
+                  !collapsible &&
+                    'min-h-[2.5rem] max-[359px]:line-clamp-3 max-[359px]:min-h-[3.75rem]',
+                )}
+              >
+                {card.tagline}
+              </p>
               <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-hud text-accent-ink">
                 Explore
                 <ArrowRight

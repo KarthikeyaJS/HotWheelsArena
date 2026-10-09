@@ -93,7 +93,10 @@ export default function NotFoundPage() {
           </p>
           <p className="hud mt-5 flex min-w-0 flex-wrap items-center gap-2 text-muted">
             <span>Route</span>
-            <code className="max-w-full truncate rounded border border-line bg-card px-2 py-1 text-fg">
+            <code
+              title={pathname}
+              className="max-w-full truncate rounded border border-line bg-card px-2 py-1 normal-case text-fg"
+            >
               {pathname}
             </code>
             <span className="text-danger-ink">not found</span>

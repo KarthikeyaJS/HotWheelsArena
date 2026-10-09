@@ -165,7 +165,9 @@ describe('ProductPage', () => {
     expect(screen.getByText('HW LEGENDS · 2025 SERIES')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Buy Twin Mill now' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Add to garage – Twin Mill' })).toBeInTheDocument();
-    expect(screen.getByText('Free shipping over')).toBeInTheDocument();
+    expect(screen.getByText(/^Free shipping on orders of/)).toHaveTextContent(
+      /^Free shipping on orders of ₹[\d,]+ or more/,
+    );
     expect(
       screen.getByText('Themed vehicle specifications — not claims about the toy itself.'),
     ).toBeInTheDocument();

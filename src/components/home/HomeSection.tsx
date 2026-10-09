@@ -14,7 +14,7 @@ export interface HomeSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'id'
 /**
  * Home page section shell: `<section id aria-labelledby="<id>-title">` with the standard
  * vertical rhythm and content container. Programmatically focusable (`tabIndex=-1`) so the
- * hero CTA and the scroll-track navigation can move keyboard focus to it after scrolling.
+ * hero's "Explore Collection" CTA can move keyboard focus to it after scrolling.
  */
 export function HomeSection({
   id,

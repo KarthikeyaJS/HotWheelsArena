@@ -87,8 +87,8 @@ export function FreeShippingMeter({ totals, threshold, className }: FreeShipping
                 Free shipping unlocked
               </p>
               <p className="mt-1 text-xs text-muted">
-                Your cars ride to your garage on us — orders over{' '}
-                <span className="font-mono text-fg">{formatINR(threshold)}</span> ship free.
+                Your cars ride to your garage on us — orders of{' '}
+                <span className="font-mono text-fg">{formatINR(threshold)}</span> or more ship free.
               </p>
             </>
           ) : (
@@ -101,8 +101,8 @@ export function FreeShippingMeter({ totals, threshold, className }: FreeShipping
                 more for <span className="font-semibold">free shipping</span>
               </p>
               <p className="mt-1 text-xs text-muted">
-                Free delivery on pit stops over{' '}
-                <span className="font-mono">{formatINR(threshold)}</span>.
+                Free delivery on pit stops of{' '}
+                <span className="font-mono">{formatINR(threshold)}</span> or more.
               </p>
             </>
           )}

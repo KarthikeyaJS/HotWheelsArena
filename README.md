@@ -38,13 +38,13 @@ It is a React 18 + Vite + TypeScript single-page app on Firebase (Google sign-in
 ## Features
 
 - **Digital Garage design system**: black/white foundation with orange (`#FF5A00`) reserved for interaction. Dark "garage" theme and light "showroom" theme, both AA-contrast. Orbitron / Inter / JetBrains Mono. CRT scanlines, racing HUD readouts, metallic cards and racing-stripe hovers, all toned down under `prefers-reduced-motion`.
-- **Home**: GSAP hero and scroll-track sequence, "Choose Your Ride" category garage, "Just Off The Track" rail, featured grid, the Collector's Vault (numbered limited editions such as `#001/500`), a garage teaser, achievements preview and newsletter.
+- **Home**: a calm static hero (headline, two CTAs and the hero car on a faint garage grid), "Choose Your Ride" category garage, "Just Off The Track" rail, featured grid, the Collector's Vault (numbered limited editions such as `#001/500`), a garage teaser, achievements preview and newsletter. The original scroll-driven hero sequence and page scroll-track were removed at the user's request (2026-10-08).
 - **Shop and search**: client-side filters (make, model, series, year, colour, scale, ₹ price range, rarity, availability) and sorting over a cached catalogue. <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd> command palette with grouped make → model suggestions and recent searches.
 - **Product detail**: gallery with 3D tilt, spec table, "Meet the Machine" themed stat bars, related cars, reviews (signed-in collectors), SEO title/meta and JSON-LD.
 - **Pit Stop cart and checkout**: GST-inclusive totals, free-shipping progress, Indian address validation (phone, PIN code, state), test-mode payments (card / UPI / COD). Orders are priced and created **only** by the `placeOrder` Cloud Function.
 - **My Garage**: owned cars (manual or auto-added after purchase), favourites, duplicates tracker, missing cars per series, collection value, wishlist, achievements and stats.
 - **Gamification**: 25 collector levels, XP for orders and badges, five badges (First Ride, Speed Demon, Treasure Hunter, Garage Builder, Master Collector), awarded server-side with live unlock toasts.
-- **Performance and accessibility**: route-level code splitting (zod, GSAP and Howler stay out of the ~60 kB gzip entry chunk); metric-matched local fallbacks for the web fonts (`src/styles/fonts.css`) so the font swap moves nothing; Lighthouse desktop about 94 on Home and 96–97 on Shop and a product page, CLS ≤ 0.003, and 100 for accessibility, best practices and SEO (production build against the emulators). Route changes are announced to screen readers, the layout reflows at 320 px, and axe finds no serious issues in either theme.
+- **Performance and accessibility**: route-level code splitting (zod and Howler stay out of the ~60 kB gzip entry chunk); metric-matched local fallbacks for the web fonts (`src/styles/fonts.css`) so the font swap moves nothing; Lighthouse desktop 95 on Home (median of three runs after the hero was simplified, 2026-10-09) and 96–97 on Shop and a product page, CLS ≤ 0.003, and 100 for accessibility, best practices and SEO (production build against the emulators). Route changes are announced to screen readers, the layout reflows at 320 px, and axe finds no serious issues in either theme.
 - **Admin-ready backend**: admin custom claim, every admin-editable document in Firestore with `createdAt`/`updatedAt` and `isActive` soft-delete flags, strict security rules with 320+ emulator tests.
 
 ## Tech stack
@@ -52,7 +52,7 @@ It is a React 18 + Vite + TypeScript single-page app on Firebase (Google sign-in
 | Layer          | Choice                                                                                                               |
 | -------------- | -------------------------------------------------------------------------------------------------------------------- |
 | UI             | React 18.3, TypeScript 5.9 (strict), Vite 5.4, Tailwind CSS 3.4 (CSS-variable tokens, `darkMode: "class"`)           |
-| Motion         | Framer Motion 11 (UI), GSAP 3.13 + ScrollTrigger / MotionPath (hero and scroll track only, lazy-loaded)              |
+| Motion         | Framer Motion 11 for UI animation only (GSAP removed at the user's request on 2026-10-08), CSS transitions           |
 | Routing, state | React Router 6.30 (data router, lazy routes), Zustand 5 (cart, UI prefs, garage mirror, toasts)                      |
 | Data           | TanStack Query 5 (every Firestore read and mutation), Zod 3 (shared validation), React Hook Form 7                   |
 | Firebase       | Firebase JS SDK 10.14 (modular): Auth (Google only), Firestore, callable Functions, Hosting, optional Analytics      |
@@ -548,14 +548,14 @@ Notes:
 
 ## Testing
 
-| Command                                                     | What it covers                                                                                                                                                                                                          |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                                  | Vitest unit + component tests: `shared/` (gamification, commerce totals, schemas, text hygiene) and `src/` (stores, hooks, services, helpers, pages and components in jsdom) — 79 files, 684 tests                      |
-| `npm --prefix functions test`                               | Functions unit tests (pricing, order planning, stats, garage sync, reviews, profiles, rate limits, client IP, email, env) — 18 files, 214 tests                                                                         |
-| `npm run test:rules`                                        | Boots the Firestore emulator (Java 21) and runs `tests/rules/**` — 7 files, 322 tests                                                                                                                                   |
-| `npm run smoke`                                             | Backend end-to-end: builds functions, boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` (20 checks over HTTP)                                                                               |
-| `npm run e2e`                                               | Browser end-to-end: builds functions, boots the emulators, seeds, runs the Playwright suite in `tests/e2e/` (3 projects, 207 tests: 203 pass, 4 skipped by design — desktop-only checks on mobile, the real popup once) |
-| `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                                                                                                                                                           |
+| Command                                                     | What it covers                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                                  | Vitest unit + component tests: `shared/` (gamification, commerce totals, schemas, text hygiene) and `src/` (stores, hooks, services, helpers, pages and components in jsdom) — 82 files, 701 tests                                                  |
+| `npm --prefix functions test`                               | Functions unit tests (pricing, order planning, stats, garage sync, reviews, profiles, rate limits, client IP, email, env) — 18 files, 214 tests                                                                                                     |
+| `npm run test:rules`                                        | Boots the Firestore emulator (Java 21) and runs `tests/rules/**` — 7 files, 322 tests                                                                                                                                                               |
+| `npm run smoke`                                             | Backend end-to-end: builds functions, boots Auth/Firestore/Functions emulators, seeds, runs `scripts/smoke-e2e.mjs` (20 checks over HTTP)                                                                                                           |
+| `npm run e2e`                                               | Browser end-to-end: builds functions, boots the emulators, seeds, runs the Playwright suite in `tests/e2e/` (3 projects, 219 tests: 214 pass, 5 skipped by design — desktop-only checks on mobile, the real popup once, the 320 px rail check once) |
+| `npm run typecheck`, `npm run lint`, `npm run format:check` | Static checks                                                                                                                                                                                                                                       |
 
 `tests/rules/` covers:
 
@@ -571,7 +571,7 @@ Notes:
 
 - every route (public and signed-in, all garage tabs): exactly one `<h1>`, a meaningful title, no page errors, no console errors, no horizontal overflow, `noindex` on private pages;
 - axe-core scans (`wcag2a` + `wcag2aa`) of the main routes in both themes: zero serious/critical violations;
-- home section order, category card → `/shop?category=…`, the GSAP hero sequence on desktop, and a reduced-motion run (static hero, no pin spacer, no scroll-track, GSAP never loaded);
+- home section order, the static hero (not pinned, no sticky stage, shorter than the viewport, no scroll-track), Explore Collection → `#collection` (focus moves there), the next section visible after a short scroll, Choose Your Ride names never truncating and titles lining up per row (320 / 375 / 1024 / 1440 px), whole labels on the rail's cards at 320 px, category card → `/shop?category=…`, and a reduced-motion run (instant jump, no errors);
 - command palette (<kbd>Ctrl</kbd>+<kbd>K</kbd>, `/`, Esc, Make → Models group, Enter → `/search?q=…`) and shop load more + sort + MAKE filter + clear all (URL-synced; drawer on mobile);
 - product page: add-to-cart badge, signed-out PIT PASS prompt, Product JSON-LD, the themed-specs note; reviews (validation, post, edit mode);
 - a signed-in "filled pit stop" axe flow in every project: a seeded two-car cart, each checkout step (address, COD payment, review) and the order-success page;
@@ -647,6 +647,7 @@ Deliberately not built, with clean seams for later:
 - **Live inventory**: `stock` is a static counter that `placeOrder` validates but never decrements. Decrement it inside the `placeOrder` transaction when inventory goes live.
 - **3D models**: `<CarImage>` is structured so a `.glb` viewer can replace the `<img>`.
 - **Email/SMS notifications, multi-currency, other sign-in providers.**
+- **Home hero (simplified at the user's request, 2026-10-08)**: the original spec (§5.1) asked for a GSAP ScrollTrigger hero in which the car accelerates as you scroll, plus a scroll-track down the page margin. Both were removed: the hero is now a static section (headline, copy, Explore Collection / Enter the Vault, one static car on a faint grid) and GSAP is no longer used anywhere. Framer Motion remains for UI animation.
 - **Functions runtime**: Cloud Functions run on **Node.js 22**. The original spec asked for Node 20, but Node 20 reached upstream end-of-life in April 2026 and the `nodejs20` Cloud Functions runtime is deprecated (decommissioned 2026-10-30), so new projects may not be able to deploy it. `nodejs22` is supported until 2027-04-30.
 
 ## Disclaimer

@@ -40,7 +40,14 @@ export function garageTeaserStats(
   };
 }
 
-/** Speedometer scale that always leaves headroom above the current count. */
+/**
+ * Dial step: the speedometer labels a major tick every `max / 8`, so the maximum is a multiple
+ * of 40 to keep every label a whole multiple of 5 (`0 10 20 … 80`, never `8 15 23 …`).
+ */
+const DIAL_STEP = 40;
+
+/** Speedometer scale that always leaves headroom above the current count (≥ 80, step 40). */
 export function garageDialMax(carsOwned: number): number {
-  return Math.max(60, Math.ceil((Math.max(0, carsOwned) * 1.4) / 20) * 20);
+  const safe = Number.isFinite(carsOwned) ? Math.max(0, carsOwned) : 0;
+  return Math.max(2 * DIAL_STEP, Math.ceil((safe * 1.4) / DIAL_STEP) * DIAL_STEP);
 }

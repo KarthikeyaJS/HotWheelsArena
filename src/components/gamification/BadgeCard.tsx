@@ -20,8 +20,10 @@ export interface BadgeCardProps {
 }
 
 /**
- * Achievement badge. Locked: grayscale medallion, lock mark and a progress bar. Unlocked: the
- * badge's tone colours (`BADGE_UI`) with a glow and an "UNLOCKED" status.
+ * Achievement badge. Locked: muted medallion, lock mark and a progress bar. Unlocked: the
+ * badge's tone colours (`BADGE_UI`) with a glow and an "UNLOCKED" status. In the full card the
+ * XP line and progress bar sit at the bottom (`mt-auto`), so they line up across a grid row even
+ * when one requirement wraps to two lines.
  */
 export function BadgeCard({
   badgeId,
@@ -61,7 +63,15 @@ export function BadgeCard({
             unlocked ? cn(tone.border, tone.bg) : 'border-line bg-fg/[0.04]',
           )}
         >
-          <span className={cn('leading-none', !unlocked && 'opacity-50 grayscale')}>
+          {/* Locked emoji: desaturated and dimmed, not fully grey at half opacity (dark glyphs such
+              as 🏎️ vanished on the dark card); a faint light outline keeps them legible there. */}
+          <span
+            className={cn(
+              'leading-none',
+              !unlocked &&
+                'opacity-75 grayscale-[0.85] dark:drop-shadow-[0_0_1px_rgb(var(--text)/0.75)]',
+            )}
+          >
             {badge.emoji}
           </span>
           <span
@@ -121,7 +131,7 @@ export function BadgeCard({
         {!compact ? (
           <p
             className={cn(
-              'mt-3 font-mono text-xs font-bold tabular-nums',
+              'mt-auto pt-3 font-mono text-xs font-bold tabular-nums',
               unlocked ? tone.text : 'text-muted',
             )}
           >

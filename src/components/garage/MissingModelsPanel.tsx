@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Crown, Layers } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HudPanel } from '@/components/effects/HudPanel';
 import { AddToCartButton } from '@/components/product/AddToCartButton';
@@ -41,7 +41,7 @@ function MissingCarRow({
     <li className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
       <CarImage image={image} alt="" width={96} height={60} className="w-16 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-fg">
+        <p className="truncate text-sm font-semibold text-fg" title={product.name}>
           <Link
             to={productPath(product.slug)}
             className="rounded-sm transition-colors hover:text-accent-ink"
@@ -64,6 +64,7 @@ function MissingCarRow({
           variant="outline"
           leftIcon={<Check />}
           aria-label={`I have it — park ${product.name} in your garage`}
+          data-have-it=""
           onClick={() => onHaveIt(product)}
         >
           I have it
@@ -75,12 +76,35 @@ function MissingCarRow({
 
 function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Product) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const cardRef = useRef<HTMLLIElement>(null);
+  /** Position of the last "I have it" press — its row leaves the list once the car is parked. */
+  const haveItIndexRef = useRef<number | null>(null);
+
+  // Keep keyboard focus in this card when the parked car's row (and its focused button) goes:
+  // the next row's "I have it", else the previous one, else the series link (series complete).
+  useEffect(() => {
+    const index = haveItIndexRef.current;
+    if (index === null) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active.isConnected) return;
+    haveItIndexRef.current = null;
+    const card = cardRef.current;
+    const actions = card?.querySelectorAll<HTMLElement>('[data-have-it]');
+    const next =
+      actions && actions.length > 0 ? actions[Math.min(index, actions.length - 1)] : null;
+    (next ?? card?.querySelector<HTMLElement>('h3 a'))?.focus();
+  }, [row.missing]);
+
+  const handleHaveIt = (product: Product, index: number): void => {
+    haveItIndexRef.current = index;
+    onHaveIt(product);
+  };
   const listId = `missing-${row.series.id}`;
   const visible = expanded ? row.missing : row.missing.slice(0, PREVIEW_COUNT);
   const hiddenCount = row.missing.length - visible.length;
 
   return (
-    <li className="rounded-lg border border-line bg-card p-4">
+    <li ref={cardRef} className="rounded-lg border border-line bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <div className="min-w-0">
           <h3 className="font-display text-sm font-bold uppercase tracking-display text-fg">
@@ -124,8 +148,12 @@ function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Prod
             aria-label={`Missing from ${row.series.name}`}
             className="divide-y divide-line"
           >
-            {visible.map((product) => (
-              <MissingCarRow key={product.id} product={product} onHaveIt={onHaveIt} />
+            {visible.map((product, index) => (
+              <MissingCarRow
+                key={product.id}
+                product={product}
+                onHaveIt={(car) => handleHaveIt(car, index)}
+              />
             ))}
           </ul>
           {row.missing.length > PREVIEW_COUNT ? (

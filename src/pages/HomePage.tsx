@@ -9,13 +9,9 @@ import { GarageTeaserSection } from '@/components/home/GarageTeaserSection';
 import { buildHomeJsonLd } from '@/components/home/homeJsonLd';
 import { NewArrivalsSection } from '@/components/home/NewArrivalsSection';
 import { VaultSection } from '@/components/home/VaultSection';
-import { ScrollTrack } from '@/components/scrolltrack/ScrollTrack';
-import { SCROLL_TRACK_QUERY } from '@/components/scrolltrack/trackGeometry';
 import { Container } from '@/components/ui/Container';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { BRAND_DESCRIPTION } from '@/config/brand';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useDocumentMeta, useJsonLd } from '@/lib/seo';
 
 /** Section-level boundary: one stalled section never takes the rest of the home page down. */
@@ -35,19 +31,15 @@ function SectionBoundary({ label, children }: { label: string; children: ReactNo
 }
 
 /**
- * Home — the Digital Collector's Garage (spec §5.1): hero with the GSAP scroll sequence, then
- * Choose Your Ride, Just Off The Track, Featured Collection, The Collector's Vault, Build Your
- * Garage, Collector Achievements and the pit-crew newsletter; plus the page scroll-track on wide
- * desktops. The footer comes from the layout.
+ * Home — the Digital Collector's Garage (spec §5.1, hero simplified at the user's request): a
+ * static hero, then Choose Your Ride, Just Off The Track, Featured Collection, The Collector's
+ * Vault, Build Your Garage, Collector Achievements and the pit-crew newsletter. The footer comes
+ * from the layout.
  */
 export default function HomePage() {
   useDocumentMeta({ description: BRAND_DESCRIPTION });
   const jsonLd = useMemo(() => buildHomeJsonLd(), []);
   useJsonLd('home', jsonLd);
-
-  const reducedMotion = useReducedMotion();
-  const wideDesktop = useMediaQuery(SCROLL_TRACK_QUERY);
-  const showScrollTrack = wideDesktop && !reducedMotion;
 
   return (
     <div className="overflow-x-clip">
@@ -75,7 +67,6 @@ export default function HomePage() {
       <SectionBoundary label="Newsletter">
         <AboutSection />
       </SectionBoundary>
-      {showScrollTrack ? <ScrollTrack /> : null}
     </div>
   );
 }

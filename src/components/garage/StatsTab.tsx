@@ -113,7 +113,9 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                 <span className="hud text-muted">Most valuable</span>
                 {top && top.product ? (
                   <>
-                    <span className="truncate text-sm font-semibold text-fg">{carName(top)}</span>
+                    <span className="truncate text-sm font-semibold text-fg" title={carName(top)}>
+                      {carName(top)}
+                    </span>
                     <span className="font-mono text-xs tabular-nums text-muted">
                       {formatINR(carValue(top))}
                     </span>
@@ -161,7 +163,10 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                           className={cn('w-14 shrink-0', car.retired && 'opacity-60 grayscale')}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-fg">
+                          <p
+                            className="truncate text-sm font-semibold text-fg"
+                            title={carName(car)}
+                          >
                             {car.product && !car.retired ? (
                               <Link
                                 to={productPath(car.product.slug)}
@@ -223,6 +228,7 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                       <div className="flex items-baseline justify-between gap-3">
                         <Link
                           to={seriesPath(row.series.slug)}
+                          title={row.series.name}
                           className="min-w-0 truncate rounded-sm text-sm font-semibold text-fg transition-colors hover:text-accent-ink"
                         >
                           {row.series.name}

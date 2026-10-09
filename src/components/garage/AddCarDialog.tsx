@@ -1,5 +1,5 @@
 import { Check, Plus, SearchX } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DataState } from '@/components/common/DataState';
 import { CarImage } from '@/components/product/CarImage';
 import { SearchInput } from '@/components/search/SearchInput';
@@ -69,6 +69,10 @@ export function AddCarDialog({
 }: AddCarDialogProps) {
   const [query, setQuery] = useState('');
   const [hideParked, setHideParked] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  /** Row index of the last Park it / +1 copy press (focus rescue when that row leaves the list). */
+  const actionIndexRef = useRef<number | null>(null);
   const debouncedQuery = useDebounce(query.trim(), 150);
 
   const index = useMemo(() => buildSearchIndex(catalogue), [catalogue]);
@@ -80,6 +84,20 @@ export function AddCarDialog({
     const base = debouncedQuery ? searchProducts(index, debouncedQuery) : alphabetical;
     return hideParked ? base.filter((product) => !ownedCopies.has(product.id)) : base;
   }, [alphabetical, debouncedQuery, hideParked, index, ownedCopies]);
+
+  // With "Hide parked cars" on, parking a car removes its row (and the focused button). Move focus
+  // to the action of the row that took its place, or back to the search field when none is left.
+  useEffect(() => {
+    const index = actionIndexRef.current;
+    if (index === null) return;
+    actionIndexRef.current = null;
+    const active = document.activeElement;
+    if (active && active !== document.body && active.isConnected) return;
+    const actions = listRef.current?.querySelectorAll<HTMLElement>('[data-picker-action]');
+    const next =
+      actions && actions.length > 0 ? actions[Math.min(index, actions.length - 1)] : null;
+    (next ?? searchRef.current)?.focus();
+  }, [results]);
 
   const summary = debouncedQuery
     ? results.length === 0
@@ -109,6 +127,7 @@ export function AddCarDialog({
     >
       <div className="sticky top-0 z-10 -mx-1 flex flex-col gap-3 bg-surface px-1 pb-3">
         <SearchInput
+          ref={searchRef}
           value={query}
           onChange={setQuery}
           onClear={() => setQuery('')}
@@ -153,9 +172,10 @@ export function AddCarDialog({
         }
       >
         {() => (
-          <ul aria-label="Catalogue cars" className="flex flex-col gap-2">
-            {results.map((product) => {
+          <ul ref={listRef} aria-label="Catalogue cars" className="flex flex-col gap-2">
+            {results.map((product, index) => {
               const copies = ownedCopies.get(product.id) ?? 0;
+              const parked = copies > 0;
               const image = primaryImageOf(product);
               return (
                 <li
@@ -184,33 +204,33 @@ export function AddCarDialog({
                     </p>
                   </div>
                   <RarityChip rarity={product.rarity} size="sm" className="hidden sm:inline-flex" />
-                  {copies > 0 ? (
-                    <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                  {/* One action button in the same tree position for both states, so focus stays
+                      on it when "Park it" turns into "+1 copy". */}
+                  <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    {parked ? (
                       <span className="hud inline-flex items-center gap-1 text-[10px] text-success">
                         <Check aria-hidden="true" className="h-3.5 w-3.5" />
                         Parked ×{copies}
                       </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        leftIcon={<Plus />}
-                        disabled={copies >= MAX_GARAGE_QUANTITY}
-                        aria-label={`+1 copy — ${product.name}`}
-                        onClick={() => onAddCopy(product, copies + 1)}
-                      >
-                        1 copy
-                      </Button>
-                    </div>
-                  ) : (
+                    ) : null}
                     <Button
                       size="sm"
-                      aria-label={`Park it — ${product.name}`}
-                      onClick={() => onAdd(product)}
-                      className="shrink-0"
+                      variant={parked ? 'outline' : 'primary'}
+                      leftIcon={parked ? <Plus /> : undefined}
+                      disabled={copies >= MAX_GARAGE_QUANTITY}
+                      aria-label={
+                        parked ? `+1 copy — ${product.name}` : `Park it — ${product.name}`
+                      }
+                      data-picker-action=""
+                      onClick={() => {
+                        actionIndexRef.current = index;
+                        if (parked) onAddCopy(product, copies + 1);
+                        else onAdd(product);
+                      }}
                     >
-                      Park it
+                      {parked ? '1 copy' : 'Park it'}
                     </Button>
-                  )}
+                  </div>
                 </li>
               );
             })}

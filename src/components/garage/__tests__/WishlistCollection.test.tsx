@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCartStore } from '@/store/cartStore';
 import type { Product, WishlistEntry } from '@/types';
 import { WishlistCollection } from '../WishlistCollection';
-import { sortWishlist } from '../wishlistModel';
+import { blockedMoveToast, sortWishlist } from '../wishlistModel';
 import { DAY, NOW, ROUTER_FUTURE, makeProduct } from './fixtures';
 
 const state = vi.hoisted(() => ({
@@ -187,5 +187,69 @@ describe('sortWishlist', () => {
   it('always sinks retired products to the end', () => {
     const retired = { ...amgOne, isActive: false };
     expect(ids(sortWishlist([retired, thar], 'price-desc', addedAt))).toEqual(['thar', 'amg-one']);
+  });
+});
+
+describe('WishlistCollection focus + refusal copy', () => {
+  function renderLive() {
+    // The real hook removes the car optimistically; mirror that and re-render.
+    state.removeFromWishlist.mockImplementation((product: Product) => {
+      state.products = state.products.filter((entry) => entry.id !== product.id);
+    });
+    const view = renderCollection();
+    return () =>
+      view.rerender(
+        <MemoryRouter future={ROUTER_FUTURE}>
+          <WishlistCollection />
+        </MemoryRouter>,
+      );
+  }
+
+  it('moves focus to the next car after removing the focused one', () => {
+    const rerender = renderLive();
+    const remove = screen.getByRole('button', { name: 'Remove Mahindra Thar from your wishlist' });
+    remove.focus();
+    fireEvent.click(remove);
+    rerender();
+
+    // Next card is sold out, so its first enabled action is Remove (before: focus on <body>).
+    expect(
+      screen.getByRole('button', { name: 'Remove Toyota GR010 Hybrid from your wishlist' }),
+    ).toHaveFocus();
+  });
+
+  it('moves focus to what is left after "Move all to pit stop"', () => {
+    const rerender = renderLive();
+    const moveAll = screen.getByRole('button', { name: /move all to pit stop/i });
+    moveAll.focus();
+    fireEvent.click(moveAll);
+    rerender();
+
+    expect(screen.getByRole('button', { name: /move all to pit stop/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Remove Toyota GR010 Hybrid from your wishlist' }),
+    ).toHaveFocus();
+  });
+
+  it('focuses the empty state CTA when the last car leaves', () => {
+    state.products = [thar];
+    const rerender = renderLive();
+    const move = screen.getByRole('button', { name: 'Move to pit stop — Mahindra Thar' });
+    move.focus();
+    fireEvent.click(move);
+    rerender();
+
+    expect(screen.getByRole('link', { name: 'Explore the garage' })).toHaveFocus();
+  });
+
+  it('explains why a car could not be moved (not always "Max per collector")', () => {
+    expect(blockedMoveToast('sold-out', { name: 'GR010', stock: 0 }).title).toBe('Sold out');
+    expect(blockedMoveToast('unavailable', { name: 'GR010', stock: 4 }).title).toBe(
+      'No longer available',
+    );
+    expect(blockedMoveToast('capped', { name: 'GT40', stock: 3 }).title).toBe('Only 3 in stock');
+    expect(blockedMoveToast('capped', { name: 'Thar', stock: 40 }).title).toBe(
+      'Max per collector reached',
+    );
   });
 });

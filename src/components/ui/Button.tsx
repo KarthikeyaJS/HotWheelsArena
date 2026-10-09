@@ -49,6 +49,12 @@ export interface ButtonProps extends Omit<HTMLAttributes<HTMLElement>, 'children
   /** Native button type (default `'button'`). */
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
+  /**
+   * `<button>` only: a disabled button stays focusable (`aria-disabled` instead of the native
+   * attribute; clicks are still blocked). Use it when the control's own action can disable it
+   * (e.g. the last unit added to the cart), so keyboard focus isn't dropped to the page.
+   */
+  focusableWhenDisabled?: boolean;
   form?: string;
   name?: string;
   value?: string | number;
@@ -80,6 +86,7 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
     download,
     type = 'button',
     disabled = false,
+    focusableWhenDisabled = false,
     form,
     name,
     value,
@@ -226,11 +233,11 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(
       {...rest}
       ref={setRef}
       type={type}
-      disabled={disabled}
+      disabled={disabled && !focusableWhenDisabled}
       form={form}
       name={name}
       value={value}
-      aria-disabled={loading || undefined}
+      aria-disabled={loading || (disabled && focusableWhenDisabled) || undefined}
       aria-busy={loading || undefined}
       data-loading={loading || undefined}
       className={classes}

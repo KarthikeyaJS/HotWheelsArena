@@ -71,7 +71,7 @@ export function DuplicatesPanel({ rows, className }: DuplicatesPanelProps) {
                     className={cn('w-14 shrink-0', car.retired && 'opacity-60 grayscale')}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-fg">
+                    <p className="truncate text-sm font-semibold text-fg" title={name}>
                       {car.product && !car.retired ? (
                         <Link
                           to={productPath(car.product.slug)}

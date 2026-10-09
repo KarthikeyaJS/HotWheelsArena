@@ -34,6 +34,23 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it('focusableWhenDisabled: aria-disabled instead of native disabled, clicks blocked', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(
+      <Button disabled focusableWhenDisabled onClick={onClick}>
+        Max in cart
+      </Button>,
+    );
+    const button = screen.getByRole('button', { name: 'Max in cart' });
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    button.focus();
+    expect(button).toHaveFocus();
+    await user.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it('announces loadingText instead of the label while loading', () => {
     render(
       <Button loading loadingText="Processing…">

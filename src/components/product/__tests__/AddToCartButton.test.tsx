@@ -65,11 +65,49 @@ describe('AddToCartButton', () => {
     expect(button).toHaveTextContent(/sold out/i);
   });
 
-  it('is disabled once the per-collector max (or stock) is in the cart', () => {
+  it('is disabled (but stays focusable) once the max or the whole stock is in the cart', async () => {
+    const user = userEvent.setup();
     const product = makeProduct({ stock: 2 });
     useCartStore.getState().addItem(toCartItem(product), 2);
     render(<AddToCartButton product={product} />);
-    expect(screen.getByRole('button', { name: /^Max in cart/ })).toBeDisabled();
+    const button = screen.getByRole('button', { name: /^Max in cart/ });
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(button).toHaveAccessibleName('Max in cart – 2 × Twin Mill, every one in stock');
+
+    await user.click(button);
+    expect(useCartStore.getState().items[0]?.qty).toBe(2);
+    expect(useToastStore.getState().toasts).toEqual([]);
+  });
+
+  it('keeps keyboard focus on the button when the last unit goes in', async () => {
+    const user = userEvent.setup();
+    const product = makeProduct({ stock: 1 });
+    render(<AddToCartButton product={product} />);
+    const button = screen.getByRole('button', { name: 'Add Twin Mill to cart' });
+    button.focus();
+    await user.keyboard('{Enter}');
+
+    expect(useCartStore.getState().items[0]?.qty).toBe(1);
+    expect(button).toHaveFocus();
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(button).not.toBeDisabled();
+  });
+
+  it('names the stock (not the collector limit) when stock is the cap', async () => {
+    const user = userEvent.setup();
+    const product = makeProduct({ stock: 3 });
+    useCartStore.getState().addItem(toCartItem(product), 1);
+    render(<AddToCartButton product={product} qty={5} />);
+
+    await user.click(screen.getByRole('button', { name: /^In pit stop/ }));
+
+    expect(useCartStore.getState().items[0]?.qty).toBe(3);
+    expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({
+        title: 'Only 3 in stock',
+        description: 'Your pit stop now holds 3 × Twin Mill.',
+      }),
+    ]);
   });
 
   it('caps at MAX_QTY_PER_ITEM and says so', async () => {

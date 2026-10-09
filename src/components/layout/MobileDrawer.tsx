@@ -56,6 +56,8 @@ export function MobileDrawer() {
   const cartCount = useCartCount();
   const wishlistCount = useWishlistCount();
 
+  // Closes on navigation (back/forward too). Links also close on click, because a link to the
+  // current page doesn't change the location and the drawer would otherwise stay open.
   useEffect(() => {
     close();
   }, [location.pathname, location.search, close]);
@@ -143,6 +145,7 @@ export function MobileDrawer() {
                 <Link
                   to={link.to}
                   aria-current={active ? 'page' : undefined}
+                  onClick={close}
                   className={cn(
                     'group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2.5 transition-colors duration-150',
                     active ? 'bg-card-hover' : 'hover:bg-fg/[0.05] active:bg-fg/[0.08]',
@@ -193,6 +196,7 @@ export function MobileDrawer() {
             <Link
               to={to}
               aria-current={location.pathname === to ? 'page' : undefined}
+              onClick={close}
               className="flex h-11 items-center gap-3 rounded-md px-3 text-sm text-fg transition-colors hover:bg-fg/[0.05] active:bg-fg/[0.08]"
             >
               <Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-muted" />

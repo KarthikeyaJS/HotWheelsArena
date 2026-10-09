@@ -10,7 +10,7 @@ import {
   Send,
   User,
 } from 'lucide-react';
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
@@ -63,17 +63,26 @@ export function ContactForm({ onCompose = openMailto, className }: ContactFormPr
   };
   const [composed, setComposed] = useState<ComposedEmail | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  /** "Write another" swaps the result panel (and its focused button) for the empty form. */
+  const refocusFormRef = useRef(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm<ContactFormInput>({
     resolver: zodResolver(ContactFormSchema),
     defaultValues: CONTACT_FORM_DEFAULTS,
     mode: 'onTouched',
   });
+
+  useEffect(() => {
+    if (composed !== null || !refocusFormRef.current) return;
+    refocusFormRef.current = false;
+    setFocus('name');
+  }, [composed, setFocus]);
 
   const onSubmit = handleSubmit((raw) => {
     const values = ContactFormSchema.parse(raw);
@@ -138,6 +147,7 @@ export function ContactForm({ onCompose = openMailto, className }: ContactFormPr
             variant="ghost"
             leftIcon={<RotateCcw />}
             onClick={() => {
+              refocusFormRef.current = true;
               setComposed(null);
               reset(CONTACT_FORM_DEFAULTS);
             }}

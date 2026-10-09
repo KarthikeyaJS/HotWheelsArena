@@ -8,13 +8,13 @@ import {
   garageTeaserStats,
 } from '../garageTeaser';
 import { buildHomeJsonLd, buildWebSiteJsonLd } from '../homeJsonLd';
-import { HOME_SECTION_ORDER, TRACK_STATIONS } from '../homeSections';
+import { HOME_SECTION_ORDER } from '../homeSections';
 import { buildRideCards, countByCategory, orderedCategorySlugs } from '../rideCards';
 import { pickVaultLineup } from '../vaultLineup';
 import { HOME_PRODUCTS, makeCategory, makeProduct } from './homeFixtures';
 
 describe('home sections', () => {
-  it('keeps the spec order and the six scroll-track stations', () => {
+  it('keeps the spec order', () => {
     expect(HOME_SECTION_ORDER).toEqual([
       'hero',
       'collection',
@@ -24,14 +24,6 @@ describe('home sections', () => {
       'garage',
       'achievements',
       'about',
-    ]);
-    expect(TRACK_STATIONS.map((station) => station.label)).toEqual([
-      'HERO',
-      'COLLECTION',
-      'NEW ARRIVALS',
-      'VAULT',
-      'GARAGE',
-      'ABOUT',
     ]);
   });
 });
@@ -127,7 +119,20 @@ describe('garage teaser', () => {
       level: 7,
     });
     expect(garageDialMax(42)).toBeGreaterThan(42);
-    expect(garageDialMax(0)).toBe(60);
+    expect(garageDialMax(0)).toBe(80);
+  });
+
+  it('keeps every speedometer label (a major tick every max / 8) a whole multiple of 5', () => {
+    for (const cars of [0, 1, 7, 42, 57, 58, 99, 250, 1000]) {
+      const max = garageDialMax(cars);
+      expect(max).toBeGreaterThanOrEqual(cars);
+      for (let tick = 1; tick <= 8; tick += 1) {
+        expect(((max / 8) * tick) % 5, `max ${max} for ${cars} cars`).toBe(0);
+      }
+    }
+    // The sample garage (42 cars) reads 0 · 10 · 20 … 80 — before: 0 · 8 · 15 · 23 … 60.
+    expect(garageDialMax(42)).toBe(80);
+    expect(garageDialMax(Number.NaN)).toBe(80);
   });
 });
 

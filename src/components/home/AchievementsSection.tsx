@@ -93,9 +93,19 @@ export function AchievementsSection() {
               <HudPanel
                 as="section"
                 aria-label={live ? 'Your collector level' : 'Collector level preview'}
-                title={live ? 'Your collector level' : 'Level preview'}
-                meta={live ? `${unlocked.length}/${BADGES.length} badges` : 'Sample progress'}
+                title={
+                  live ? (
+                    <>
+                      Your <span className="max-sm:hidden">collector </span>level
+                    </>
+                  ) : (
+                    'Level preview'
+                  )
+                }
+                meta={live ? `${unlocked.length}/${BADGES.length} badges` : 'Demo data'}
                 padding="lg"
+                // p-5 below 640px: at 320px the title and the meta fit on one line without truncating.
+                className="p-5 sm:p-8"
               >
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-10">
                   <LevelBadge level={level} size="lg" showTitle />

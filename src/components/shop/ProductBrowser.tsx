@@ -31,14 +31,23 @@ export interface ProductBrowserProps {
   pageSize: number;
   /** Accessible name of the results list. */
   gridLabel: string;
-  /** Empty state; `filtered` = rail filters are narrowing the base. */
-  renderEmpty: (context: { filtered: boolean }) => ReactNode;
+  /**
+   * Empty state; `filtered` = rail filters are narrowing the base. Use `clearAll` for its
+   * clear action: it runs `onClearAll` and hands keyboard focus to the results heading.
+   */
+  renderEmpty: (context: EmptyContext) => ReactNode;
   /** Clears every chip (pages decide whether the text query goes too). */
   onClearAll: () => void;
   /** Chips rendered before the filter chips (e.g. the shop's `q`). */
   leadingChips?: ReactNode;
   /** Eager images for the first row. */
   priorityCount?: number;
+}
+
+export interface EmptyContext {
+  filtered: boolean;
+  /** `onClearAll` + focus on the results heading (the clicked button unmounts). */
+  clearAll: () => void;
 }
 
 function GridSkeleton() {
@@ -125,6 +134,16 @@ export function ProductBrowser({
 
   const headingId = `${idPrefix}-results-heading`;
   const loading = isLoading && !products;
+
+  // Clearing filters removes the control that had focus (chip, empty-state button): keyboard
+  // focus moves to the results heading, whose count is announced, instead of <body>.
+  const focusResults = useCallback((): void => {
+    document.getElementById(headingId)?.focus();
+  }, [headingId]);
+  const clearAllAndFocus = useCallback((): void => {
+    onClearAll();
+    focusResults();
+  }, [focusResults, onClearAll]);
   const count = loading || isError ? null : results.length;
 
   const rail = (instance: 'rail' | 'drawer') =>
@@ -147,7 +166,9 @@ export function ProductBrowser({
     <>
       <div className="grid gap-8 lg:grid-cols-12 xl:gap-10">
         <aside aria-label="Filters" className="hidden lg:col-span-3 lg:block">
-          <div className="sticky top-[calc(var(--header-height)+1.25rem)] -mx-1 max-h-[calc(100dvh-var(--header-height)-2.5rem)] overflow-y-auto overscroll-contain px-1 pb-6 pt-1">
+          {/* -mx-2/px-2 leaves room for the options' -mx-2 hover rows and focus rings; overflow-x-hidden keeps
+              classic (non-overlay) scrollbars from adding a horizontal bar under the rail. */}
+          <div className="sticky top-[calc(var(--header-height)+1.25rem)] -mx-2 max-h-[calc(100dvh-var(--header-height)-2.5rem)] overflow-y-auto overflow-x-hidden overscroll-contain px-2 pb-6 pt-1">
             {rail('rail')}
           </div>
         </aside>
@@ -169,6 +190,7 @@ export function ProductBrowser({
             filters={activeFilters}
             onRemove={controller.removeFilter}
             onClearAll={onClearAll}
+            onFocusFallback={focusResults}
             getLabel={chipLabel}
             leading={leadingChips}
           />
@@ -180,7 +202,7 @@ export function ProductBrowser({
               onRetry={onRetry}
               isEmpty={results.length === 0}
               skeleton={<GridSkeleton />}
-              empty={renderEmpty({ filtered: activeCount > 0 })}
+              empty={renderEmpty({ filtered: activeCount > 0, clearAll: clearAllAndFocus })}
               loadingLabel="Warming up the grid…"
             >
               {() => (

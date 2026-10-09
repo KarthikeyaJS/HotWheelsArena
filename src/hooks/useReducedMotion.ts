@@ -4,8 +4,8 @@ import { motionSafe } from '@/lib/animations';
 import { MEDIA_QUERIES, useMediaQuery } from './useMediaQuery';
 
 /**
- * True when the user prefers reduced motion. Gate GSAP timelines, particles, engine shake,
- * auto-scrolling and parallax on this.
+ * True when the user prefers reduced motion. Gate Framer Motion transitions, confetti, engine
+ * shake, auto-scrolling and parallax on this.
  */
 export function useReducedMotion(): boolean {
   return useMediaQuery(MEDIA_QUERIES.reducedMotion);

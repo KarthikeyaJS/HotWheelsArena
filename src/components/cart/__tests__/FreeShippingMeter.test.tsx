@@ -38,6 +38,25 @@ describe('FreeShippingMeter', () => {
     );
   });
 
+  it('treats a subtotal exactly at the threshold as free shipping (copy says "or more")', () => {
+    const below = computeOrderTotals([{ price: 998, qty: 1 }]);
+    const { rerender } = render(<FreeShippingMeter totals={below} threshold={threshold} />);
+    expect(screen.getByText(/more for/i)).toHaveTextContent('Add ₹1 more for free shipping');
+    expect(screen.getByText(/free delivery on pit stops/i)).toHaveTextContent(
+      'Free delivery on pit stops of ₹999 or more.',
+    );
+
+    const exact = computeOrderTotals([{ price: 999, qty: 1 }]);
+    expect(exact.qualifiesForFreeShipping).toBe(true);
+    rerender(<FreeShippingMeter totals={exact} threshold={threshold} />);
+    expect(screen.queryByText(/more for/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/ride to your garage on us/i)).toHaveTextContent(
+      'orders of ₹999 or more ship free.',
+    );
+    expect(screen.getByText(/ride to your garage on us/i)).not.toHaveTextContent(/over/);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+  });
+
   it('renders nothing for an empty cart', () => {
     const { container } = render(
       <FreeShippingMeter totals={computeOrderTotals([])} threshold={threshold} />,

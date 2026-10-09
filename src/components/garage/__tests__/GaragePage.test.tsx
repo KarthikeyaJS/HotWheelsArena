@@ -317,3 +317,62 @@ describe('GaragePage collection tools', () => {
     );
   });
 });
+
+describe('GaragePage focus after actions that remove the focused control', () => {
+  function renderAgain(view: ReturnType<typeof renderPage>) {
+    view.rerender(
+      <MemoryRouter initialEntries={['/garage']} future={ROUTER_FUTURE}>
+        <GaragePage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+  }
+
+  it('focuses the COLLECTION tab when the favorites empty state sends you there', () => {
+    state.entries = GARAGE.map((entry) => ({ ...entry, isFavorite: false }));
+    renderPage('/garage?tab=favorites');
+    const cta = screen.getByRole('button', { name: 'Go to your collection' });
+    cta.focus();
+    fireEvent.click(cta);
+
+    expect(currentPath()).toBe('/garage');
+    // Before: the CTA unmounted with its panel and focus fell back to <body>.
+    expect(screen.getByRole('tab', { name: /collection/i })).toHaveFocus();
+  });
+
+  it('focuses the ALL chip after "Show all cars" in an empty filter', () => {
+    state.entries = GARAGE.map((entry) => ({ ...entry, isFavorite: false }));
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /favorites · 0/i }));
+    const showAll = screen.getByRole('button', { name: 'Show all cars' });
+    showAll.focus();
+    fireEvent.click(showAll);
+
+    expect(screen.getByRole('button', { name: /^all · 3/i })).toHaveFocus();
+  });
+
+  it('keeps focus in the series card after "I have it" parks a missing car', () => {
+    state.entries = [
+      makeEntry({ productId: 'revuelto', addedAt: NOW - DAY }),
+      makeEntry({ productId: 'swift-rally', addedAt: NOW - 3 * DAY }),
+    ];
+    state.actions.addToGarage.mockImplementation((product: Product) => {
+      state.entries = [...state.entries, makeEntry({ productId: product.id, addedAt: NOW })];
+    });
+    const view = renderPage();
+
+    const haveIt = (name: string) =>
+      screen.getByRole('button', { name: `I have it — park ${name} in your garage` });
+    const mclaren = haveIt('McLaren 750S');
+    mclaren.focus();
+    fireEvent.click(mclaren);
+    renderAgain(view);
+    // The McLaren row is gone; the next missing car's action takes focus (not <body>).
+    expect(haveIt('Porsche 911 GT3 RS')).toHaveFocus();
+
+    fireEvent.click(haveIt('Porsche 911 GT3 RS'));
+    renderAgain(view);
+    // Series complete: no rows left, so focus lands on the series link.
+    expect(screen.getByRole('link', { name: 'HW Exotics' })).toHaveFocus();
+  });
+});

@@ -11,7 +11,8 @@ import { productSelectors, useProducts } from '@/hooks/useProducts';
 import { HomeSection } from './HomeSection';
 import { HOME_SECTION_IDS, sectionHeadingId } from './homeSections';
 
-const RAIL_ITEM_WIDTH = 'clamp(15rem, 74vw, 18.5rem)';
+/** ≥ 17rem: narrower compact cards truncate the series line and wrap the stock label (320px). */
+const RAIL_ITEM_WIDTH = 'clamp(17rem, 74vw, 18.5rem)';
 
 function RailSkeleton() {
   return (

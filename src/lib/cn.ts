@@ -33,9 +33,7 @@ const twMerge = extendTailwindMerge({
     classGroups: {
       shadow: [{ shadow: ['glow-accent', 'glow-highlight', 'card', 'card-hover'] }],
       tracking: [{ tracking: ['display', 'hud'] }],
-      z: [
-        { z: ['track', 'header', 'overlay', 'drawer', 'modal', 'palette', 'toast', 'scanlines'] },
-      ],
+      z: [{ z: ['header', 'overlay', 'drawer', 'modal', 'palette', 'toast', 'scanlines'] }],
       'max-w': [{ 'max-w': ['content'] }],
       'font-family': [{ font: ['display', 'sans', 'mono'] }],
       animate: [
@@ -49,8 +47,6 @@ const twMerge = extendTailwindMerge({
             'stripe-slide',
             'speed-line',
             'glow-pulse',
-            'float',
-            'headlight-flicker',
           ],
         },
       ],

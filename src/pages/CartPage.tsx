@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockedLinesNotice } from '@/components/cart/BlockedLinesNotice';
 import { CartLineItem } from '@/components/cart/CartLineItem';
 import { CartSummary } from '@/components/cart/CartSummary';
@@ -46,6 +46,21 @@ export default function CartPage() {
   const [removed, setRemoved] = useState<RemovedEntry[]>([]);
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
   const linesHeadingRef = useRef<HTMLHeadingElement>(null);
+  const emptyRegionRef = useRef<HTMLDivElement>(null);
+  // Set when an action removes the control that had focus (a dismissed Undo row, the
+  // "Remove unavailable" button). After that render, focus moves to the lines heading — or, once
+  // the pit stop is empty and the heading is gone, to the first control of the empty view.
+  const restoreFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!restoreFocusRef.current) return;
+    restoreFocusRef.current = false;
+    const target =
+      linesHeadingRef.current ??
+      emptyRegionRef.current?.querySelector<HTMLElement>('button, a[href]') ??
+      null;
+    target?.focus();
+  });
 
   const handleQtyChange = useCallback((productId: string, qty: number) => {
     useCartStore.getState().setQty(productId, qty);
@@ -93,19 +108,19 @@ export default function CartPage() {
   );
 
   const handleDismissRemoved = useCallback((entry: RemovedEntry) => {
+    restoreFocusRef.current = true;
     setRemoved((current) => current.filter((e) => e.key !== entry.key));
-    linesHeadingRef.current?.focus();
   }, []);
 
   const { blocked } = cart;
   const handleRemoveBlocked = useCallback(() => {
     const store = useCartStore.getState();
+    restoreFocusRef.current = true;
     blocked.forEach((line) => store.removeItem(line.item.productId));
     toast({
       title: `Removed ${pluralize(blocked.length, 'unavailable car')}`,
       description: 'Your pit stop is ready to race.',
     });
-    linesHeadingRef.current?.focus();
   }, [blocked]);
 
   // Lines in cart order, with Undo placeholders slotted back where the removed lines were.
@@ -134,7 +149,9 @@ export default function CartPage() {
     <Container className="py-10 lg:py-14">
       <SectionHeading
         as="h1"
-        eyebrow={isEmpty ? 'PIT STOP · EMPTY BAY' : `PIT STOP · ${pluralize(unitCount, 'UNIT')}`}
+        eyebrow={
+          isEmpty ? 'PIT STOP · EMPTY BAY' : `PIT STOP · ${pluralize(unitCount, 'UNIT', 'UNITS')}`
+        }
         title="Your pit stop"
         description={
           isEmpty
@@ -152,7 +169,7 @@ export default function CartPage() {
       />
 
       {isEmpty ? (
-        <div className="mt-10 flex flex-col gap-4">
+        <div ref={emptyRegionRef} className="mt-10 flex flex-col gap-4">
           {rows.map((row) =>
             row.type === 'removed' ? (
               <RemovedLineNotice

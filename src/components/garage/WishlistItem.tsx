@@ -66,6 +66,7 @@ function WishlistItemImpl({
             leftIcon={<Trash2 />}
             loading={removing}
             aria-label={`Remove ${product.name} from your wishlist`}
+            data-wishlist-action=""
             onClick={() => onRemove(product)}
           >
             Remove
@@ -94,6 +95,7 @@ function WishlistItemImpl({
               ? `${product.name} is sold out`
               : `Move to pit stop — ${product.name}${inCart ? ' (already in your pit stop)' : ''}`
           }
+          data-wishlist-action=""
           onClick={() => onMove(product)}
           className="min-w-0 flex-1"
         >
@@ -106,6 +108,7 @@ function WishlistItemImpl({
           title="Remove from wishlist"
           icon={<Trash2 />}
           loading={removing}
+          data-wishlist-action=""
           onClick={() => onRemove(product)}
         />
       </div>

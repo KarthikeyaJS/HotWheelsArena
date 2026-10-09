@@ -58,6 +58,9 @@ export function UserMenu({ className }: UserMenuProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const signInRef = useRef<HTMLElement>(null);
+  /** Set by "Sign out": the menu button unmounts, so focus moves to the "Sign in" button. */
+  const focusSignInRef = useRef(false);
   const initialFocus = useRef<'first' | 'last'>('first');
   const location = useLocation();
   const baseId = useId().replace(/:/g, '');
@@ -76,6 +79,14 @@ export function UserMenu({ className }: UserMenuProps) {
     if (items.length === 0) return;
     items[((index % items.length) + items.length) % items.length]?.focus();
   };
+
+  useEffect(() => {
+    if (user || !focusSignInRef.current) return;
+    focusSignInRef.current = false;
+    // Only when sign-out dropped focus (the menu button is gone) — never steal it back.
+    const focused = document.activeElement;
+    if (!focused || focused === document.body) signInRef.current?.focus();
+  }, [user]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -118,6 +129,7 @@ export function UserMenu({ className }: UserMenuProps) {
   if (!user) {
     return (
       <GoogleSignInButton
+        ref={signInRef}
         size="sm"
         variant="outline"
         label="Sign in"
@@ -282,6 +294,7 @@ export function UserMenu({ className }: UserMenuProps) {
               tabIndex={-1}
               onClick={() => {
                 closeMenu(true);
+                focusSignInRef.current = true;
                 void signOut();
               }}
               className={cn(ITEM_CLASSES, 'text-danger-ink hover:bg-danger/10')}

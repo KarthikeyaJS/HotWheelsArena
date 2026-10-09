@@ -1,5 +1,5 @@
 import { Gem, Heart, ShoppingCart } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DataState } from '@/components/common/DataState';
 import { ProductCardSkeleton } from '@/components/product/ProductCardSkeleton';
 import { Button } from '@/components/ui/Button';
@@ -15,7 +15,14 @@ import { isSoldOut, toCartItem } from '@/lib/product';
 import { useCartItems, useCartStore } from '@/store/cartStore';
 import { toast } from '@/store/toastStore';
 import type { Product } from '@/types';
-import { WISHLIST_SORTS, isWishlistSort, sortWishlist, type WishlistSort } from './wishlistModel';
+import {
+  WISHLIST_SORTS,
+  blockedMoveToast,
+  isWishlistSort,
+  sortWishlist,
+  type MoveOutcome,
+  type WishlistSort,
+} from './wishlistModel';
 import { WishlistItem } from './WishlistItem';
 
 export interface WishlistCollectionProps {
@@ -24,6 +31,12 @@ export interface WishlistCollectionProps {
   /** First N card images load eagerly (above the fold on the Wishlist page). */
   priorityCount?: number;
   className?: string;
+}
+
+/** Focus left the page: the focused control was removed from the DOM or just got disabled. */
+function focusWasLost(active: Element | null): boolean {
+  if (!active || active === document.body || !active.isConnected) return true;
+  return active instanceof HTMLButtonElement && active.disabled;
 }
 
 function WishlistSkeleton() {
@@ -51,6 +64,9 @@ export function WishlistCollection({
   const { removeFromWishlist: removeQuietly } = useWishlistActions({ toasts: false });
   const cartItems = useCartItems();
   const [sort, setSort] = useState<WishlistSort>('recent');
+  const rootRef = useRef<HTMLDivElement>(null);
+  /** Cars that are leaving the grid through an action here, and the grid slot to refocus. */
+  const refocusRef = useRef<{ ids: ReadonlySet<string>; index: number } | null>(null);
 
   const addedAtById = useMemo(
     () => new Map(wishlist.entries.map((entry) => [entry.productId, entry.addedAt])),
@@ -69,38 +85,70 @@ export function WishlistCollection({
     () => products.reduce((sum, product) => sum + (product.isActive ? product.price : 0), 0),
     [products],
   );
+  const productsRef = useRef(products);
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
 
-  /** Adds to the cart (once) and clears the car from the wishlist. Returns false when blocked. */
+  const expectRemoval = useCallback((ids: readonly string[]) => {
+    const index = productsRef.current.findIndex((product) => ids.includes(product.id));
+    refocusRef.current = { ids: new Set(ids), index: Math.max(0, index) };
+  }, []);
+
+  // Moving / removing a car unmounts the card whose button had focus (and "Move all" disables
+  // itself). Once those cars have left the grid, focus the same slot's action (the next car), or
+  // the first control of what is left (sort, or the empty state's CTA).
+  useEffect(() => {
+    const pending = refocusRef.current;
+    if (!pending || products.some((product) => pending.ids.has(product.id))) return;
+    refocusRef.current = null;
+    if (!focusWasLost(document.activeElement)) return;
+    const root = rootRef.current;
+    const items = root?.querySelectorAll<HTMLElement>('[data-wishlist-item]');
+    const item =
+      items && items.length > 0 ? items[Math.min(pending.index, items.length - 1)] : null;
+    const target =
+      item?.querySelector<HTMLElement>('[data-wishlist-action]:not(:disabled)') ??
+      root?.querySelector<HTMLElement>('a[href], button:not(:disabled), select');
+    target?.focus();
+  }, [products]);
+
+  /** Adds to the cart (once) and clears the car from the wishlist. */
   const moveOne = useCallback(
-    (product: Product): boolean => {
-      if (!product.isActive || isSoldOut(product.stock)) return false;
+    (product: Product): MoveOutcome => {
+      if (!product.isActive) return 'unavailable';
+      if (isSoldOut(product.stock)) return 'sold-out';
       const alreadyInCart = useCartStore
         .getState()
         .items.some((item) => item.productId === product.id);
       if (!alreadyInCart) {
         const result = useCartStore.getState().addItem(toCartItem(product));
-        if (result.added === 0) return false;
+        if (result.added === 0) return 'capped';
       }
       removeQuietly(product);
-      return true;
+      return 'moved';
     },
     [removeQuietly],
   );
 
   const handleMove = useCallback(
     (product: Product) => {
-      if (moveOne(product)) {
+      expectRemoval([product.id]);
+      const outcome = moveOne(product);
+      if (outcome === 'moved') {
         toast.success('Moved to your pit stop', product.name);
-      } else {
-        toast({ title: 'Max per collector reached', description: product.name });
+        return;
       }
+      refocusRef.current = null;
+      toast(blockedMoveToast(outcome, product));
     },
-    [moveOne],
+    [expectRemoval, moveOne],
   );
 
   const handleMoveAll = (): void => {
-    const moved = movable.filter((product) => moveOne(product));
+    const moved = movable.filter((product) => moveOne(product) === 'moved');
     if (moved.length > 0) {
+      expectRemoval(moved.map((product) => product.id));
       toast.success(
         `${pluralize(moved.length, 'car')} moved to your pit stop`,
         moved.map((product) => product.name).join(', '),
@@ -111,12 +159,15 @@ export function WishlistCollection({
   };
 
   const handleRemove = useCallback(
-    (product: Product) => removeFromWishlist(product),
-    [removeFromWishlist],
+    (product: Product) => {
+      expectRemoval([product.id]);
+      removeFromWishlist(product);
+    },
+    [expectRemoval, removeFromWishlist],
   );
 
   return (
-    <div className={cn('flex flex-col gap-6', className)}>
+    <div ref={rootRef} className={cn('flex flex-col gap-6', className)}>
       <DataState
         isLoading={wishlist.isLoading}
         isError={wishlist.isError}
@@ -190,7 +241,7 @@ export function WishlistCollection({
               className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {products.map((product, index) => (
-                <li key={product.id} className="min-w-0">
+                <li key={product.id} data-wishlist-item="" className="min-w-0">
                   <WishlistItem
                     product={product}
                     addedAt={addedAtById.get(product.id) ?? null}

@@ -94,6 +94,7 @@ export function GarageStatsStrip({ stats, isLoading, className }: GarageStatsStr
           ) : (
             <>
               <span
+                title={tile.value}
                 className={cn(
                   'truncate font-mono text-2xl font-bold tabular-nums leading-none tracking-tight',
                   tile.accent ? 'text-accent-ink' : 'text-fg',
@@ -101,7 +102,9 @@ export function GarageStatsStrip({ stats, isLoading, className }: GarageStatsStr
               >
                 {tile.value}
               </span>
-              <span className="truncate text-xs text-muted">{tile.detail}</span>
+              <span className="truncate text-xs text-muted" title={tile.detail}>
+                {tile.detail}
+              </span>
             </>
           )}
         </div>

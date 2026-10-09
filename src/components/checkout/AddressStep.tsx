@@ -126,16 +126,27 @@ export function AddressStep({
     setSelection(preferred ? preferred.id : NEW_ADDRESS);
   }, [selection, saved, savedQuery.isPending]);
 
-  // A selected saved address that was deleted elsewhere → fall back to "new".
+  // A selected saved address that was deleted elsewhere → fall back to "new" (prefilled with the
+  // address this checkout was using). Wait for a refetch in flight: an address saved a moment ago
+  // is not in the list until it lands.
+  const savedSettled = !savedQuery.isPending && !savedQuery.isFetching;
   useEffect(() => {
-    if (selection && selection !== NEW_ADDRESS && savedQuery.isSuccess) {
-      if (!saved.some((entry) => entry.id === selection)) setSelection(NEW_ADDRESS);
+    if (!selection || selection === NEW_ADDRESS || !savedSettled) return;
+    if (saved.some((entry) => entry.id === selection)) return;
+    setSelection(NEW_ADDRESS);
+    if (initialSource?.kind === 'saved' && initialSource.id === selection && initialAddress) {
+      reset(toAddressValues(initialAddress));
     }
-  }, [selection, saved, savedQuery.isSuccess]);
+  }, [selection, saved, savedSettled, initialSource, initialAddress, reset]);
 
   const hasSaved = saved.length > 0;
-  const usingNew = selection === NEW_ADDRESS || (!savedQuery.isPending && !hasSaved);
   const selectedSaved = saved.find((entry) => entry.id === selection) ?? null;
+  // The selected saved address is still on its way (saved moments ago, the list is refetching).
+  const awaitingSelected =
+    selection !== null && selection !== NEW_ADDRESS && !selectedSaved && !savedSettled;
+  const savedLoading = savedQuery.isPending || awaitingSelected;
+  const usingNew =
+    !awaitingSelected && (selection === NEW_ADDRESS || (!savedQuery.isPending && !hasSaved));
 
   const options = useMemo<RadioOption<string>[]>(
     () => [
@@ -152,15 +163,19 @@ export function AddressStep({
 
   const submitNew = handleSubmit(async (values) => {
     const address = toAddress(values);
+    let source: AddressSource = { kind: 'new' };
     if (saveForLater) {
       try {
-        await saveAddress.mutateAsync({ address, isDefault: !hasSaved });
+        const id = await saveAddress.mutateAsync({ address, isDefault: !hasSaved });
+        // From now on this checkout uses the SAVED card: coming back to this step selects it
+        // instead of the prefilled "new address" form, which would save a duplicate.
+        source = { kind: 'saved', id };
         toast.success('Address saved', 'It will be ready for your next pit stop.');
       } catch (error) {
         toast.error("Couldn't save the address", getFriendlyErrorMessage(error));
       }
     }
-    onContinue({ address, source: { kind: 'new' } });
+    onContinue({ address, source });
   });
 
   const continueWithSaved = (): void => {
@@ -193,7 +208,7 @@ export function AddressStep({
       }}
       className="flex flex-col gap-6"
     >
-      {savedQuery.isPending ? (
+      {savedLoading ? (
         <div role="status" aria-busy="true">
           <span className="sr-only">Loading your saved addresses…</span>
           <SavedAddressesSkeleton />
@@ -210,7 +225,7 @@ export function AddressStep({
         />
       ) : null}
 
-      {hasSaved ? (
+      {hasSaved && !awaitingSelected ? (
         <RadioGroup
           name="saved-address"
           legend="Deliver to"
@@ -225,7 +240,7 @@ export function AddressStep({
         />
       ) : null}
 
-      {usingNew && !savedQuery.isPending ? (
+      {usingNew && !savedLoading ? (
         <div className="flex flex-col gap-5">
           {savedIssue ? (
             <p role="alert" className="text-sm text-danger-ink">
@@ -251,7 +266,7 @@ export function AddressStep({
           type="submit"
           size="lg"
           rightIcon={<ArrowRight />}
-          disabled={savedQuery.isPending || (!usingNew && !selectedSaved)}
+          disabled={savedLoading || (!usingNew && !selectedSaved)}
           loading={isSubmitting}
           loadingText="Saving address…"
         >

@@ -129,11 +129,12 @@ export default function ShopPage() {
             onClearAll={clearAll}
             leadingChips={
               q ? (
-                <li className="max-w-full">
+                <li data-filter-chip="" className="max-w-full">
                   <Chip
                     variant="outline"
                     onRemove={() => controller.setQuery('')}
                     removeLabel={`Remove search: ${q}`}
+                    title={`Search: ${q}`}
                     className="max-w-full bg-card/60"
                   >
                     <span className="text-muted">Search</span>
@@ -145,12 +146,12 @@ export default function ShopPage() {
                 </li>
               ) : null
             }
-            renderEmpty={({ filtered }) =>
+            renderEmpty={({ filtered, clearAll: clearAndFocus }) =>
               filtered || q ? (
                 <ShopEmptyState
                   title="No machines on this track"
                   description="Nothing on the grid matches these filters. Ease off a filter or two, or clear them to see every car in this view."
-                  onClear={clearAll}
+                  onClear={clearAndFocus}
                   browseAll={filters.view !== 'all'}
                 />
               ) : (

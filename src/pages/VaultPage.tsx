@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DataState } from '@/components/common/DataState';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { focusHashTarget } from '@/components/content/focusTarget';
 import { PageHeader } from '@/components/content/PageHeader';
 import { useHashScroll } from '@/components/content/useHashScroll';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +15,7 @@ import { VaultDropAlerts } from '@/components/vault/VaultDropAlerts';
 import { VaultGrid } from '@/components/vault/VaultGrid';
 import { VaultGridSkeleton } from '@/components/vault/VaultGridSkeleton';
 import { VaultStatusPanel } from '@/components/vault/VaultStatusPanel';
-import { VaultToolbar } from '@/components/vault/VaultToolbar';
+import { VAULT_FILTER_GROUP_ID, VaultToolbar } from '@/components/vault/VaultToolbar';
 import {
   DEFAULT_VAULT_FILTER,
   DEFAULT_VAULT_SORT,
@@ -89,7 +90,13 @@ export default function VaultPage() {
     [vault],
   );
 
-  const showAll = () => updateParam('filter', DEFAULT_VAULT_FILTER, DEFAULT_VAULT_FILTER);
+  const showAll = () => {
+    updateParam('filter', DEFAULT_VAULT_FILTER, DEFAULT_VAULT_FILTER);
+    // The empty state (and this button) goes away — keep focus on the filter chips ("All").
+    document.getElementById(VAULT_FILTER_GROUP_ID)?.querySelector<HTMLElement>('button')?.focus();
+  };
+  // In-page CTAs: the router scrolls to the section; move keyboard focus there too.
+  const toAlerts = () => focusHashTarget(ALERTS_ID);
   const vaultEmpty = (vault?.length ?? 0) === 0;
 
   const emptyFiltered =
@@ -116,7 +123,7 @@ export default function VaultPage() {
             <Button variant="secondary" leftIcon={<RotateCcw />} onClick={showAll}>
               Show all editions
             </Button>
-            <Button to={{ hash: ALERTS_ID }} leftIcon={<BellRing />}>
+            <Button to={{ hash: ALERTS_ID }} onClick={toAlerts} leftIcon={<BellRing />}>
               Get drop alerts
             </Button>
           </>
@@ -135,10 +142,19 @@ export default function VaultPage() {
         lead="Numbered limited editions and rare finds. Every run has a fixed size and a printed edition number — once a run is gone, it is gone."
         meta={
           <div className="flex flex-wrap gap-3">
-            <Button to={{ hash: EDITIONS_ID }} rightIcon={<ArrowDown />}>
+            <Button
+              to={{ hash: EDITIONS_ID }}
+              onClick={() => focusHashTarget(EDITIONS_ID)}
+              rightIcon={<ArrowDown />}
+            >
               Browse editions
             </Button>
-            <Button to={{ hash: ALERTS_ID }} variant="secondary" leftIcon={<BellRing />}>
+            <Button
+              to={{ hash: ALERTS_ID }}
+              onClick={toAlerts}
+              variant="secondary"
+              leftIcon={<BellRing />}
+            >
               Get drop alerts
             </Button>
           </div>
@@ -182,7 +198,7 @@ export default function VaultPage() {
                     description="No numbered editions are on display right now. Join drop alerts and we’ll tell you when the next run opens."
                     titleAs="h3"
                     action={
-                      <Button to={{ hash: ALERTS_ID }} leftIcon={<BellRing />}>
+                      <Button to={{ hash: ALERTS_ID }} onClick={toAlerts} leftIcon={<BellRing />}>
                         Get drop alerts
                       </Button>
                     }

@@ -149,7 +149,11 @@ export default function ProductPage() {
         skeleton={<ProductDetailSkeleton />}
         loadingLabel="Rolling the machine out…"
       >
-        {() => (product ? <ProductDetail product={product} /> : null)}
+        {() =>
+          // Keyed by car: moving to another car (related rail, Back) starts every section fresh —
+          // no review draft, "show more" or gallery state carried over from the previous car.
+          product ? <ProductDetail key={product.id} product={product} /> : null
+        }
       </DataState>
     </Container>
   );

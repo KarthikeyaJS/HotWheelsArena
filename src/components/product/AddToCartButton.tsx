@@ -5,6 +5,7 @@ import { MAX_QTY_PER_ITEM } from '@shared/commerce';
 import { Button, type ButtonSize, type ButtonVariant } from '@/components/ui';
 import { useSound } from '@/hooks/useSound';
 import { cn } from '@/lib/cn';
+import { formatNumber } from '@/lib/format';
 import { isSoldOut, toCartItem } from '@/lib/product';
 import { useCartQty, useCartStore, type AddToCartResult } from '@/store/cartStore';
 import { toast } from '@/store/toastStore';
@@ -60,6 +61,8 @@ export function AddToCartButton({
 
   const soldOut = isSoldOut(product.stock);
   const maxQty = Math.max(0, Math.min(Math.floor(product.stock), MAX_QTY_PER_ITEM));
+  /** The cap is the remaining stock, not the per-collector limit (copy must not blame the rule). */
+  const stockLimited = maxQty < MAX_QTY_PER_ITEM;
   const atMax = !soldOut && inCartQty >= maxQty;
   const inCart = inCartQty > 0;
   const disabled = soldOut || atMax;
@@ -68,9 +71,13 @@ export function AddToCartButton({
     const result = useCartStore.getState().addItem(toCartItem(product), qty);
     onAdded?.(result);
 
+    const limitTitle = stockLimited
+      ? `Only ${formatNumber(maxQty)} in stock`
+      : 'Max per collector reached';
+
     if (result.added === 0) {
       toast({
-        title: 'Max per collector reached',
+        title: limitTitle,
         description: `Your pit stop already holds ${result.qty} × ${product.name}.`,
       });
       return;
@@ -78,7 +85,7 @@ export function AddToCartButton({
 
     if (result.limited) {
       toast({
-        title: 'Max per collector reached',
+        title: limitTitle,
         description: `Your pit stop now holds ${result.qty} × ${product.name}.`,
       });
     } else {
@@ -111,7 +118,9 @@ export function AddToCartButton({
     icon = <Check />;
   } else if (atMax) {
     content = 'Max in cart';
-    accessibleName = `Max in cart – ${inCartQty} × ${product.name} is the limit per collector`;
+    accessibleName = stockLimited
+      ? `Max in cart – ${inCartQty} × ${product.name}, every one in stock`
+      : `Max in cart – ${inCartQty} × ${product.name} is the limit per collector`;
     icon = <ShoppingCart />;
     resolvedVariant = 'outline';
   } else if (inCart) {
@@ -145,6 +154,8 @@ export function AddToCartButton({
         fullWidth={fullWidth}
         leftIcon={icon}
         disabled={disabled}
+        // Adding the last allowed unit disables the button under the collector's focus.
+        focusableWhenDisabled={atMax}
         aria-label={accessibleName}
         data-state={soldOut ? 'sold-out' : atMax ? 'max' : inCart ? 'in-cart' : 'idle'}
         onClick={handleClick}

@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { padNumber } from '@/lib/format';
+import { focusHashTarget } from './focusTarget';
 import { useActiveSection } from './useActiveSection';
 
 export interface TocItem {
@@ -18,14 +19,6 @@ export interface TableOfContentsProps {
   /** `sidebar` = sticky desktop list; `disclosure` = collapsible "On this page" panel (mobile). */
   variant?: 'sidebar' | 'disclosure';
   className?: string;
-}
-
-/** Moves keyboard focus to the section heading after the router has scrolled to it. */
-function focusSectionHeading(id: string): void {
-  window.requestAnimationFrame(() => {
-    const heading = document.getElementById(`${id}-title`) ?? document.getElementById(id);
-    heading?.focus({ preventScroll: true });
-  });
 }
 
 /**
@@ -52,7 +45,7 @@ export function TableOfContents({
               aria-current={current ? 'location' : undefined}
               onClick={() => {
                 if (detailsRef.current) detailsRef.current.open = false;
-                focusSectionHeading(item.id);
+                focusHashTarget(item.id);
               }}
               className={cn(
                 'group flex items-baseline gap-3 border-l-2 py-2 pl-4 pr-2 text-sm transition-colors duration-150 active:opacity-80',

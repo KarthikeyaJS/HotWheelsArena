@@ -17,6 +17,7 @@ import { WishlistCollection } from '@/components/garage/WishlistCollection';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { TabPanel } from '@/components/ui/TabPanel';
+import { tabId } from '@/components/ui/tabIds';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { ROUTES, type GarageTab } from '@/config/routes';
 import { useGarageActions } from '@/hooks/useGarageActions';
@@ -85,6 +86,12 @@ export default function GaragePage() {
   );
 
   const openAddCar = useCallback(() => setAddOpen(true), []);
+  // Empty-state CTA on another tab: that button unmounts with its panel, so keep keyboard focus
+  // on the tab strip (the COLLECTION tab) instead of dropping it to <body>.
+  const showCollection = useCallback(() => {
+    setTab('collection');
+    document.getElementById(tabId(ID_PREFIX, 'collection'))?.focus();
+  }, [setTab]);
   const { stats, profile } = dashboard;
 
   const tabItems = useMemo<ReadonlyArray<TabItem<GarageTab>>>(
@@ -136,7 +143,7 @@ export default function GaragePage() {
           <FavoritesTab
             dashboard={dashboard}
             onRemove={handleRemove}
-            onShowCollection={() => setTab('collection')}
+            onShowCollection={showCollection}
           />
         );
       case 'achievements':

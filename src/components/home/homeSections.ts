@@ -1,7 +1,6 @@
 /**
- * Home page section registry: ids (used for anchors, `aria-labelledby` and the scroll-track
- * stations) in their fixed on-page order, plus the in-page jump helper shared by the hero CTA
- * and the scroll-track navigation.
+ * Home page section registry: ids (used for anchors and `aria-labelledby`) in their fixed
+ * on-page order, plus the in-page jump helper used by the hero's "Explore Collection" CTA.
  */
 
 export const HOME_SECTION_IDS = {
@@ -31,24 +30,6 @@ export const HOME_SECTION_ORDER: readonly HomeSectionId[] = [
 
 /** `aria-labelledby` target for a section's heading. */
 export const sectionHeadingId = (id: HomeSectionId): string => `${id}-title`;
-
-export interface TrackStation {
-  id: HomeSectionId;
-  /** Short HUD label on the track (`NEW ARRIVALS`). */
-  label: string;
-  /** Title-case name for the accessible "Jump to …" label. */
-  name: string;
-}
-
-/** Scroll-track stations: HERO → COLLECTION → NEW ARRIVALS → VAULT → GARAGE → ABOUT. */
-export const TRACK_STATIONS: readonly TrackStation[] = [
-  { id: HOME_SECTION_IDS.hero, label: 'HERO', name: 'Hero' },
-  { id: HOME_SECTION_IDS.collection, label: 'COLLECTION', name: 'Collection' },
-  { id: HOME_SECTION_IDS.newArrivals, label: 'NEW ARRIVALS', name: 'New arrivals' },
-  { id: HOME_SECTION_IDS.vault, label: 'VAULT', name: 'Vault' },
-  { id: HOME_SECTION_IDS.garage, label: 'GARAGE', name: 'Garage' },
-  { id: HOME_SECTION_IDS.about, label: 'ABOUT', name: 'About' },
-];
 
 export interface ScrollToSectionOptions {
   /** Jump instantly instead of gliding (prefers-reduced-motion). */
