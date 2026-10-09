@@ -20,7 +20,7 @@ import { SkipLink } from './SkipLink';
  */
 export function AppLayout() {
   return (
-    <div className="relative isolate flex min-h-screen flex-col bg-bg text-fg">
+    <div className="relative isolate flex min-h-screen min-h-[100svh] flex-col bg-bg text-fg">
       <PageBackdrop />
       <SkipLink />
       <Navbar />

@@ -36,7 +36,7 @@ export default function OrdersPage() {
   }, [orders]);
 
   return (
-    <Container className="py-10 lg:py-14">
+    <Container className="py-6 sm:py-10 lg:py-14">
       <SectionHeading
         as="h1"
         eyebrow="RACE HISTORY"
@@ -50,7 +50,7 @@ export default function OrdersPage() {
       />
 
       <ErrorBoundary label="Your orders">
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
           <DataState
             isLoading={ordersQuery.isPending}
             isError={ordersQuery.isError}

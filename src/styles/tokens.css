@@ -87,3 +87,11 @@
   --grid-opacity: 0.045;
   --scanline-opacity: 0.06;
 }
+
+/* Landscape phones: the header is always condensed (Navbar uses short:h-14), so anchors and
+   scroll-padding follow the shorter bar. */
+@media (max-height: 500px) {
+  :root {
+    --header-height: 3.5rem;
+  }
+}

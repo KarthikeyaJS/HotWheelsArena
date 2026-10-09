@@ -1,7 +1,7 @@
 # layout — component reference
 
 > Written by the **layout** agent. Source: `src/components/{layout,search,effects,auth,newsletter}/**`,
-> `src/lib/search.ts`, `src/hooks/{useSound,useHotkey,useScrollProgress}.ts`.
+> `src/lib/search.ts`, `src/hooks/{useHotkey,useScrollProgress}.ts`.
 > Contract: `docs/ARCHITECTURE.md` §13. Names listed there are final; everything else is additive.
 > All components are named exports (one component per file), accept `className`, and use token colours only.
 
@@ -11,7 +11,6 @@ import { Speedometer } from '@/components/effects/Speedometer';
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { buildSearchIndex, searchProducts, groupSuggestions } from '@/lib/search';
-import { useSound } from '@/hooks/useSound';
 ```
 
 There are no barrels in these folders on purpose: import each file directly so pages only pull what they use.
@@ -48,8 +47,8 @@ orange `ScrollProgress` line on its bottom edge.
 | Width        | Contents                                                                                                                    |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `< sm`       | hamburger · logo · search icon · cart (below 360px the wordmark text is `sr-only`, leaving the stripe mark)                 |
-| `sm`–`md`    | + wishlist, account (sign-in button / avatar menu); `md` adds theme + sound toggles                                         |
-| `lg` (1024+) | hamburger hidden; centre `NavLinks`; search icon · cart · theme · sound · account (wishlist moves to the account menu here) |
+| `sm`–`md`    | + wishlist, account (sign-in button / avatar menu); `md` adds the theme toggle                                         |
+| `lg` (1024+) | hamburger hidden; centre `NavLinks`; search icon · cart · theme · account (wishlist moves to the account menu here) |
 | `xl` (1280+) | + wishlist, search trigger with the `Ctrl K` / `⌘K` hint; `2xl` shows the full "Search the garage…" pill                    |
 
 The CRT scanlines toggle lives in the account menu, the mobile drawer and the footer (not the bar itself — width budget).
@@ -93,11 +92,6 @@ keys, `icon` = `IconButton`, `row` = full-width (drawer). Always `aria-haspopup=
 
 Dark ⇄ light. Icon variant's name describes the action ("Switch to light theme"). Persisted via `uiStore.toggleTheme`.
 
-### `SoundToggle` — `variant?: 'icon' | 'row' | 'text'`, `size?`
-
-Engine sounds on/off (off by default). Icon/text = toggle button with `aria-pressed` and a constant name "Engine sounds";
-row = `role="switch"`. Turning sounds on plays the `start` cue.
-
 ### `ScanlinesToggle` — `variant?: 'icon' | 'row' | 'menuitem' | 'text'`, `size?`
 
 Cycles `auto → on → off` (`uiStore.cycleScanlines`). Name states current + next mode ("CRT scanlines: auto. Switch to on").
@@ -127,14 +121,14 @@ Decorative avatar (`referrerPolicy="no-referrer"`, lazy) with initials fallback 
 
 ui-kit `Drawer` (left, `size="sm"`) bound to `uiStore.mobileNavOpen`: search row, primary links (icon, description,
 active racing stripe, lock hint for My Garage when signed out), "Your pit" links with counts (cart / wishlist / orders),
-theme / sound / scanlines rows, account footer (user + level + Sign out, or Google sign-in). Closes on navigation and when
+theme / scanlines rows, account footer (user + level + Sign out, or Google sign-in). Closes on navigation and when
 the viewport reaches `lg`.
 
 ### `Footer` (no props)
 
 Brand block (logo, tagline, description, `SocialLinks`, support email/phone/hours in an `<address>`), `FOOTER_LINK_GROUPS`
 in `<nav aria-label="Footer">`, inline `NewsletterForm` (lazy-loaded with a same-height skeleton — keeps
-react-hook-form out of the entry chunk), "Garage settings" chips (theme / sound / scanlines), HUD details,
+react-hook-form out of the entry chunk), "Garage settings" chips (theme / scanlines), HUD details,
 `FOOTER_DISCLAIMER`, `© <year> COPYRIGHT_OWNER`, and a **"Payments are in test mode"** chip when `isTestPaymentMode()`.
 
 ### `SocialLinks` — `size?`
@@ -316,12 +310,6 @@ Also exported: `parseHotkey`, `matchesHotkey(event, parsed, isMac?)`, `isEditabl
 
 One shared rAF-throttled scroll store (scroll, resize and a body ResizeObserver). `useScrollProgress` → 0..1 (3 decimals);
 `useIsScrolled` re-renders only when the boolean flips.
-
-### `useSound(): (name: SoundName) => void` and `playSound(name)`
-
-No-op unless `uiStore.soundEnabled` (read at call time). The first real play does `import('howler')` (never loaded while
-sounds are off), caches one `Howl` per sound (`SOUND_SOURCES` / `SOUND_VOLUME`), and swallows missing files, blocked
-autoplay and decode errors (a broken sound is not retried). `playSound` works outside React.
 
 ---
 

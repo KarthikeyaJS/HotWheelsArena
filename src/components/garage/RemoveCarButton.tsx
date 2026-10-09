@@ -64,10 +64,10 @@ export function RemoveCarButton({
         title={armed ? 'Press again to remove' : 'Remove from garage'}
         data-state={armed ? 'armed' : 'idle'}
         className={cn(
-          'inline-flex h-9 shrink-0 select-none items-center justify-center gap-1.5 rounded-md font-display text-[11px] font-bold uppercase tracking-display transition-[background-color,color,border-color,width,transform] duration-200 ease-race active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:h-4 [&_svg]:w-4',
+          'inline-flex h-9 shrink-0 select-none items-center justify-center gap-1.5 rounded-md font-display text-xs font-bold uppercase tracking-display transition-[background-color,color,border-color,width,transform] duration-200 ease-race active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40 touch:h-11 [&_svg]:h-4 [&_svg]:w-4',
           armed
             ? 'bg-danger px-3 text-white hover:brightness-110'
-            : 'w-9 border border-line text-muted hover:border-danger/60 hover:bg-danger/10 hover:text-danger-ink',
+            : 'w-9 border border-line text-muted hover:border-danger/60 hover:bg-danger/10 hover:text-danger-ink touch:w-11',
           className,
         )}
       >

@@ -1,7 +1,27 @@
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 let lockCount = 0;
 let savedStyles: { overflow: string; paddingRight: string } | null = null;
+const listeners = new Set<() => void>();
+
+function notify(): void {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+const getLocked = (): boolean => lockCount > 0;
+
+/**
+ * True while any modal / drawer / palette holds the scroll lock. The Toaster uses it to hold
+ * toasts back so they never cover a dialog's actions.
+ */
+export function useIsScrollLocked(): boolean {
+  return useSyncExternalStore(subscribe, getLocked, () => false);
+}
 
 /**
  * Prevents body scrolling while `locked` is true (modals, drawers, command palette).
@@ -19,13 +39,17 @@ export function useLockBodyScroll(locked = true): void {
       if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
     }
     lockCount += 1;
+    if (lockCount === 1) notify();
 
     return () => {
       lockCount = Math.max(0, lockCount - 1);
-      if (lockCount === 0 && savedStyles) {
-        body.style.overflow = savedStyles.overflow;
-        body.style.paddingRight = savedStyles.paddingRight;
-        savedStyles = null;
+      if (lockCount === 0) {
+        if (savedStyles) {
+          body.style.overflow = savedStyles.overflow;
+          body.style.paddingRight = savedStyles.paddingRight;
+          savedStyles = null;
+        }
+        notify();
       }
     };
   }, [locked]);

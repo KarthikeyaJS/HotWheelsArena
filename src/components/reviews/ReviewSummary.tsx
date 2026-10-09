@@ -25,9 +25,7 @@ export function ReviewSummary({ summary, className }: ReviewSummaryProps) {
         </p>
         <div className="flex flex-col gap-1.5 pb-1">
           <StarRating value={summary.average} size="md" />
-          <p className="hud text-[10px] text-muted">
-            Based on {pluralize(summary.count, 'review')}
-          </p>
+          <p className="hud text-xs text-muted">Based on {pluralize(summary.count, 'review')}</p>
         </div>
       </div>
 

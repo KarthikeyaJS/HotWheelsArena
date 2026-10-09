@@ -24,7 +24,7 @@ export function RouteFallback({
       aria-busy="true"
       className={cn(
         'flex w-full animate-fade-in-delayed flex-col items-center justify-center gap-5 px-4',
-        fullScreen ? 'min-h-screen' : 'min-h-[50vh]',
+        fullScreen ? 'min-h-screen min-h-[100svh]' : 'min-h-[50vh]',
         className,
       )}
     >

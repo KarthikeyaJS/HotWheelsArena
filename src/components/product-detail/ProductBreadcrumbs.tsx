@@ -13,7 +13,7 @@ export interface ProductBreadcrumbsProps {
 export function ProductBreadcrumbs({ items, className }: ProductBreadcrumbsProps) {
   return (
     <nav aria-label="Breadcrumb" className={cn('min-w-0', className)}>
-      <ol className="hud flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-muted">
+      <ol className="hud flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
         {items.map((item, index) => {
           const current = index === items.length - 1;
           return (
@@ -28,7 +28,7 @@ export function ProductBreadcrumbs({ items, className }: ProductBreadcrumbsProps
               ) : (
                 <Link
                   to={item.path}
-                  className="rounded-sm transition-colors duration-150 hover:text-accent-ink active:opacity-80"
+                  className="relative rounded-sm transition-colors duration-150 hover:text-accent-ink active:opacity-80 touch:after:absolute touch:after:-inset-x-1 touch:after:-inset-y-3"
                 >
                   {item.name}
                 </Link>

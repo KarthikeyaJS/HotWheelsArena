@@ -190,7 +190,8 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
   let flatIndex = -1;
 
   return (
-    <div className="fixed inset-0 z-palette flex items-start justify-center sm:px-6 sm:pt-[10vh]">
+    // Short (landscape-phone) viewports keep the full-height phone layout: no 10vh gap, no hint footer.
+    <div className="fixed inset-0 z-palette flex items-start justify-center sm:px-6 sm:pt-[10vh] short:px-0 short:pt-0">
       <motion.div
         aria-hidden="true"
         className="absolute inset-0 bg-fg/40 backdrop-blur-sm dark:bg-bg/80"
@@ -210,7 +211,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="relative flex h-[100dvh] w-full flex-col overflow-hidden border-line bg-surface shadow-card-hover outline-none sm:h-auto sm:max-h-[min(40rem,80dvh)] sm:max-w-2xl sm:rounded-xl sm:border"
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden border-line bg-surface shadow-card-hover outline-none sm:h-auto sm:max-h-[min(40rem,80dvh)] sm:max-w-2xl sm:rounded-xl sm:border short:h-[100dvh] short:max-h-none short:rounded-none short:border-0 short:pl-[env(safe-area-inset-left)] short:pr-[env(safe-area-inset-right)]"
       >
         <span aria-hidden="true" className="racing-stripe is-active" />
         <h2 id={titleId} className="sr-only">
@@ -242,11 +243,12 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md px-1.5 py-1 text-muted transition-colors hover:bg-fg/[0.08] hover:text-fg"
+                className="inline-flex items-center rounded-md px-1.5 py-1 text-muted transition-colors hover:bg-fg/[0.08] hover:text-fg touch:min-h-10 touch:px-2.5"
                 aria-label="Close search"
               >
-                <span className="hud text-[10px] sm:hidden">Close</span>
-                <Kbd className="hidden sm:inline-flex">Esc</Kbd>
+                {/* Touch screens have no Esc key: they always get the word. */}
+                <span className="hud text-xs sm:hidden touch:inline">Close</span>
+                <Kbd className="hidden sm:inline-flex touch:hidden">Esc</Kbd>
               </button>
             }
           />
@@ -288,7 +290,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
             {groups.map((group) => (
               <div key={group.id} role="group" aria-label={group.label} className="pb-1">
                 {group.heading ? (
-                  <div aria-hidden="true" className="hud px-3 pb-1.5 pt-3 text-[10px] text-muted">
+                  <div aria-hidden="true" className="hud px-3 pb-1.5 pt-3 text-2xs text-muted">
                     {group.heading}
                   </div>
                 ) : null}
@@ -312,7 +314,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
 
           {catalogueLoading ? (
             <div role="status" aria-label="Loading cars">
-              <div aria-hidden="true" className="hud px-3 pb-1.5 pt-3 text-[10px] text-muted">
+              <div aria-hidden="true" className="hud px-3 pb-1.5 pt-3 text-2xs text-muted">
                 Cars
               </div>
               <LoadingRows />
@@ -360,8 +362,8 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
         </div>
 
         {/* Footer */}
-        <div className="safe-bottom hidden shrink-0 items-center justify-between gap-4 border-t border-line bg-bg/40 px-5 pt-3 text-muted sm:flex">
-          <p className="hud flex items-center gap-4 text-[10px]">
+        <div className="safe-bottom hidden shrink-0 items-center justify-between gap-4 border-t border-line bg-bg/40 px-5 pt-3 text-muted sm:flex short:hidden">
+          <p className="hud flex items-center gap-4 text-2xs">
             <span className="inline-flex items-center gap-1.5">
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd> Navigate
@@ -374,7 +376,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
             </span>
           </p>
           <p
-            className={cn('hud text-[10px]', productsQuery.isSuccess ? 'text-muted' : 'opacity-0')}
+            className={cn('hud text-2xs', productsQuery.isSuccess ? 'text-muted' : 'opacity-0')}
           >
             Garage index · {products?.length ?? 0} cars
           </p>

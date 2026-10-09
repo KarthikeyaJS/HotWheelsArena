@@ -33,12 +33,13 @@ export function OverlayHeader({
   return (
     <div className={cn('flex items-start gap-4', className)}>
       <div className="min-w-0 flex-1">
-        {eyebrow ? <p className="eyebrow mb-2">{eyebrow}</p> : null}
+        {/* Short (landscape-phone) viewports drop the decorative eyebrow to save height. */}
+        {eyebrow ? <p className="eyebrow mb-2 short:hidden">{eyebrow}</p> : null}
         <h2 id={titleId} className={cn('text-lg leading-tight text-fg sm:text-xl', titleClassName)}>
           {title}
         </h2>
         {description ? (
-          <p id={descriptionId} className="mt-2 text-sm text-muted">
+          <p id={descriptionId} className="mt-2 text-sm text-muted short:mt-1">
             {description}
           </p>
         ) : null}

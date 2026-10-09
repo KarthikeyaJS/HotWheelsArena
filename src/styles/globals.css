@@ -221,16 +221,25 @@
     transform-origin: center top;
   }
 
-  .group:hover .racing-stripe,
   .group:focus-within .racing-stripe,
   .racing-stripe.is-active {
     transform: scaleX(1);
   }
 
-  .group:hover .racing-stripe-left,
   .group:focus-within .racing-stripe-left,
   .racing-stripe-left.is-active {
     transform: scaleY(1);
+  }
+
+  /* Hover reveal only where hover exists (a tap on a touch screen must not leave it stuck). */
+  @media (hover: hover) {
+    .group:hover .racing-stripe {
+      transform: scaleX(1);
+    }
+
+    .group:hover .racing-stripe-left {
+      transform: scaleY(1);
+    }
   }
 
   /* One-shot 1–2px engine vibration. Re-trigger by toggling the class. */
@@ -359,6 +368,34 @@
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
+
+  /* Safe-area insets (index.html sets viewport-fit=cover): notches, rounded corners, home bar. */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pl-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .pr-safe {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .px-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* Horizontal scroller affordance: fades the inline-end edge so clipped items read as "more". */
+  .scroll-fade-x {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
 }
 
 /* ───────────────────────── Reduced motion ─────────────────────────────── */
@@ -386,5 +423,26 @@
     animation: none !important;
     background-image: none;
     background-color: rgb(var(--card-hover));
+  }
+}
+
+/* ───────────────────── Touch form-field size floor ────────────────────── */
+/* iOS Safari zooms the page when a focused field's text is below 16px. Last-resort rule outside
+   @layer so it beats single utility classes (e.g. a component's own text-sm). */
+@media (hover: none) and (pointer: coarse) {
+  html
+    input:is(
+      [type='text'],
+      [type='email'],
+      [type='tel'],
+      [type='search'],
+      [type='number'],
+      [type='password'],
+      [type='url'],
+      :not([type])
+    ),
+  html select,
+  html textarea {
+    font-size: max(1rem, 16px);
   }
 }

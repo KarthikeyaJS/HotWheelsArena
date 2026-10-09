@@ -1,5 +1,5 @@
 /**
- * Recent searches — sessionStorage-backed (localStorage is reserved for cart/theme/sound prefs).
+ * Recent searches — sessionStorage-backed (localStorage is reserved for the cart and display prefs).
  */
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';

@@ -1,4 +1,5 @@
 import { Award, MessageSquarePlus, RotateCcw, Truck } from 'lucide-react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AddToCartButton,
@@ -15,6 +16,7 @@ import { formatINR, formatNumber } from '@/lib/format';
 import { isSoldOut, productHudLine, productMetaLine } from '@/lib/product';
 import type { Product } from '@/types';
 import { BuyNowButton } from './BuyNowButton';
+import { ProductBuyBar } from './ProductBuyBar';
 import { LimitedEditionPanel } from './LimitedEditionPanel';
 import { ProductSpecTable } from './ProductSpecTable';
 
@@ -37,6 +39,7 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
   const hasReviews = product.ratingCount > 0;
   const collectorEdition = product.collectorScore >= COLLECTOR_EDITION_MIN_SCORE;
   const description = product.description.trim();
+  const actionsRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className={cn('flex min-w-0 flex-col gap-6', className)}>
@@ -73,7 +76,7 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <p className="hud text-[11px] text-muted">
+          <p className="hud text-xs text-muted">
             {hud.series}
             <span aria-hidden="true" className="mx-1.5 text-fg/30">
               ·
@@ -99,7 +102,7 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div className="flex flex-col gap-1.5">
             <PriceTag price={product.price} compareAtPrice={product.compareAtPrice} size="xl" />
-            <p className="hud text-[10px] text-muted">
+            <p className="hud text-xs text-muted">
               {settings.taxInclusive ? 'Incl. GST' : '+ GST at checkout'}
             </p>
           </div>
@@ -109,8 +112,9 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
 
       <LimitedEditionPanel product={product} />
 
-      <div className="flex flex-col gap-3">
-        <div className="grid gap-3 sm:grid-cols-2">
+      <div ref={actionsRef} className="flex flex-col gap-3">
+        {/* Side by side from 640px, stacked in the narrow 1024–1279px summary column (CA-01), side by side again from 1280px. */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           <AddToGarageButton product={product} size="lg" fullWidth variant="secondary" />
           <BuyNowButton
             product={product}
@@ -181,6 +185,8 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
       </ul>
 
       <ProductSpecTable product={product} />
+
+      <ProductBuyBar product={product} anchorRef={actionsRef} />
     </div>
   );
 }

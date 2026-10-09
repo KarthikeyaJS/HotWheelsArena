@@ -125,7 +125,8 @@ export function AddCarDialog({
         </Button>
       }
     >
-      <div className="sticky top-0 z-10 -mx-1 flex flex-col gap-3 bg-surface px-1 pb-3">
+      {/* Landscape phones: search + "Hide parked" share one row so the list keeps the height. */}
+      <div className="sticky top-0 z-10 -mx-1 flex flex-col gap-3 bg-surface px-1 pb-3 short:flex-row short:items-center short:pb-2">
         <SearchInput
           ref={searchRef}
           value={query}
@@ -134,9 +135,10 @@ export function AddCarDialog({
           label="Search the catalogue"
           placeholder="Search by name, make or series…"
           data-autofocus=""
+          formClassName="short:min-w-0 short:flex-1"
         />
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="hud text-muted" role="status" aria-live="polite">
+        <div className="flex flex-wrap items-center justify-between gap-2 short:shrink-0">
+          <p className="hud text-muted short:sr-only" role="status" aria-live="polite">
             {isLoading ? 'Loading the catalogue…' : summary}
           </p>
           <Checkbox
@@ -193,7 +195,7 @@ export function AddCarDialog({
                     <p className="line-clamp-2 font-display text-[13px] font-bold uppercase leading-snug tracking-display text-fg">
                       {product.name}
                     </p>
-                    <p className="hud mt-1 truncate text-[10px] text-muted">
+                    <p className="hud mt-1 truncate text-xs text-muted">
                       {product.seriesName}
                       <span aria-hidden="true"> · </span>
                       <span className="sr-only">, </span>
@@ -208,7 +210,7 @@ export function AddCarDialog({
                       on it when "Park it" turns into "+1 copy". */}
                   <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
                     {parked ? (
-                      <span className="hud inline-flex items-center gap-1 text-[10px] text-success">
+                      <span className="hud inline-flex items-center gap-1 text-xs text-success">
                         <Check aria-hidden="true" className="h-3.5 w-3.5" />
                         Parked ×{copies}
                       </span>

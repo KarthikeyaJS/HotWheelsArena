@@ -116,6 +116,9 @@ export function CollectionTab({ dashboard, onRemove, onAddCar, onHaveIt }: Colle
                       icon={<Icon />}
                       selected={filter === option.id}
                       onClick={() => setFilter(option.id)}
+                      // 44px tall on touch; slightly tighter on phones so ALL + FAVORITES share
+                      // the first row at 320px.
+                      className="touch:h-11 max-sm:px-3"
                     >
                       {option.label} · {counts[option.id]}
                     </Chip>

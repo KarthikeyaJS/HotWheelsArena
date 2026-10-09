@@ -45,7 +45,7 @@ declare global {
   }
 }
 
-/** Persist key of the UI prefs store (src/store/uiStore.ts, zustand persist version 1). */
+/** Persist key of the UI prefs store (src/store/uiStore.ts, zustand persist version 2). */
 const PREFS_KEY = 'hwa-prefs-v1';
 /** Persist key of the Pit Stop cart (src/store/cartStore.ts, zustand persist version 1). */
 const CART_KEY = 'hwa-cart-v1';
@@ -73,7 +73,7 @@ export const test = base.extend<E2eFixtures & E2eOptions>({
           const parsed = raw ? (JSON.parse(raw) as { state?: object; version?: number }) : {};
           window.localStorage.setItem(
             prefsKey,
-            JSON.stringify({ state: { ...(parsed.state ?? {}), theme: initialTheme }, version: 1 }),
+            JSON.stringify({ state: { ...(parsed.state ?? {}), theme: initialTheme }, version: 2 }),
           );
         } catch {
           /* storage unavailable — the app falls back to prefers-color-scheme */
@@ -168,7 +168,7 @@ export async function setTheme(page: Page, theme: Theme): Promise<void> {
       const parsed = raw ? (JSON.parse(raw) as { state?: object }) : {};
       window.localStorage.setItem(
         prefsKey,
-        JSON.stringify({ state: { ...(parsed.state ?? {}), theme: next }, version: 1 }),
+        JSON.stringify({ state: { ...(parsed.state ?? {}), theme: next }, version: 2 }),
       );
       window.localStorage.setItem(lockKey, '1');
     },

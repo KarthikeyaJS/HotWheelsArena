@@ -75,7 +75,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
       {textarea}
       <p
         className={cn(
-          'self-end font-mono text-[11px] tabular-nums',
+          'self-end font-mono text-xs tabular-nums',
           atLimit ? 'text-danger-ink' : nearLimit ? 'text-accent-ink' : 'text-muted',
         )}
       >

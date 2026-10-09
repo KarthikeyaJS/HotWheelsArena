@@ -291,7 +291,7 @@ export function RangeSlider({
       {showScale ? (
         <div
           aria-hidden="true"
-          className="mt-1 flex justify-between font-mono text-[11px] text-muted"
+          className="mt-1 flex justify-between font-mono text-xs text-muted"
         >
           <span>{formatValue(lowerBound)}</span>
           <span>{formatValue(upperBound)}</span>

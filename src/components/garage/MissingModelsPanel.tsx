@@ -49,16 +49,25 @@ function MissingCarRow({
             {product.name}
           </Link>
         </p>
-        <p className="hud mt-0.5 text-[10px] text-muted">
+        <p className="hud mt-0.5 text-xs text-muted">
           {formatCollectionNumber(product.collectionNumber)}
           <span aria-hidden="true"> · </span>
           <span className="sr-only">, </span>
           <span className="text-fg">{formatINR(product.price)}</span>
         </p>
       </div>
-      <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
-        <WishlistButton product={product} size="sm" />
-        <AddToCartButton product={product} size="sm" variant="outline" />
+      {/* Phones: the heart sits beside the name and CART / I HAVE IT share the next row (each
+          grows; they wrap to two full-width rows only if they can't fit side by side). From sm
+          everything is one row again. */}
+      <WishlistButton product={product} size="sm" />
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+        <AddToCartButton
+          product={product}
+          size="sm"
+          variant="outline"
+          fullWidth
+          className="w-auto flex-1 sm:flex-none"
+        />
         <Button
           size="sm"
           variant="outline"
@@ -66,6 +75,7 @@ function MissingCarRow({
           aria-label={`I have it — park ${product.name} in your garage`}
           data-have-it=""
           onClick={() => onHaveIt(product)}
+          className="flex-1 sm:flex-none"
         >
           I have it
         </Button>
@@ -104,7 +114,7 @@ function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Prod
   const hiddenCount = row.missing.length - visible.length;
 
   return (
-    <li ref={cardRef} className="rounded-lg border border-line bg-card p-4">
+    <li ref={cardRef} className="rounded-lg border border-line bg-card p-3 sm:p-4">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <div className="min-w-0">
           <h3 className="font-display text-sm font-bold uppercase tracking-display text-fg">
@@ -115,7 +125,7 @@ function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Prod
               {row.series.name}
             </Link>
           </h3>
-          <p className="hud mt-1 text-[10px] text-muted">{row.series.year} series</p>
+          <p className="hud mt-1 text-2xs text-muted">{row.series.year} series</p>
         </div>
         <p className="font-mono text-lg font-bold tabular-nums leading-none text-fg">
           {formatNumber(row.owned)}
@@ -140,7 +150,7 @@ function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Prod
         </p>
       ) : row.missing.length > 0 ? (
         <>
-          <p className="hud mt-3 text-[10px] text-muted">
+          <p className="hud mt-3 text-xs text-muted">
             Missing {pluralize(row.missing.length, 'car')}
           </p>
           <ul
@@ -168,9 +178,15 @@ function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Prod
               onClick={() => setExpanded((value) => !value)}
               className="mt-2"
             >
-              {expanded
-                ? 'Show fewer'
-                : `Show all ${row.missing.length} missing (${hiddenCount} more)`}
+              {expanded ? (
+                'Show fewer'
+              ) : (
+                <>
+                  Show all {row.missing.length} missing
+                  {/* Phones: the short label fits the card at 320px. */}
+                  <span className="max-sm:hidden">&nbsp;({hiddenCount} more)</span>
+                </>
+              )}
             </Button>
           ) : null}
         </>
@@ -204,7 +220,7 @@ export function MissingModelsPanel({
     <HudPanel
       as="section"
       aria-labelledby="garage-missing-title"
-      className={cn('flex flex-col', className)}
+      className={cn('flex flex-col max-sm:p-4', className)}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
@@ -217,7 +233,7 @@ export function MissingModelsPanel({
           </h2>
         </div>
         {rows.length > 0 ? (
-          <p className="hud shrink-0 text-right text-[10px] text-muted">
+          <p className="hud shrink-0 text-right text-2xs text-muted">
             <span className="block font-mono text-2xl font-bold leading-none tracking-normal text-fg">
               {formatNumber(inProgress)}
             </span>

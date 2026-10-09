@@ -53,12 +53,12 @@ export function ProductSpecTable({
       <div className="flex items-center justify-between gap-3 border-b border-fg/10 px-5 py-3">
         <h2
           id={headingId}
-          className="hud flex items-center gap-2 font-mono text-[11px] font-bold text-fg"
+          className="hud flex items-center gap-2 font-mono text-xs font-bold text-fg"
         >
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-[1px] bg-fg/70" />
           SPEC SHEET
         </h2>
-        <span aria-hidden="true" className="hud text-[10px] text-fg/75">
+        <span aria-hidden="true" className="hud text-2xs text-fg/75">
           FILE {formatCollectionNumber(product.collectionNumber)}
         </span>
       </div>
@@ -66,7 +66,7 @@ export function ProductSpecTable({
       <dl className="divide-y divide-fg/10 px-5 pb-1">
         {specs.map((spec) => (
           <div key={spec.label} className="grid grid-cols-[7.5rem_1fr] items-baseline gap-4 py-2.5">
-            <dt className="hud text-[10px] text-fg/75">{spec.label}</dt>
+            <dt className="hud text-xs text-fg/75">{spec.label}</dt>
             <dd className="min-w-0 text-right font-mono text-[13px] font-semibold text-fg">
               {spec.value}
             </dd>

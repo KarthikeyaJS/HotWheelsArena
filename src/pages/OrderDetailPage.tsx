@@ -56,6 +56,7 @@ function OrderDetail({ order }: { order: Order }) {
       <HudPanel
         as="section"
         title="Delivery tracker"
+        className="max-sm:p-4"
         titleAs="h2"
         meta={ORDER_STATUS_META[order.status].label}
       >
@@ -68,11 +69,23 @@ function OrderDetail({ order }: { order: Order }) {
 
       <div className="grid gap-6 lg:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-7 xl:col-span-8">
-          <HudPanel as="section" title={`Cars · ${count}`} titleAs="h2" tone="default">
+          <HudPanel
+            as="section"
+            title={`Cars · ${count}`}
+            titleAs="h2"
+            className="max-sm:p-4"
+            tone="default"
+          >
             <OrderLinesList lines={order.items} />
           </HudPanel>
 
-          <HudPanel as="section" title="XP & badges" titleAs="h2" tone="default">
+          <HudPanel
+            as="section"
+            title="XP & badges"
+            titleAs="h2"
+            className="max-sm:p-4"
+            tone="default"
+          >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p className="flex items-center gap-2 text-fg">
                 <Zap aria-hidden="true" className="h-5 w-5 text-accent-ink" />
@@ -105,7 +118,7 @@ function OrderDetail({ order }: { order: Order }) {
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-5 xl:col-span-4">
-          <HudPanel as="section" title="Totals" titleAs="h2">
+          <HudPanel as="section" title="Totals" titleAs="h2" className="max-sm:p-4">
             <TotalsBreakdown
               totals={{
                 subtotal: order.subtotal,
@@ -117,10 +130,16 @@ function OrderDetail({ order }: { order: Order }) {
               size="lg"
             />
           </HudPanel>
-          <HudPanel as="section" title="Shipping address" titleAs="h2" tone="default">
+          <HudPanel
+            as="section"
+            title="Shipping address"
+            titleAs="h2"
+            className="max-sm:p-4"
+            tone="default"
+          >
             <AddressBlock address={order.address} />
           </HudPanel>
-          <HudPanel as="section" title="Payment" titleAs="h2" tone="default">
+          <HudPanel as="section" title="Payment" titleAs="h2" className="max-sm:p-4" tone="default">
             <PaymentDetails payment={order.payment} method={order.paymentMethod} />
           </HudPanel>
         </div>
@@ -146,7 +165,7 @@ export default function OrderDetailPage() {
   });
 
   return (
-    <Container className="py-10 lg:py-14">
+    <Container className="py-6 sm:py-10 lg:py-14">
       <Button
         to={ROUTES.orders}
         variant="ghost"

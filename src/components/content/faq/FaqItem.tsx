@@ -38,7 +38,7 @@ export function FaqItem({ item, open, onToggle }: FaqItemProps) {
             aria-controls={panelId}
             data-faq-trigger=""
             onClick={() => onToggle(item.id)}
-            className="flex w-full items-center gap-4 rounded-xl py-4 pl-5 pr-2 text-left text-[15px] font-semibold leading-6 text-fg transition-colors duration-150 active:opacity-80 sm:text-base"
+            className="flex w-full items-center gap-4 rounded-xl py-4 pl-5 pr-4 text-left text-[15px] font-semibold leading-6 text-fg transition-colors duration-150 active:opacity-80 sm:pr-2 sm:text-base"
           >
             <span className="min-w-0 flex-1">{item.question}</span>
             <span
@@ -56,7 +56,7 @@ export function FaqItem({ item, open, onToggle }: FaqItemProps) {
           to={{ hash: item.id }}
           aria-label={`Link to this question: ${item.question}`}
           title="Link to this question"
-          className="my-3 mr-3 grid w-9 shrink-0 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-fg/[0.06] hover:text-accent-ink active:scale-95"
+          className="my-3 mr-3 hidden w-9 shrink-0 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-fg/[0.06] hover:text-accent-ink active:scale-95 sm:grid"
         >
           <Link2 aria-hidden="true" className="h-4 w-4" />
         </Link>
@@ -79,7 +79,7 @@ export function FaqItem({ item, open, onToggle }: FaqItemProps) {
               <li key={link.to}>
                 <Link
                   to={link.to}
-                  className="inline-flex h-8 items-center gap-1.5 rounded border border-line bg-surface px-3 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-fg transition-[color,border-color,transform] duration-150 hover:border-accent/60 hover:text-accent-ink active:scale-[0.97]"
+                  className="inline-flex h-8 items-center gap-1.5 rounded border border-line bg-surface px-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-fg transition-[color,border-color,transform] duration-150 hover:border-accent/60 hover:text-accent-ink active:scale-[0.97] touch:h-11"
                 >
                   {link.label}
                   <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -88,6 +88,14 @@ export function FaqItem({ item, open, onToggle }: FaqItemProps) {
             ))}
           </ul>
         ) : null}
+        {/* Phones: the permalink lives here instead of beside the question (CA-09). */}
+        <Link
+          to={{ hash: item.id }}
+          className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-sm font-mono text-xs font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent-ink sm:hidden"
+        >
+          <Link2 aria-hidden="true" className="h-3.5 w-3.5" />
+          Link to this question
+        </Link>
       </div>
     </div>
   );

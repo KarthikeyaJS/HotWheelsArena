@@ -24,7 +24,6 @@ import { Container } from '@/components/ui/Container';
 import { garagePath, orderPath, shopPath } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrder } from '@/hooks/useOrders';
-import { useSound } from '@/hooks/useSound';
 import { isNotFoundError, isPermissionError } from '@/lib/errors';
 import { formatINR, pluralize } from '@/lib/format';
 import { formatOrderRef, orderItemCount } from '@/lib/order';
@@ -64,18 +63,15 @@ function viewFromOrder(order: Order, level: number | null): SuccessView {
 
 function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const playSound = useSound();
-
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true });
-    if (fresh) playSound('start');
-  }, [fresh, playSound]);
+  }, []);
 
   return (
     <div className="flex flex-col gap-10">
       <section
         aria-labelledby="success-title"
-        className="relative isolate overflow-hidden rounded-2xl border border-line bg-surface px-5 pb-10 pt-14 text-center shadow-card sm:px-10 sm:pt-16"
+        className="relative isolate overflow-hidden rounded-2xl border border-line bg-surface px-4 pb-8 pt-12 text-center shadow-card sm:px-10 sm:pb-10 sm:pt-16 sm:short:pt-12"
       >
         <div aria-hidden="true" className="bg-checker absolute inset-x-0 top-0 h-7 opacity-90" />
         <div
@@ -99,9 +95,11 @@ function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
           id="success-title"
           ref={headingRef}
           tabIndex={-1}
-          className="mx-auto mt-3 max-w-3xl text-balance text-3xl text-fg focus:outline-none sm:text-5xl"
+          className="mx-auto mt-3 max-w-3xl text-balance text-2xl text-fg focus:outline-none sm:text-5xl sm:short:text-3xl"
         >
-          Chequered flag! Order confirmed
+          {/* Phones: "Chequered flag!" becomes a smaller first line so the h1 takes 3 short lines
+              instead of 4 big ones. */}
+          <span className="max-sm:block max-sm:text-lg">Chequered flag!</span> Order confirmed
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-muted">
           {pluralize(view.totals.itemCount, 'car')} just rolled into your garage. We&apos;ll ping
@@ -118,7 +116,7 @@ function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
           <CopyButton value={view.orderId} label="Copy order ID" size="xs" />
         </div>
 
-        <div className="mt-10 grid gap-4 text-left sm:grid-cols-3">
+        <div className="mt-8 grid gap-4 text-left sm:mt-10 sm:grid-cols-3">
           <HudPanel title="XP earned" meta="REWARD">
             <XpCountUp xp={view.xpEarned} className="text-4xl text-accent-ink" />
             <p className="mt-2 text-xs text-muted">Added to your collector rank.</p>
@@ -147,7 +145,7 @@ function Celebration({ view, fresh }: { view: SuccessView; fresh: boolean }) {
           </HudPanel>
         </div>
 
-        <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+        <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
           <Button to={orderPath(view.orderId)} size="lg" leftIcon={<ClipboardList />}>
             View order
           </Button>
@@ -260,7 +258,7 @@ export default function OrderSuccessPage() {
         (isPermissionError(orderQuery.error) || isNotFoundError(orderQuery.error))));
 
   return (
-    <Container className="py-10 lg:py-14">
+    <Container className="py-6 sm:py-10 lg:py-14">
       <ErrorBoundary label="Order confirmation" resetKeys={[orderId]}>
         {notFound ? (
           <>

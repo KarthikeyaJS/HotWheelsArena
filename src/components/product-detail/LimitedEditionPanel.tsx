@@ -60,7 +60,7 @@ export function LimitedEditionPanel({ product, className }: LimitedEditionPanelP
               </>
             )}
           </p>
-          <p aria-hidden="true" className="hud text-[10px] text-muted">
+          <p aria-hidden="true" className="hud text-2xs text-muted">
             {formatPercent(info.claimedPct)} claimed
           </p>
         </div>

@@ -23,7 +23,7 @@ const PRICE_SIZES: Readonly<Record<PriceTagSize, string>> = {
 };
 
 const COMPARE_SIZES: Readonly<Record<PriceTagSize, string>> = {
-  sm: 'text-[11px]',
+  sm: 'text-xs',
   md: 'text-xs',
   lg: 'text-sm',
   xl: 'text-base',
@@ -55,7 +55,7 @@ export function PriceTag({
             {formatINR(compareAtPrice)}
           </s>
           {showDiscount ? (
-            <span className="rounded-sm bg-danger px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none tracking-wider text-white">
+            <span className="rounded-sm bg-danger px-1.5 py-0.5 font-mono text-2xs font-bold leading-none tracking-wider text-white">
               <span aria-hidden="true">−{discount}%</span>
               <span className="sr-only">, {discount}% off</span>
             </span>

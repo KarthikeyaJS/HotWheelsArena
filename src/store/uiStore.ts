@@ -1,7 +1,7 @@
 /**
  * UI preferences + transient UI state.
- * Persisted (localStorage `hwa-prefs-v1`): `theme` (only once the user explicitly picks one),
- * `soundEnabled`, `scanlines`. Everything else is session-only.
+ * Persisted (localStorage `hwa-prefs-v1`, persist version 2): `theme` (only once the user
+ * explicitly picks one) and `scanlines`. Everything else is session-only.
  */
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -9,13 +9,16 @@ import { getDocumentTheme } from '@/lib/theme';
 import type { ScanlineMode, SignInPromptState, Theme } from '@/types';
 
 export const PREFS_STORAGE_KEY = 'hwa-prefs-v1';
+/**
+ * zustand persist version of {@link PREFS_STORAGE_KEY}. v1 also stored `soundEnabled` (the
+ * engine-sound preference, removed with the sound feature); `migratePrefs` upgrades it.
+ */
+export const PREFS_VERSION = 2;
 
 export interface UiState {
   theme: Theme;
   /** True once the user chose a theme (then OS changes are ignored). Derived from storage. */
   themeExplicit: boolean;
-  /** Engine sounds — off by default. */
-  soundEnabled: boolean;
   /** CRT scanlines: `auto` = on in dark, off in light. */
   scanlines: ScanlineMode;
 
@@ -28,9 +31,6 @@ export interface UiState {
   toggleTheme: () => void;
   /** Follow the OS preference — ignored once the user chose explicitly. */
   syncSystemTheme: (theme: Theme) => void;
-
-  setSoundEnabled: (enabled: boolean) => void;
-  toggleSound: () => void;
 
   setScanlines: (mode: ScanlineMode) => void;
   /** auto → on → off → auto. */
@@ -52,9 +52,8 @@ export interface UiState {
   closeSignInPrompt: () => void;
 }
 
-interface PersistedPrefs {
+export interface PersistedPrefs {
   theme?: Theme;
-  soundEnabled?: boolean;
   scanlines?: ScanlineMode;
 }
 
@@ -64,12 +63,27 @@ const isTheme = (value: unknown): value is Theme => value === 'dark' || value ==
 const isScanlineMode = (value: unknown): value is ScanlineMode =>
   typeof value === 'string' && (SCANLINE_MODES as readonly string[]).includes(value);
 
+/**
+ * Upgrades a stored prefs payload from an older persist version: keeps a valid `theme` and
+ * `scanlines` and drops everything else (e.g. the legacy v1 `soundEnabled` key), so the
+ * index.html no-flash script keeps reading `state.theme` from the same key.
+ */
+export function migratePrefs(persisted: unknown): PersistedPrefs {
+  const stored =
+    typeof persisted === 'object' && persisted !== null
+      ? (persisted as Record<string, unknown>)
+      : {};
+  return {
+    ...(isTheme(stored.theme) ? { theme: stored.theme } : {}),
+    ...(isScanlineMode(stored.scanlines) ? { scanlines: stored.scanlines } : {}),
+  };
+}
+
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
       theme: getDocumentTheme(),
       themeExplicit: false,
-      soundEnabled: false,
       scanlines: 'auto',
       mobileNavOpen: false,
       searchOpen: false,
@@ -80,9 +94,6 @@ export const useUiStore = create<UiState>()(
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark', themeExplicit: true })),
       syncSystemTheme: (theme) =>
         set((state) => (state.themeExplicit || state.theme === theme ? state : { theme })),
-
-      setSoundEnabled: (soundEnabled) => set({ soundEnabled }),
-      toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
 
       setScanlines: (scanlines) => set({ scanlines }),
       cycleScanlines: () =>
@@ -114,20 +125,18 @@ export const useUiStore = create<UiState>()(
     }),
     {
       name: PREFS_STORAGE_KEY,
-      version: 1,
+      version: PREFS_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state): PersistedPrefs => ({
         ...(state.themeExplicit ? { theme: state.theme } : {}),
-        soundEnabled: state.soundEnabled,
         scanlines: state.scanlines,
       }),
+      migrate: (persisted) => migratePrefs(persisted),
       merge: (persisted, current) => {
         const stored = (persisted ?? {}) as PersistedPrefs;
         return {
           ...current,
           ...(isTheme(stored.theme) ? { theme: stored.theme, themeExplicit: true } : {}),
-          soundEnabled:
-            typeof stored.soundEnabled === 'boolean' ? stored.soundEnabled : current.soundEnabled,
           scanlines: isScanlineMode(stored.scanlines) ? stored.scanlines : current.scanlines,
         };
       },

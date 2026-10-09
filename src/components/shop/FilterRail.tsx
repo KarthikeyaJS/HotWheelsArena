@@ -76,7 +76,7 @@ export function FilterRail({
             Filters
           </h2>
           {activeCount > 0 ? (
-            <span className="inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 font-mono text-[10px] font-bold tabular-nums text-on-accent">
+            <span className="inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 font-mono text-2xs font-bold tabular-nums text-on-accent">
               {activeCount}
               <span className="sr-only"> active</span>
             </span>
@@ -89,7 +89,7 @@ export function FilterRail({
                 // The button is swapped for "Tune the grid": keep keyboard focus in the rail.
                 headingRef.current?.focus();
               }}
-              className="ml-auto inline-flex min-h-8 items-center gap-1.5 rounded-sm font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70"
+              className="ml-auto inline-flex min-h-8 items-center gap-1.5 rounded-sm font-mono text-xs font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70 touch:min-h-11"
             >
               <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" />
               Clear all
@@ -152,7 +152,7 @@ export function FilterRail({
                   {seriesLabel(option)}
                 </span>
                 {year ? (
-                  <span className="shrink-0 font-mono text-[11px] text-muted">
+                  <span className="shrink-0 font-mono text-xs text-muted">
                     &apos;{String(year).slice(-2)}
                   </span>
                 ) : null}

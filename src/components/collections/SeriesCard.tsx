@@ -74,10 +74,10 @@ export function SeriesCard({
             <Layers />
           </span>
         )}
-        <span className="absolute left-4 top-4 rounded border border-line bg-bg/80 px-2 py-1 font-mono text-[11px] font-bold tabular-nums tracking-[0.12em] text-fg backdrop-blur-sm">
+        <span className="absolute left-4 top-4 rounded border border-line bg-bg/80 px-2 py-1 font-mono text-xs font-bold tabular-nums tracking-[0.12em] text-fg backdrop-blur-sm">
           {series.year}
         </span>
-        <span className="absolute right-4 top-4 rounded border border-line bg-bg/80 px-2 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-fg backdrop-blur-sm">
+        <span className="absolute right-4 top-4 rounded border border-line bg-bg/80 px-2 py-1 font-mono text-xs font-bold uppercase tracking-[0.12em] text-fg backdrop-blur-sm">
           {padNumber(totalCars)} cars
         </span>
       </div>

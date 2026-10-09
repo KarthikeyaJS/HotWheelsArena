@@ -18,7 +18,11 @@ export interface AddressFieldsProps {
   className?: string;
 }
 
-/** Indian delivery address fields (react-hook-form + AddressSchema). */
+/**
+ * Indian delivery address fields (react-hook-form + AddressSchema). Phone keyboards: every text
+ * field shows "Next" (the State select ends the form), names/places auto-capitalise, and
+ * `scroll-margin-bottom` keeps a field's error line in view when the keyboard is up.
+ */
 export function AddressFields({
   register,
   setValue,
@@ -30,7 +34,13 @@ export function AddressFields({
   const id = (name: keyof AddressInput): string => `${idPrefix}-${name}`;
 
   return (
-    <fieldset disabled={disabled} className={cn('grid gap-x-4 gap-y-5 sm:grid-cols-2', className)}>
+    <fieldset
+      disabled={disabled}
+      className={cn(
+        'grid gap-x-4 gap-y-5 sm:grid-cols-2 [&_:is(input,select)]:scroll-mb-14',
+        className,
+      )}
+    >
       <legend className="sr-only">Delivery address</legend>
 
       <FormField label="Full name" htmlFor={id('name')} required error={errors.name?.message}>
@@ -38,6 +48,8 @@ export function AddressFields({
           <Input
             id={f.id}
             autoComplete="name"
+            autoCapitalize="words"
+            enterKeyHint="next"
             aria-describedby={f.describedBy}
             invalid={f.invalid}
             aria-required="true"
@@ -59,6 +71,7 @@ export function AddressFields({
             type="tel"
             inputMode="numeric"
             autoComplete="tel-national"
+            enterKeyHint="next"
             placeholder="98765 43210"
             maxLength={16}
             aria-describedby={f.describedBy}
@@ -86,6 +99,8 @@ export function AddressFields({
           <Input
             id={f.id}
             autoComplete="address-line1"
+            autoCapitalize="words"
+            enterKeyHint="next"
             aria-describedby={f.describedBy}
             invalid={f.invalid}
             aria-required="true"
@@ -105,6 +120,8 @@ export function AddressFields({
           <Input
             id={f.id}
             autoComplete="address-line2"
+            autoCapitalize="words"
+            enterKeyHint="next"
             aria-describedby={f.describedBy}
             invalid={f.invalid}
             {...register('line2')}
@@ -123,6 +140,9 @@ export function AddressFields({
             id={f.id}
             aria-describedby={f.describedBy}
             invalid={f.invalid}
+            autoComplete="address-line3"
+            autoCapitalize="words"
+            enterKeyHint="next"
             placeholder="Near the pit lane"
             {...register('landmark')}
           />
@@ -135,6 +155,7 @@ export function AddressFields({
             id={f.id}
             inputMode="numeric"
             autoComplete="postal-code"
+            enterKeyHint="next"
             maxLength={6}
             placeholder="400050"
             className="font-mono tracking-hud"
@@ -151,6 +172,8 @@ export function AddressFields({
           <Input
             id={f.id}
             autoComplete="address-level2"
+            autoCapitalize="words"
+            enterKeyHint="next"
             aria-describedby={f.describedBy}
             invalid={f.invalid}
             aria-required="true"

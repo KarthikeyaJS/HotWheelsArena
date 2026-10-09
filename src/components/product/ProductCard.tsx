@@ -1,6 +1,6 @@
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Award } from 'lucide-react';
-import { memo, type PointerEvent } from 'react';
+import { memo, type PointerEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Chip, PriceTag, RarityChip, StarRating } from '@/components/ui';
 import { productPath } from '@/config/routes';
@@ -42,12 +42,37 @@ const IMAGE_WIDTH = 480;
 const IMAGE_HEIGHT = 300;
 
 const DEFAULT_SIZES: Readonly<Record<ProductCardVariant, string>> = {
-  default: '(min-width: 1280px) 296px, (min-width: 1024px) 30vw, (min-width: 640px) 46vw, 92vw',
+  default:
+    '(min-width: 1280px) 296px, (min-width: 1024px) 30vw, (min-width: 640px) 46vw, (min-width: 360px) 46vw, 92vw',
   compact: '(min-width: 640px) 288px, 76vw',
 };
 
+/** Hyphenated model codes up to this length never break at the hyphen ("GT-R", "V-SPEC"). */
+const NO_BREAK_TOKEN_MAX = 8;
+
 /**
- * The Collectible Product Card (spec §5.2), used everywhere. The whole card navigates to the
+ * Keeps short hyphenated tokens on one line, so "SKYLINE GT-R" never wraps as "GT- / R".
+ * Longer ones ("MERCEDES-AMG") may still break, or they could overflow a 2-up phone card.
+ */
+export function withNoBreakHyphens(name: string): ReactNode {
+  const parts = name.split(/(\S+)/);
+  if (!parts.some((part) => part.includes('-') && part.length <= NO_BREAK_TOKEN_MAX)) return name;
+  return parts.map((part, index) =>
+    part.includes('-') && part.length <= NO_BREAK_TOKEN_MAX ? (
+      <span key={index} className="whitespace-nowrap">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+}
+
+/**
+ * The Collectible Product Card (spec §5.2), used everywhere. Below sm (640px) it switches to a
+ * phone density that fits a 2-up grid: series line, collector chip and spec row are hidden, the
+ * ♡ moves to the top-right corner and + CART becomes a full-width 44px row (≈ 320px tall at 375).
+ * The whole card navigates to the
  * product page through a stretched link on the name, while the + CART and ♡ buttons sit above
  * that overlay (no nested interactive elements; tab order: name → cart → wishlist).
  * Hover / focus-within: metallic card-hover surface, orange racing stripe, car rotates −3° and
@@ -119,21 +144,25 @@ function ProductCardImpl({
       <div
         className={cn(
           'flex items-center justify-between gap-2',
-          compact ? 'px-3 pt-3' : 'px-4 pt-4',
+          compact ? 'px-3 pt-3' : 'px-4 pt-4 max-sm:px-3 max-sm:pt-3',
         )}
       >
-        <p className="hud truncate text-[10px] text-muted">
+        <p className="hud truncate text-2xs text-muted max-sm:hidden">
           {hud.series}
           <span aria-hidden="true" className="mx-1.5 text-fg/25">
             //
           </span>
           <span className="text-fg">{hud.collection}</span>
         </p>
-        <RarityChip rarity={product.rarity} size="sm" />
+        <RarityChip
+          rarity={product.rarity}
+          size="sm"
+          className="max-sm:mr-9 max-sm:min-w-0 max-sm:shrink max-sm:tracking-[0.06em] max-sm:[&>span[aria-hidden]]:hidden"
+        />
       </div>
 
       {/* Media stage */}
-      <div className={cn('relative', compact ? 'px-3 pt-1' : 'px-4 pt-2')}>
+      <div className={cn('relative', compact ? 'px-3 pt-1' : 'px-4 pt-2 max-sm:px-3 max-sm:pt-1')}>
         <motion.div
           className="relative aspect-[16/10] [transform-style:preserve-3d]"
           style={tiltEnabled ? { rotateX, rotateY, transformPerspective: 900 } : undefined}
@@ -169,7 +198,7 @@ function ProductCardImpl({
             />
           ) : null}
           {product.isNew && !soldOut ? (
-            <span className="absolute left-0 top-1 rounded-sm bg-danger px-1.5 py-1 font-mono text-[10px] font-bold uppercase leading-none tracking-[0.14em] text-white">
+            <span className="absolute left-0 top-1 rounded-sm bg-danger px-1.5 py-1 font-mono text-2xs font-bold uppercase leading-none tracking-[0.14em] text-white">
               New
             </span>
           ) : null}
@@ -185,11 +214,16 @@ function ProductCardImpl({
       </div>
 
       {/* Body */}
-      <div className={cn('flex flex-1 flex-col', compact ? 'gap-2.5 p-3 pt-2' : 'gap-3 p-4 pt-3')}>
+      <div
+        className={cn(
+          'flex flex-1 flex-col',
+          compact ? 'gap-2.5 p-3 pt-2' : 'gap-3 p-4 pt-3 max-sm:gap-2 max-sm:p-3 max-sm:pt-2',
+        )}
+      >
         <Heading
           className={cn(
             'font-display font-bold uppercase tracking-display text-fg',
-            compact ? 'text-[13px]' : 'text-[15px]',
+            compact ? 'text-[13px]' : 'text-[15px] max-sm:text-[13px]',
             // Exactly two 1.25 lines tall: names align across the grid and never peek a 3rd line.
             'line-clamp-2 h-[2.5em] leading-[1.25]',
           )}
@@ -203,7 +237,7 @@ function ProductCardImpl({
               'focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-ring',
             )}
           >
-            {product.name}
+            {withNoBreakHyphens(product.name)}
           </Link>
         </Heading>
 
@@ -211,23 +245,25 @@ function ProductCardImpl({
           {hasReviews ? (
             <StarRating value={product.ratingAvg} count={product.ratingCount} size="sm" />
           ) : (
-            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+            <span className="font-mono text-xs uppercase tracking-[0.12em] text-muted">
               No reviews yet
             </span>
           )}
           {collectorEdition ? (
-            <Chip tone="metal" variant="solid" size="sm" icon={<Award />}>
+            <Chip tone="metal" variant="solid" size="sm" icon={<Award />} className="max-sm:hidden">
               Collector edition
             </Chip>
           ) : null}
         </div>
 
-        <CollectorMeta product={product} />
+        <CollectorMeta product={product} className="max-sm:hidden" />
 
+        {/* Phones: price block, then a full-width CART row; the ♡ is pinned to the card's
+            top-right corner (positioned against the article, so this row must stay static). */}
         <div
           className={cn(
-            'mt-auto flex items-end justify-between gap-3 border-t border-line',
-            compact ? 'pt-2.5' : 'pt-3',
+            'mt-auto flex items-end justify-between gap-3 border-t border-line max-sm:flex-col max-sm:items-stretch max-sm:gap-2.5',
+            compact ? 'pt-2.5' : 'pt-3 max-sm:pt-2.5',
           )}
         >
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -238,9 +274,18 @@ function ProductCardImpl({
               size={compact ? 'sm' : 'md'}
             />
           </div>
-          <div className="relative z-10 flex shrink-0 items-center gap-2">
-            <AddToCartButton product={product} size="sm" />
-            <WishlistButton product={product} size="sm" />
+          <div className="relative z-10 flex shrink-0 items-center gap-2 max-sm:static">
+            <AddToCartButton
+              product={product}
+              size="sm"
+              compactLabel
+              className="max-sm:relative max-sm:z-10 max-sm:flex max-sm:w-full max-sm:[&>*]:w-full"
+            />
+            <WishlistButton
+              product={product}
+              size="sm"
+              className="max-sm:absolute max-sm:right-2 max-sm:top-2 max-sm:z-10 max-sm:bg-card/80 max-sm:backdrop-blur-sm"
+            />
           </div>
         </div>
       </div>

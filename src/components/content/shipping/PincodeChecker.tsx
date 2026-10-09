@@ -82,7 +82,8 @@ export function PincodeChecker({ className }: PincodeCheckerProps) {
           }
         >
           {(field) => (
-            <div className="flex gap-2">
+            /* Below 360px the CHECK button drops under the field so the PIN stays readable (CA-11). */
+            <div className="flex gap-2 max-[359px]:flex-col">
               <Input
                 ref={inputRef}
                 id={field.id}
@@ -101,7 +102,12 @@ export function PincodeChecker({ className }: PincodeCheckerProps) {
                 containerClassName="min-w-0 flex-1"
                 className="font-mono tracking-[0.2em]"
               />
-              <Button type="submit" variant="secondary" leftIcon={<Search />} className="shrink-0">
+              <Button
+                type="submit"
+                variant="secondary"
+                leftIcon={<Search />}
+                className="shrink-0 max-[359px]:w-full"
+              >
                 Check
               </Button>
             </div>

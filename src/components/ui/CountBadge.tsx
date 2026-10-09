@@ -27,8 +27,8 @@ const TONES: Readonly<Record<CountBadgeTone, string>> = {
 };
 
 const SIZES = {
-  sm: 'h-4 min-w-4 px-1 text-[9px]',
-  md: 'h-5 min-w-5 px-1.5 text-[10px]',
+  sm: 'h-4 min-w-4 px-1 text-2xs leading-none',
+  md: 'h-5 min-w-5 px-1.5 text-2xs leading-none',
 } as const;
 
 /** Formats a badge count: `7`, `99+`. */

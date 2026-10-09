@@ -110,8 +110,6 @@ export interface Toast extends Required<Pick<ToastInput, 'title' | 'variant' | '
   createdAt: number;
 }
 
-export type SoundName = 'rev' | 'click' | 'start';
-
 export type AuthStatus = 'loading' | 'signed-in' | 'signed-out';
 
 export interface SignInPromptState {

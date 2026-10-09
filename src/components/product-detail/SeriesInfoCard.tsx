@@ -77,7 +77,7 @@ function GarageProgress({ series }: { series: Pick<Series, 'id' | 'carIds' | 'na
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="hud text-[10px] text-muted">Your garage</p>
+        <p className="hud text-xs text-muted">Your garage</p>
         <p className="font-mono text-xs font-bold tabular-nums text-fg">
           {formatNumber(completion.owned)}/{formatNumber(completion.total)} owned
         </p>
@@ -146,7 +146,7 @@ export function SeriesInfoCard({ product, className }: SeriesInfoCardProps) {
       >
         <span aria-hidden="true" className="racing-stripe" />
         <div className="flex flex-col gap-2">
-          <p className="hud flex items-center gap-2 text-[10px] text-muted">
+          <p className="hud flex items-center gap-2 text-xs text-muted">
             <Layers aria-hidden="true" className="h-3.5 w-3.5 text-accent-ink" />
             Collection file
           </p>

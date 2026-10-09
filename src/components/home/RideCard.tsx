@@ -107,7 +107,7 @@ export const RideCard = memo(function RideCard({
         </span>
 
         <div className="relative flex items-center justify-between gap-2 px-4 pt-4">
-          <span aria-hidden="true" className="hud text-[10px] text-muted">
+          <span aria-hidden="true" className="hud text-2xs text-muted">
             Bay {bay}
           </span>
           <span

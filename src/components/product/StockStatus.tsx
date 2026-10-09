@@ -25,7 +25,8 @@ const DOT_TONES: Readonly<Record<StockStatusValue, string>> = {
 };
 
 const SIZES: Readonly<Record<StockStatusSize, { text: string; dot: string; gap: string }>> = {
-  sm: { text: 'text-[10px]', dot: 'h-2 w-2', gap: 'gap-1.5' },
+  // 12px on phones (own row); from sm it shares a row with + CART, so 11px with tighter tracking.
+  sm: { text: 'text-xs sm:text-2xs sm:tracking-[0.1em]', dot: 'h-2 w-2', gap: 'gap-1.5' },
   md: { text: 'text-xs', dot: 'h-2.5 w-2.5', gap: 'gap-2' },
 };
 

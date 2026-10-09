@@ -48,7 +48,7 @@ export function RecentSearches({ onPick, className }: RecentSearchesProps) {
             {recent.map((query, index) => (
               <li
                 key={query}
-                className="group inline-flex h-9 max-w-full items-center rounded border border-line bg-card/60 transition-colors duration-150 hover:border-fg/40"
+                className="group inline-flex h-9 max-w-full items-center rounded border border-line bg-card/60 transition-colors duration-150 hover:border-fg/40 touch:h-11"
               >
                 <Link
                   to={searchPath(query)}
@@ -68,7 +68,7 @@ export function RecentSearches({ onPick, className }: RecentSearchesProps) {
                   }}
                   aria-label={`Remove “${query}” from recent searches`}
                   title="Remove"
-                  className="mr-1 inline-grid h-7 w-7 shrink-0 place-items-center rounded-sm text-muted transition-[color,background-color] hover:bg-fg/10 hover:text-fg active:scale-90"
+                  className="mr-1 inline-grid h-7 w-7 shrink-0 place-items-center rounded-sm text-muted transition-[color,background-color] hover:bg-fg/10 hover:text-fg active:scale-90 touch:mr-0 touch:h-11 touch:w-11"
                 >
                   <X aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
@@ -81,7 +81,7 @@ export function RecentSearches({ onPick, className }: RecentSearchesProps) {
               pendingFocusRef.current = 0;
               clearRecent();
             }}
-            className="inline-flex min-h-8 items-center self-start rounded-sm font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70"
+            className="inline-flex min-h-8 items-center self-start rounded-sm font-mono text-xs font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70 touch:min-h-11"
           >
             Clear history
           </button>

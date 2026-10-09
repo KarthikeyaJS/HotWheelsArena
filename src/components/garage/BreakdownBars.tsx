@@ -21,7 +21,7 @@ export function BreakdownBars({ rows, label, toneOf, className }: BreakdownBarsP
       {rows.map((row) => (
         <li key={row.key} className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="hud text-[11px] text-fg">{row.label}</span>
+            <span className="hud text-xs text-fg">{row.label}</span>
             <span className="font-mono text-xs tabular-nums text-muted">
               <span className="font-bold text-fg">{formatNumber(row.count)}</span>
               <span aria-hidden="true"> · </span>

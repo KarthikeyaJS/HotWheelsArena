@@ -3,7 +3,6 @@ import { Check, Plus, ShoppingCart } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MAX_QTY_PER_ITEM } from '@shared/commerce';
 import { Button, type ButtonSize, type ButtonVariant } from '@/components/ui';
-import { useSound } from '@/hooks/useSound';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
 import { isSoldOut, toCartItem } from '@/lib/product';
@@ -22,6 +21,11 @@ export interface AddToCartButtonProps {
   fullWidth?: boolean;
   /** Idle label (default `Cart`, rendered as `+ CART`). */
   label?: ReactNode;
+  /**
+   * Below sm (640px), use short state labels ("In cart ×2", "Max ×3") and tighter padding so
+   * the button fits a 2-up phone card. The accessible name is unchanged.
+   */
+  compactLabel?: boolean;
   className?: string;
   /** Called after every add with the cart result. */
   onAdded?: (result: AddToCartResult) => void;
@@ -32,7 +36,7 @@ const ADDED_FLASH_MS = 1400;
 
 /**
  * `+ CART` for a product. Adds through the Pit Stop cart store (`toCartItem`), toasts
- * "Added to your pit stop", plays the optional click sound and a 1–2px engine shake.
+ * "Added to your pit stop" and runs a 1–2px engine shake.
  * States: idle → ADDED (flash) → IN PIT STOP ×n (still adds +1) → MAX IN CART (disabled);
  * SOLD OUT is disabled.
  */
@@ -43,11 +47,11 @@ export function AddToCartButton({
   variant = 'primary',
   fullWidth = false,
   label = 'Cart',
+  compactLabel = false,
   className,
   onAdded,
 }: AddToCartButtonProps) {
   const inCartQty = useCartQty(product.id);
-  const playSound = useSound();
   const { controls, variants, shake } = useEngineShake();
   const [justAdded, setJustAdded] = useState(false);
   const flashTimer = useRef<number | null>(null);
@@ -92,7 +96,6 @@ export function AddToCartButton({
       toast.success('Added to your pit stop', product.name);
     }
 
-    playSound('click');
     shake();
     setJustAdded(true);
     if (flashTimer.current !== null) window.clearTimeout(flashTimer.current);
@@ -117,7 +120,19 @@ export function AddToCartButton({
     accessibleName = `Added – ${product.name} is in your pit stop (${inCartQty})`;
     icon = <Check />;
   } else if (atMax) {
-    content = 'Max in cart';
+    content = compactLabel ? (
+      <>
+        <span className="max-sm:hidden">Max in cart</span>
+        <span className="sm:hidden">
+          Max{' '}
+          <span className="font-mono tabular-nums tracking-normal" aria-hidden="true">
+            ×{inCartQty}
+          </span>
+        </span>
+      </>
+    ) : (
+      'Max in cart'
+    );
     accessibleName = stockLimited
       ? `Max in cart – ${inCartQty} × ${product.name}, every one in stock`
       : `Max in cart – ${inCartQty} × ${product.name} is the limit per collector`;
@@ -126,7 +141,14 @@ export function AddToCartButton({
   } else if (inCart) {
     content = (
       <>
-        In pit stop{' '}
+        {compactLabel ? (
+          <>
+            <span className="max-sm:hidden">In pit stop</span>
+            <span className="sm:hidden">In cart</span>
+          </>
+        ) : (
+          'In pit stop'
+        )}{' '}
         <span className="font-mono tabular-nums tracking-normal" aria-hidden="true">
           ×{inCartQty}
         </span>
@@ -159,7 +181,10 @@ export function AddToCartButton({
         aria-label={accessibleName}
         data-state={soldOut ? 'sold-out' : atMax ? 'max' : inCart ? 'in-cart' : 'idle'}
         onClick={handleClick}
-        className={cn(justAdded && resolvedVariant !== 'primary' && 'text-success')}
+        className={cn(
+          justAdded && resolvedVariant !== 'primary' && 'text-success',
+          compactLabel && 'max-sm:px-2',
+        )}
       >
         {content}
       </Button>

@@ -26,7 +26,7 @@ export interface IconButtonProps extends Omit<
   variant?: IconButtonVariant;
   size?: IconButtonSize;
   loading?: boolean;
-  /** Toggle state → `aria-pressed` + active styling (wishlist heart, sound toggle…). */
+  /** Toggle state → `aria-pressed` + active styling (wishlist heart…). */
   pressed?: boolean;
   /** Count overlay (hidden at 0). The count is appended to the accessible name. */
   badge?: number;
@@ -69,10 +69,14 @@ const PRESSED: Readonly<Record<IconButtonVariant, string>> = {
   danger: 'bg-danger/10',
 };
 
+/**
+ * On touch screens every size gets a ≥ 44×44 hit area through an invisible `::after` (the
+ * visible box keeps its size, so dense rows don't reflow). Keep ≥ 8px between neighbours.
+ */
 const SIZES: Readonly<Record<IconButtonSize, string>> = {
-  xs: 'h-7 w-7 [&_svg]:h-3.5 [&_svg]:w-3.5',
-  sm: 'h-9 w-9 [&_svg]:h-4 [&_svg]:w-4',
-  md: 'h-10 w-10 [&_svg]:h-[18px] [&_svg]:w-[18px]',
+  xs: 'h-7 w-7 [&_svg]:h-3.5 [&_svg]:w-3.5 touch:after:absolute touch:after:-inset-2',
+  sm: 'h-9 w-9 [&_svg]:h-4 [&_svg]:w-4 touch:after:absolute touch:after:-inset-1',
+  md: 'h-10 w-10 [&_svg]:h-[18px] [&_svg]:w-[18px] touch:after:absolute touch:after:-inset-0.5',
   lg: 'h-12 w-12 [&_svg]:h-5 [&_svg]:w-5',
 };
 

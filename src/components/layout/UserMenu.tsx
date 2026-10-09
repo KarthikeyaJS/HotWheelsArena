@@ -226,7 +226,7 @@ export function UserMenu({ className }: UserMenuProps) {
           {level ? (
             <span
               aria-hidden="true"
-              className="absolute -bottom-1 -right-1.5 rounded-sm bg-accent px-1 font-mono text-[9px] font-bold leading-[14px] text-on-accent shadow-sm"
+              className="absolute -bottom-1 -right-1.5 rounded-sm bg-accent px-1 font-mono text-2xs font-bold leading-[14px] text-on-accent shadow-sm"
             >
               {padNumber(level)}
             </span>
@@ -242,7 +242,9 @@ export function UserMenu({ className }: UserMenuProps) {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-overlay mt-2 w-72 animate-fade-in overflow-hidden rounded-xl border border-line bg-surface shadow-card-hover">
+        // Capped to the space under the sticky header and scrollable, so every item stays
+        // reachable on landscape phones (the panel lives inside the header; page scroll can't reveal it).
+        <div className="absolute right-0 top-full z-overlay mt-2 max-h-[calc(100dvh-var(--header-height)-1rem)] w-72 animate-fade-in overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface shadow-card-hover">
           <span aria-hidden="true" className="racing-stripe is-active" />
           <div className="flex items-center gap-3 border-b border-line px-4 pb-4 pt-5">
             <UserAvatar name={displayName} photoURL={photoURL} size="lg" />
@@ -260,7 +262,7 @@ export function UserMenu({ className }: UserMenuProps) {
                 </span>
               </div>
               <XpBar xp={profile.xp} size="sm" showLabels={false} />
-              <p className="hud text-[10px] text-muted">{xpCaption}</p>
+              <p className="hud text-xs text-muted">{xpCaption}</p>
             </div>
           ) : null}
           <div

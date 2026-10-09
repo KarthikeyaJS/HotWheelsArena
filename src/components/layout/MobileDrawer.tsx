@@ -10,22 +10,22 @@ import {
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
-import { LevelBadge } from '@/components/gamification/LevelBadge';
-import { Button } from '@/components/ui/Button';
 import { CountBadge } from '@/components/ui/CountBadge';
 import { Drawer } from '@/components/ui/Drawer';
+import { IconButton } from '@/components/ui/IconButton';
+import { levelTitle } from '@/config/gamification';
 import { NAV_LINKS, isNavLinkActive } from '@/config/nav';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/cn';
+import { padNumber } from '@/lib/format';
 import { useCartCount } from '@/store/cartStore';
 import { useWishlistCount } from '@/store/garageStore';
 import { useUiStore } from '@/store/uiStore';
 import { Logo } from './Logo';
 import { ScanlinesToggle } from './ScanlinesToggle';
 import { SearchButton } from './SearchButton';
-import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { UserAvatar } from './UserAvatar';
 
@@ -38,13 +38,13 @@ interface PitLink {
 }
 
 function SectionLabel({ children }: { children: string }) {
-  return <p className="hud mb-2 mt-6 px-3 text-[10px] text-muted">{children}</p>;
+  return <p className="hud mb-2 mt-6 px-3 text-2xs text-muted">{children}</p>;
 }
 
 /**
  * Slide-in navigation for < lg screens (`uiStore.mobileNavOpen`). Built on the ui-kit `Drawer`
  * (focus trap, Esc, scroll lock, focus return). Contains search, primary links, pit links with
- * counts, theme / sound / scanlines settings and account actions. Closes on navigation and
+ * counts, theme / scanlines settings and account actions. Closes on navigation and
  * when the viewport grows to desktop.
  */
 export function MobileDrawer() {
@@ -88,27 +88,34 @@ export function MobileDrawer() {
 
   const footer =
     status === 'loading' ? null : user ? (
+      // One compact row (≈ 80px with the safe-area padding): the name gets the full middle
+      // column and the level reads on one line, so nothing wraps or truncates at 320px.
       <div className="flex items-center gap-3 pb-1">
         <UserAvatar name={displayName} photoURL={profile?.photoURL ?? user.photoURL} size="md" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-fg">{displayName}</p>
           {profile ? (
-            <LevelBadge level={profile.level} size="sm" showTitle className="mt-1" />
+            <p className="hud mt-0.5 truncate text-xs text-accent-ink">
+              Lvl {padNumber(profile.level)}
+              <span aria-hidden="true" className="mx-1.5 text-muted">
+                ·
+              </span>
+              {levelTitle(profile.level)}
+            </p>
           ) : (
             <p className="truncate text-xs text-muted">{user.email}</p>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          leftIcon={<LogOut />}
+        <IconButton
+          label="Sign out"
+          icon={<LogOut />}
+          variant="outline"
           onClick={() => {
             close();
             void signOut();
           }}
-        >
-          Sign out
-        </Button>
+          className="text-danger-ink"
+        />
       </div>
     ) : (
       <div className="space-y-2 pb-1">
@@ -212,7 +219,6 @@ export function MobileDrawer() {
       <SectionLabel>Garage settings</SectionLabel>
       <div className="space-y-0.5">
         <ThemeToggle variant="row" />
-        <SoundToggle variant="row" />
         <ScanlinesToggle variant="row" />
       </div>
     </Drawer>

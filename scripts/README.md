@@ -11,7 +11,6 @@ because tsx does not resolve the `@shared` alias.
 | `set-admin.ts`        | `npm run set-admin`                       | Grants or revokes the `admin` custom claim for a user                                             |
 | `generate-images.ts`  | `npm run images` / `npm run images:check` | Generates every SVG in `public/placeholders/`, plus the favicon and social card                   |
 | `rasterize-images.ts` | —                                         | Renders `og-image.png` and `apple-touch-icon.png` from their SVGs                                 |
-| `generate-sounds.mjs` | `npm run sounds`                          | Generates the engine sound effects in `public/sounds/`                                            |
 | `smoke-e2e.mjs`       | `npm run smoke`                           | End-to-end smoke test of the Cloud Functions, rules and seed on the Emulator Suite (see below)    |
 | `dev/snap.mjs`        | `npm run snap`                            | Playwright screenshot of a route (dev server) + console/page errors and 375px overflow (`--help`) |
 
@@ -210,13 +209,6 @@ cd - && npx tsx scripts/rasterize-images.ts --resvg ../hwa-rasterize    # or set
 
 This writes `public/og-image.png` (1200×630, used by `og:image` / `twitter:image`) and `public/apple-touch-icon.png` (180×180, with a full ink background).
 Do **not** add `public/site.webmanifest`: the Vite `brandPlugin` generates it from `src/config/brand.ts`.
-
-### Sounds — `generate-sounds.mjs`
-
-`npm run sounds` synthesises `public/sounds/{rev,click,start}.wav` as 16-bit mono 22,050 Hz PCM, each under 70 KB:
-an engine rev (harmonic stack, pitch sweep and exhaust noise, 1.2 s), a mechanical click (80 ms) and an ignition crank settling into idle (1.5 s).
-The script has no dependencies and uses seeded noise, so the output is byte-for-byte reproducible.
-**Every sound is generated from scratch by this script, so the files are royalty-free.** Playback (`useSound`) is off by default and quietly skips missing files.
 
 ### Other public files
 

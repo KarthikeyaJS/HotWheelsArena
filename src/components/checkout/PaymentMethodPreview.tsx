@@ -18,7 +18,7 @@ export interface PaymentMethodPreviewProps {
 
 function TestValuesTag() {
   return (
-    <span className="hud inline-flex items-center gap-1.5 rounded-sm border border-accent/40 bg-accent/10 px-2 py-1 text-[10px] text-accent-ink">
+    <span className="hud inline-flex items-center gap-1.5 rounded-sm border border-accent/40 bg-accent/10 px-2 py-1 text-2xs text-accent-ink">
       <ShieldCheck aria-hidden="true" className="h-3 w-3" />
       Test values
     </span>
@@ -52,7 +52,7 @@ export function PaymentMethodPreview({
             <span className="font-display text-sm font-bold tracking-display">
               {BRAND_SHORT_NAME} <span className="text-accent-ink">TEST</span>
             </span>
-            <span className="hud text-[10px]">DEBIT</span>
+            <span className="hud text-2xs">DEBIT</span>
           </div>
           <span className="mt-4 block h-7 w-10 rounded-md border border-fg/20 bg-[linear-gradient(135deg,rgb(var(--metal)),rgb(var(--metal)/0.45))]" />
           <p className="mt-3 font-mono text-base tracking-[0.14em] sm:text-lg">
@@ -60,13 +60,13 @@ export function PaymentMethodPreview({
           </p>
           <div className="mt-2 flex items-end justify-between gap-3">
             <span className="min-w-0">
-              <span className="hud block text-[9px]">CARD HOLDER</span>
+              <span className="hud block text-2xs">CARD HOLDER</span>
               <span className="block truncate font-mono text-xs uppercase">
                 {holderName || 'COLLECTOR'}
               </span>
             </span>
             <span className="shrink-0 text-right">
-              <span className="hud block text-[9px]">VALID THRU</span>
+              <span className="hud block text-2xs">VALID THRU</span>
               <span className="font-mono text-xs">{TEST_CARD.expiry}</span>
             </span>
           </div>

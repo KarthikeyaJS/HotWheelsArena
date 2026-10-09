@@ -15,7 +15,7 @@ import { env } from '@/config/env';
 import { ROUTES } from '@/config/routes';
 import { buildBreadcrumbJsonLd, useDocumentMeta, useJsonLd } from '@/lib/seo';
 
-const LAST_UPDATED = '2026-10-01';
+const LAST_UPDATED = '2026-10-09';
 
 const BREADCRUMBS = [
   { label: 'Home', to: ROUTES.home },
@@ -182,8 +182,8 @@ export default function PrivacyPage() {
             so it survives a refresh.
           </li>
           <li>
-            <strong>Display preferences</strong> — theme, engine sounds and CRT scanlines in
-            localStorage (<code>hwa-prefs-v1</code>).
+            <strong>Display preferences</strong> — theme and CRT scanlines in localStorage (
+            <code>hwa-prefs-v1</code>).
           </li>
           <li>
             <strong>Recent searches</strong> — in sessionStorage, cleared when you close the tab.

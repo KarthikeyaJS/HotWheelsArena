@@ -46,12 +46,13 @@ export function CheckoutSummary({
         </p>
       </div>
       <div className="flex flex-col gap-5 p-5">
-        <div className="max-h-72 overflow-y-auto pr-1">
+        {/* Inner scroll only in the sticky desktop column; phones list every car in the page flow. */}
+        <div className="lg:max-h-72 lg:overflow-y-auto lg:pr-1">
           <OrderLinesList lines={lines} size="sm" label="Cars in your pit stop" />
         </div>
         <Link
           to={ROUTES.cart}
-          className="inline-flex items-center gap-1.5 self-start rounded-sm text-xs font-semibold text-accent-ink hover:underline"
+          className="relative inline-flex items-center gap-1.5 self-start rounded-sm text-xs font-semibold text-accent-ink hover:underline touch:after:absolute touch:after:-inset-y-3.5 touch:after:inset-x-0"
         >
           <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
           Edit pit stop

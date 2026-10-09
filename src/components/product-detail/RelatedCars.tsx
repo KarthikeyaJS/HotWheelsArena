@@ -92,7 +92,7 @@ export function RelatedCars({ product, limit = 8, className }: RelatedCarsProps)
           <HorizontalRail
             label={`Cars related to ${product.name}`}
             title={
-              <p className="hud text-[10px] text-muted">
+              <p className="hud text-xs text-muted">
                 <span className="text-fg">{padNumber(related.length)}</span>{' '}
                 {related.length === 1 ? 'machine' : 'machines'} · swipe or drag
               </p>

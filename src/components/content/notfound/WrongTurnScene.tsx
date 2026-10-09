@@ -97,7 +97,7 @@ export function WrongTurnScene({ className }: WrongTurnSceneProps) {
           </g>
         </g>
       </svg>
-      <div className="flex items-center justify-between border-t border-line px-4 py-2.5 font-mono text-[10px] uppercase tracking-hud text-muted sm:text-xs">
+      <div className="flex items-center justify-between border-t border-line px-4 py-2.5 font-mono text-2xs uppercase tracking-hud text-muted sm:text-xs">
         <span>GPS · signal lost</span>
         <span className="text-accent-ink">ERR 404</span>
         <span>Lap · DNF</span>

@@ -127,7 +127,7 @@ export function FacetCheckboxList({
           aria-expanded={expanded}
           aria-controls={listId}
           onClick={() => setExpanded((value) => !value)}
-          className="group mt-1 inline-flex min-h-9 items-center gap-1.5 rounded-sm font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70"
+          className="group mt-1 inline-flex min-h-9 items-center gap-1.5 rounded-sm font-mono text-xs font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70 touch:min-h-11"
         >
           {expanded ? 'Show fewer' : `Show all ${options.length} ${noun}`}
           <ChevronDown

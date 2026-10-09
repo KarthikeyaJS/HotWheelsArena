@@ -31,7 +31,7 @@ export function QueryChipLink({
       onClick={onSelect}
       title={title ?? (typeof children === 'string' ? children : undefined)}
       className={cn(
-        'group inline-flex h-9 max-w-full items-center gap-2 rounded border border-line bg-card/60 px-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-fg transition-[color,background-color,border-color,transform] duration-150 ease-race hover:border-accent/60 hover:bg-card-hover hover:text-accent-ink active:scale-[0.97]',
+        'group inline-flex h-9 max-w-full items-center gap-2 rounded border border-line bg-card/60 px-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-fg transition-[color,background-color,border-color,transform] duration-150 ease-race hover:border-accent/60 hover:bg-card-hover hover:text-accent-ink active:scale-[0.97] touch:h-11',
         className,
       )}
     >

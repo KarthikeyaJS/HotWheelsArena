@@ -80,7 +80,8 @@ export function HudPanel({
                 aria-hidden="true"
                 className={cn('h-1.5 w-1.5 shrink-0 rounded-[1px]', DOTS[tone])}
               />
-              <span className="truncate">{title}</span>
+              {/* Phones: wrap instead of cutting "COLLECTION TEL…"; one truncated line from sm. */}
+              <span className="min-w-0 break-words sm:truncate">{title}</span>
             </TitleTag>
           ) : (
             <span />

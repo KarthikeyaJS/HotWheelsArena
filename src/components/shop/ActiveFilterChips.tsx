@@ -119,7 +119,7 @@ export function ActiveFilterChips({
             onClearAll();
             onFocusFallback?.();
           }}
-          className="inline-flex min-h-8 items-center rounded-sm px-1 font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink underline-offset-4 transition-opacity hover:underline hover:opacity-90 active:opacity-70"
+          className="inline-flex min-h-8 items-center rounded-sm px-1 font-mono text-xs font-bold uppercase tracking-hud text-accent-ink underline-offset-4 transition-opacity hover:underline hover:opacity-90 active:opacity-70 touch:min-h-11"
         >
           Clear all
         </button>

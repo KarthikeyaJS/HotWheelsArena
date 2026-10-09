@@ -10,10 +10,13 @@ import { productSelectors, useProducts } from '@/hooks/useProducts';
 import { HomeSection } from './HomeSection';
 import { HOME_SECTION_IDS, sectionHeadingId } from './homeSections';
 
+/** Featured cars shown on phones (< 640px) — must match the `nth-child(n+5)` rule below. */
+const PHONE_FEATURED_COUNT = 4;
+
 function FeaturedSkeleton() {
   return (
     <div
-      className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4"
       aria-hidden="true"
     >
       {[0, 1, 2, 3].map((index) => (
@@ -67,7 +70,29 @@ export function FeaturedSection() {
             />
           }
         >
-          {() => <ProductGrid products={cars} columns={4} label="Featured collection" />}
+          {() => (
+            <>
+              {/* Phones show the first PHONE_FEATURED_COUNT picks (keeps the home page a sensible
+                  length, CA-06) and end on a "see them all" link; tablets/desktop show every pick. */}
+              <ProductGrid
+                products={cars}
+                columns={4}
+                label="Featured collection"
+                className="max-sm:[&>li:nth-child(n+5)]:hidden"
+              />
+              {cars.length > PHONE_FEATURED_COUNT ? (
+                <Button
+                  variant="outline"
+                  to={shopPath()}
+                  rightIcon={<ArrowRight />}
+                  fullWidth
+                  className="mt-6 sm:hidden"
+                >
+                  See all {cars.length} featured cars
+                </Button>
+              ) : null}
+            </>
+          )}
         </DataState>
       </div>
     </HomeSection>

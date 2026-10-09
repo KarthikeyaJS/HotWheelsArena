@@ -22,7 +22,7 @@ const STAR_SIZES: Readonly<Record<StarRatingSize, string>> = {
 };
 
 const TEXT_SIZES: Readonly<Record<StarRatingSize, string>> = {
-  sm: 'text-[11px]',
+  sm: 'text-xs',
   md: 'text-xs',
   lg: 'text-sm',
 };

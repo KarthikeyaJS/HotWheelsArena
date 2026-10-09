@@ -57,7 +57,7 @@ export function ReviewItem({ review, isOwn = false, now, className }: ReviewItem
             <StarRating value={review.rating} size="sm" />
           </div>
         </div>
-        <p className="hud shrink-0 text-[10px] text-muted">
+        <p className="hud shrink-0 text-xs text-muted">
           {review.createdAt != null ? (
             <time
               dateTime={new Date(review.createdAt).toISOString()}

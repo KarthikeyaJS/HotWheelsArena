@@ -23,7 +23,6 @@ const productsState: QueryState<Product[]> = {
   isLoading: false,
   isError: false,
 };
-const playSound = vi.fn();
 
 vi.mock('@/hooks/useCategories', () => ({
   useCategories: () => ({ ...categoriesState, error: null, refetch: vi.fn() }),
@@ -31,7 +30,6 @@ vi.mock('@/hooks/useCategories', () => ({
 vi.mock('@/hooks/useProducts', () => ({
   useProducts: () => ({ ...productsState, error: null, refetch: vi.fn() }),
 }));
-vi.mock('@/hooks/useSound', () => ({ useSound: () => playSound }));
 
 function LocationProbe() {
   const location = useLocation();
@@ -67,7 +65,6 @@ beforeEach(() => {
   categoriesState.isError = false;
   productsState.data = HOME_PRODUCTS;
   productsState.isLoading = false;
-  playSound.mockReset();
 });
 
 afterEach(() => {
@@ -129,7 +126,6 @@ describe('ChooseYourRide', () => {
     const sports = cardLink('sports');
     expect(sports).toHaveFocus();
     expect(sports).toHaveAttribute('data-phase', 'rev');
-    expect(playSound).toHaveBeenCalledWith('rev');
 
     await waitFor(() => expect(sports).toHaveAttribute('data-phase', 'lights'));
     await waitFor(() => expect(sports).toHaveAttribute('data-phase', 'expanded'));
@@ -166,7 +162,6 @@ describe('ChooseYourRide', () => {
     const special = cardLink('special');
     fireEvent.focus(special);
     expect(special).toHaveAttribute('data-phase', 'lights');
-    expect(playSound).not.toHaveBeenCalled();
     act(() => {
       vi.advanceTimersByTime(REV_TIMINGS.expand + 50);
     });

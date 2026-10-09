@@ -94,8 +94,10 @@ export function BadgeUnlockModal({
       }
     >
       {badge ? (
-        <div key={badge.id} className="flex flex-col items-center pt-2 text-center">
-          <div className="relative grid h-44 w-44 place-items-center">
+        <div key={badge.id} className="flex flex-col items-center pt-2 text-center short:pt-0">
+          {/* Short (landscape-phone) viewports: the art shrinks to ~64% (same proportions, the
+              negative margin takes back the saved height) so the actions stay in view. */}
+          <div className="relative grid h-44 w-44 place-items-center short:-my-8 short:scale-[0.64]">
             <div
               aria-hidden="true"
               className="absolute inset-6 rounded-full bg-[radial-gradient(circle,rgb(var(--highlight)/0.35)_0%,transparent_70%)]"

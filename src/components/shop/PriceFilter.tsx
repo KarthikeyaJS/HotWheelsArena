@@ -55,7 +55,7 @@ export function PriceFilter({
             // "Reset price" disappears with the filter: hand focus to the minimum-price thumb.
             rootRef.current?.querySelector<HTMLElement>('[role="slider"]')?.focus();
           }}
-          className="inline-flex min-h-8 items-center gap-1.5 self-start rounded-sm font-mono text-[11px] font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70"
+          className="inline-flex min-h-8 items-center gap-1.5 self-start rounded-sm font-mono text-xs font-bold uppercase tracking-hud text-accent-ink transition-opacity hover:opacity-80 active:opacity-70 touch:min-h-11"
         >
           <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" />
           Reset price

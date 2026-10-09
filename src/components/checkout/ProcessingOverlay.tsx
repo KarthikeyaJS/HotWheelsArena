@@ -116,7 +116,7 @@ function OverlayPanel({
             }
           />
         </div>
-        <p className="hud text-[10px] text-muted">
+        <p className="hud text-xs text-muted">
           TEST MODE · NO REAL PAYMENT · PLEASE KEEP THIS TAB OPEN
         </p>
       </div>

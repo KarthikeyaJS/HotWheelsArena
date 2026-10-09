@@ -55,9 +55,11 @@ const SIDE_VARIANTS: Readonly<Record<DrawerSide, Variants>> = {
   },
 };
 
+/** Side panels clear the notch / status bar (viewport-fit=cover); bottom footers use .safe-bottom. */
 const SIDE_CLASSES: Readonly<Record<DrawerSide, string>> = {
-  right: 'inset-y-0 right-0 h-full w-[calc(100%-2.5rem)] border-l sm:w-full',
-  left: 'inset-y-0 left-0 h-full w-[calc(100%-2.5rem)] border-r sm:w-full',
+  right:
+    'inset-y-0 right-0 h-full w-[calc(100%-2.5rem)] border-l pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)] sm:w-full',
+  left: 'inset-y-0 left-0 h-full w-[calc(100%-2.5rem)] border-r pl-[env(safe-area-inset-left)] pt-[env(safe-area-inset-top)] sm:w-full',
   bottom: 'inset-x-0 bottom-0 w-full rounded-t-2xl border-t',
 };
 
@@ -72,9 +74,11 @@ const SIZE_CLASSES: Readonly<Record<DrawerSide, Readonly<Record<DrawerSize, stri
   },
 };
 
+/** Side drawers carry a short double stripe at the top of the open edge (a full-height one read
+ * as a broken bar); bottom sheets get the usual top stripe. */
 const STRIPE_CLASSES: Readonly<Record<DrawerSide, string>> = {
-  right: 'racing-stripe racing-stripe-left is-active',
-  left: 'racing-stripe racing-stripe-left is-active left-auto right-0',
+  right: 'racing-stripe racing-stripe-left is-active bottom-auto h-28',
+  left: 'racing-stripe racing-stripe-left is-active bottom-auto left-auto right-0 h-28',
   bottom: 'racing-stripe is-active',
 };
 
@@ -139,6 +143,15 @@ function DrawerContent({
         )}
       >
         <span aria-hidden="true" className={STRIPE_CLASSES[side]} />
+        {/* Short (landscape-phone) viewports: a side panel's header, body and footer scroll as one,
+            so the content never shrinks to a sliver between fixed chrome. Bottom sheets keep their
+            pinned footer (it holds the primary action, e.g. "Show results"). */}
+        <div
+          className={cn(
+            'flex min-h-0 flex-1 flex-col',
+            side !== 'bottom' && 'short:overflow-y-auto short:overscroll-contain',
+          )}
+        >
         <OverlayHeader
           titleId={titleId}
           descriptionId={descriptionId}
@@ -148,11 +161,12 @@ function DrawerContent({
           onClose={onClose}
           hideCloseButton={hideCloseButton}
           closeLabel={closeLabel}
-          className="shrink-0 border-b border-line px-5 py-4"
+          className="shrink-0 border-b border-line px-5 py-4 short:py-3"
         />
         <div
           className={cn(
             'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5',
+            side !== 'bottom' && 'short:flex-none short:overflow-visible',
             bodyClassName,
           )}
         >
@@ -163,6 +177,7 @@ function DrawerContent({
             {footer}
           </div>
         ) : null}
+        </div>
       </motion.div>
     </div>
   );

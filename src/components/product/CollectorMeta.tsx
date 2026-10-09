@@ -48,7 +48,7 @@ export function CollectorMeta({
       >
         {items.map((item) => (
           <div key={item.label} className="flex flex-col gap-1 bg-card px-3 py-2.5">
-            <dt className="hud text-[10px] text-muted">{item.label}</dt>
+            <dt className="hud text-2xs text-muted">{item.label}</dt>
             <dd className="truncate font-mono text-sm font-bold uppercase text-fg">{item.value}</dd>
           </div>
         ))}
@@ -59,7 +59,7 @@ export function CollectorMeta({
   return (
     <dl
       className={cn(
-        'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] font-medium uppercase leading-none tracking-[0.12em] text-muted',
+        'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs font-medium uppercase leading-none tracking-[0.12em] text-muted',
         className,
       )}
     >

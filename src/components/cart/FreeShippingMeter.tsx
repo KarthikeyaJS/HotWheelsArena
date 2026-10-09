@@ -129,7 +129,7 @@ export function FreeShippingMeter({ totals, threshold, className }: FreeShipping
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={SPRING_SNAPPY}
-            className="hud absolute right-3 top-3 rounded-sm bg-success px-1.5 py-1 text-[10px] font-bold text-bg"
+            className="hud absolute right-3 top-3 rounded-sm bg-success px-1.5 py-1 text-2xs font-bold text-bg"
           >
             +FREE
           </motion.span>

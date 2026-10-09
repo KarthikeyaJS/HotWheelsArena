@@ -7,14 +7,17 @@ export interface TestModeBannerProps {
   className?: string;
 }
 
-/** Always-visible notice that checkout runs on simulated payments. */
+/**
+ * Always-visible notice that checkout runs on simulated payments. Phones and landscape phones get
+ * a one-line strip (the method details move to the payment step's own copy).
+ */
 export function TestModeBanner({ providerLabel, className }: TestModeBannerProps) {
   return (
     <div
       role="note"
       aria-label="Test mode"
       className={cn(
-        'relative flex items-center gap-3 overflow-hidden rounded-lg border border-accent/45 bg-surface px-4 py-3',
+        'relative flex items-center gap-3 overflow-hidden rounded-lg border border-accent/45 bg-surface px-4 py-2 sm:py-3 sm:short:py-2',
         className,
       )}
     >
@@ -24,7 +27,7 @@ export function TestModeBanner({ providerLabel, className }: TestModeBannerProps
       />
       <span
         aria-hidden="true"
-        className="ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-accent text-on-accent [&_svg]:h-4 [&_svg]:w-4"
+        className="ml-2 grid h-7 w-7 shrink-0 place-items-center rounded-md bg-accent text-on-accent sm:h-8 sm:w-8 sm:short:h-7 sm:short:w-7 [&_svg]:h-4 [&_svg]:w-4"
       >
         <FlaskConical />
       </span>
@@ -34,8 +37,12 @@ export function TestModeBanner({ providerLabel, className }: TestModeBannerProps
           —
         </span>
         <span className="sr-only">: </span>
-        no real payment is taken. Cards, UPI and COD are simulated
-        {providerLabel ? <span className="text-muted"> ({providerLabel})</span> : null}.
+        no real payment is taken
+        <span className="short:hidden max-sm:hidden">
+          . Cards, UPI and COD are simulated
+          {providerLabel ? <span className="text-muted"> ({providerLabel})</span> : null}
+        </span>
+        .
       </p>
     </div>
   );

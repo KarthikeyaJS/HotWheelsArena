@@ -25,7 +25,11 @@ export interface QuantityStepperProps {
 }
 
 const SIZES = {
-  sm: { button: 'h-8 w-8 [&_svg]:h-3.5 [&_svg]:w-3.5', input: 'h-8 w-10 text-sm' },
+  // Touch: 40px controls and a 16px input (no iOS zoom on focus).
+  sm: {
+    button: 'h-8 w-8 touch:h-10 touch:w-10 [&_svg]:h-3.5 [&_svg]:w-3.5',
+    input: 'h-8 w-10 text-sm touch:h-10 touch:w-11 touch:text-base',
+  },
   md: { button: 'h-10 w-10 [&_svg]:h-4 [&_svg]:w-4', input: 'h-10 w-12 text-base' },
 } as const;
 

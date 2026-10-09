@@ -10,7 +10,6 @@ import { useCategories } from '@/hooks/useCategories';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useProducts } from '@/hooks/useProducts';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useSound } from '@/hooks/useSound';
 import { HomeSection } from './HomeSection';
 import { HOME_SECTION_IDS, sectionHeadingId } from './homeSections';
 import { RideCard } from './RideCard';
@@ -41,7 +40,7 @@ function RideSkeleton() {
 
 /**
  * CHOOSE YOUR RIDE — the six classes as parked cars. Hover or keyboard focus: engine rev
- * (1–2px shake + optional rev sound) → headlights glow → the card expands (desktop row).
+ * (1–2px shake) → headlights glow → the card expands (desktop row).
  * Click / Enter opens the class in the shop. Categories come from Firestore (ordered by
  * `order`) with `CATEGORY_DISPLAY` as the fallback; counts are live from the catalogue.
  */
@@ -50,14 +49,13 @@ export function ChooseYourRide() {
   const products = useProducts();
   const isDesktop = useIsDesktop();
   const reducedMotion = useReducedMotion();
-  const play = useSound();
   const expand = isDesktop && !reducedMotion;
 
   const cards = useMemo(
     () => buildRideCards(categories.data, products.data),
     [categories.data, products.data],
   );
-  const rev = useRevSequence({ expand, reducedMotion, onRev: () => play('rev') });
+  const rev = useRevSequence({ expand, reducedMotion });
   const headingId = sectionHeadingId(HOME_SECTION_IDS.collection);
 
   return (
@@ -74,7 +72,7 @@ export function ChooseYourRide() {
           </Button>
         }
       />
-      <div className="mt-10 lg:mt-12">
+      <div className="mt-8 sm:mt-10 lg:mt-12">
         {/* Category errors fall back to the built-in classes, so only loading is surfaced. */}
         <DataState
           isLoading={categories.isLoading}

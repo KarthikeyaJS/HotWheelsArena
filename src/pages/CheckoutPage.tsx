@@ -207,14 +207,18 @@ export default function CheckoutPage() {
     ) : null;
 
   return (
-    <Container className="py-10 lg:py-14">
+    <Container className="py-6 sm:py-10 sm:short:py-5 lg:py-14">
+      {/* Phones and landscape phones: a smaller h1 and no description, so the first field (or
+          payment card) shows on the first screen. */}
       <SectionHeading
         as="h1"
         eyebrow="CHECKOUT · 3 LAPS TO THE FLAG"
         title="Checkout"
         description="Address, payment, review — then the chequered flag."
+        titleClassName="max-sm:text-2xl sm:short:text-2xl"
+        className="short:[&_h1+p]:hidden max-sm:[&_h1+p]:hidden"
       />
-      <TestModeBanner className="mt-6" providerLabel={provider.label} />
+      <TestModeBanner className="mt-4 sm:mt-6 sm:short:mt-4" providerLabel={provider.label} />
 
       {completed ? (
         <div role="status" className="mt-10 flex items-center gap-3 text-muted">
@@ -226,8 +230,8 @@ export default function CheckoutPage() {
           <EmptyCheckout />
         </div>
       ) : (
-        <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <div className="flex min-w-0 flex-col gap-6 lg:col-span-7 xl:col-span-8">
+        <div className="mt-6 grid gap-8 sm:mt-8 sm:short:mt-6 lg:grid-cols-12 lg:gap-10">
+          <div className="flex min-w-0 flex-col gap-5 sm:gap-6 lg:col-span-7 xl:col-span-8">
             <CheckoutStepper
               current={step}
               disabled={flow.isBusy}
@@ -246,7 +250,10 @@ export default function CheckoutPage() {
             />
 
             <ErrorBoundary label="Checkout step" resetKeys={[step]}>
-              <section aria-labelledby="checkout-step-title" className="flex flex-col gap-6">
+              <section
+                aria-labelledby="checkout-step-title"
+                className="flex flex-col gap-5 sm:gap-6"
+              >
                 <div>
                   <p className="hud text-muted">
                     {meta.lap} <span aria-hidden="true">/ 0{CHECKOUT_STEPS.length}</span>
@@ -258,11 +265,13 @@ export default function CheckoutPage() {
                     id="checkout-step-title"
                     ref={stepHeadingRef}
                     tabIndex={-1}
-                    className="mt-2 text-2xl text-fg focus:outline-none sm:text-3xl"
+                    className="mt-2 text-xl text-fg focus:outline-none sm:text-3xl sm:short:text-xl"
                   >
                     {meta.title}
                   </h2>
-                  <p className="mt-2 text-sm text-muted sm:text-base">{meta.description}</p>
+                  <p className="mt-2 text-sm text-muted short:hidden max-sm:hidden sm:text-base">
+                    {meta.description}
+                  </p>
                 </div>
 
                 {step === 'address' ? (

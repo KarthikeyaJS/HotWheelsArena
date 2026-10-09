@@ -1,6 +1,7 @@
 import { Menu } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { IconButton } from '@/components/ui/IconButton';
+import { MEDIA_QUERIES, useMediaQuery } from '@/hooks/useMediaQuery';
 import { useIsScrolled } from '@/hooks/useScrollProgress';
 import { cn } from '@/lib/cn';
 import { useUiStore } from '@/store/uiStore';
@@ -9,7 +10,6 @@ import { Logo } from './Logo';
 import { NavLinks } from './NavLinks';
 import { ScrollProgress } from './ScrollProgress';
 import { SearchButton } from './SearchButton';
-import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { UserMenu } from './UserMenu';
 import { WishlistNavButton } from './WishlistNavButton';
@@ -18,21 +18,24 @@ import { WishlistNavButton } from './WishlistNavButton';
 const CONDENSE_AFTER = 24;
 
 /**
- * Sticky racing header: frosted glass, condenses from 76px to 60px on scroll, orange
+ * Sticky racing header: frosted glass, condenses from 76px (64px on phones) to 60px on scroll and
+ * is always 56px on short (landscape-phone) viewports; clears the top safe area. Orange
  * scroll-progress line along its bottom edge. Desktop (≥ lg): centre links + search trigger
- * (with the Ctrl/⌘ K hint from xl) + wishlist / cart / theme / sound / account (the CRT
+ * (with the Ctrl/⌘ K hint from xl) + wishlist / cart / theme / account (the CRT
  * scanlines toggle lives in the account menu, drawer and footer). Below lg: hamburger →
  * MobileDrawer.
  */
 export function Navbar() {
-  const condensed = useIsScrolled(CONDENSE_AFTER);
+  const scrolled = useIsScrolled(CONDENSE_AFTER);
+  const short = useMediaQuery(MEDIA_QUERIES.short);
+  const condensed = scrolled || short;
   const mobileNavOpen = useUiStore((state) => state.mobileNavOpen);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
   return (
     <header
       className={cn(
-        'glass sticky top-0 z-header border-b transition-[border-color,box-shadow,background-color] duration-300',
+        'glass pt-safe sticky top-0 z-header border-b transition-[border-color,box-shadow,background-color] duration-300',
         condensed
           ? 'border-line shadow-[0_10px_30px_-20px_rgb(0_0_0/0.55)]'
           : 'border-line/60 dark:border-transparent',
@@ -42,7 +45,8 @@ export function Navbar() {
         <div
           className={cn(
             'flex items-center gap-2 transition-[height] duration-300 ease-race sm:gap-3',
-            condensed ? 'h-[60px]' : 'h-[76px]',
+            condensed ? 'h-[60px]' : 'h-16 sm:h-[76px]',
+            'short:h-14',
           )}
         >
           {/* The left cluster may shrink (and the wordmark text drops to sr-only below 360px)
@@ -72,7 +76,6 @@ export function Navbar() {
               className="mx-1 hidden h-6 w-px bg-line md:block lg:hidden xl:block"
             />
             <ThemeToggle className="hidden md:inline-flex" />
-            <SoundToggle className="hidden md:inline-flex" />
             <UserMenu className="ml-1 hidden sm:flex" />
           </div>
         </div>

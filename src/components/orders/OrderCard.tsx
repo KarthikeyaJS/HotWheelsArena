@@ -66,7 +66,7 @@ export const OrderCard = memo(function OrderCard({
             >
               <CarImage src={item.image} alt={item.name} width={80} height={50} />
               {item.qty > 1 ? (
-                <span className="absolute right-0.5 top-0.5 rounded-sm bg-fg px-1 font-mono text-[10px] font-bold leading-4 text-bg">
+                <span className="absolute right-0.5 top-0.5 rounded-sm bg-fg px-1 font-mono text-xs font-bold leading-4 text-bg">
                   ×{item.qty}
                 </span>
               ) : null}
@@ -78,8 +78,8 @@ export const OrderCard = memo(function OrderCard({
             </li>
           ) : null}
         </ul>
-        <div className="text-right">
-          <p className="hud text-[10px] text-muted">TOTAL</p>
+        <div className="ml-auto text-right">
+          <p className="hud text-2xs text-muted">TOTAL</p>
           <p className="font-mono text-lg font-bold tabular-nums text-fg sm:text-xl">
             {formatINR(order.total)}
           </p>
@@ -90,7 +90,7 @@ export const OrderCard = memo(function OrderCard({
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{paymentMethodLabel(order.paymentMethod)}</span>
           {order.payment.mode === 'test' ? (
-            <span className="hud text-[10px] text-accent-ink">TEST MODE</span>
+            <span className="hud text-2xs text-accent-ink">TEST MODE</span>
           ) : null}
           {order.xpEarned > 0 ? (
             <span className="inline-flex items-center gap-1 text-fg">

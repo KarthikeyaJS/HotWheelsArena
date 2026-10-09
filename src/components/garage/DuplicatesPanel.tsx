@@ -40,7 +40,7 @@ export function DuplicatesPanel({ rows, className }: DuplicatesPanelProps) {
           <p className="font-mono text-2xl font-bold tabular-nums leading-none text-fg">
             {formatNumber(spares)}
           </p>
-          <p className="hud mt-1 text-[10px] text-muted">{spares === 1 ? 'Spare' : 'Spares'}</p>
+          <p className="hud mt-1 text-2xs text-muted">{spares === 1 ? 'Spare' : 'Spares'}</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ export function DuplicatesPanel({ rows, className }: DuplicatesPanelProps) {
               );
             })}
           </ul>
-          <p className="hud mt-3 border-t border-line pt-3 text-[10px] text-muted">
+          <p className="hud mt-3 border-t border-line pt-3 text-xs text-muted">
             {pluralize(rows.length, 'model')} doubled up · spares worth{' '}
             <span className="font-bold text-fg">{formatINR(spareValue)}</span>
           </p>

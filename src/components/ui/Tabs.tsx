@@ -1,5 +1,6 @@
 import { LayoutGroup, motion } from 'framer-motion';
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useScrollFadeEnd } from '@/hooks/useScrollFadeEnd';
 import { SPRING_SNAPPY } from '@/lib/animations';
 import { cn } from '@/lib/cn';
 import { CountBadge } from './CountBadge';
@@ -34,8 +35,8 @@ export interface TabsProps<T extends string = string> {
 }
 
 const SIZES = {
-  underline: { sm: 'h-10 px-3 text-[11px]', md: 'h-12 px-4 text-xs' },
-  pill: { sm: 'h-8 px-3 text-[11px]', md: 'h-9 px-4 text-xs' },
+  underline: { sm: 'h-10 px-3 text-xs touch:h-11', md: 'h-12 px-4 text-xs' },
+  pill: { sm: 'h-8 px-3 text-xs touch:h-11', md: 'h-9 px-4 text-xs touch:h-11' },
 } as const;
 
 /**
@@ -56,6 +57,8 @@ export function Tabs<T extends string = string>({
   className,
 }: TabsProps<T>) {
   const tabRefs = useRef(new Map<string, HTMLButtonElement>());
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const fadeEnd = useScrollFadeEnd(scrollerRef);
   const [focusedId, setFocusedId] = useState<T | null>(null);
   const enabled = items.filter((item) => !item.disabled);
   const selectedEnabled = enabled.find((item) => item.id === value);
@@ -102,7 +105,14 @@ export function Tabs<T extends string = string>({
     <LayoutGroup id={idPrefix}>
       {/* Scroll wrapper with inline-size containment: a long tab row scrolls horizontally
           instead of forcing its min-content width onto grid / flex ancestors. */}
-      <div className={cn('scrollbar-none w-full overflow-x-auto [contain:inline-size]', className)}>
+      <div
+        ref={scrollerRef}
+        className={cn(
+          'scrollbar-none w-full overflow-x-auto overscroll-x-contain [contain:inline-size]',
+          fadeEnd && 'scroll-fade-x',
+          className,
+        )}
+      >
         <div
           role="tablist"
           aria-label={label}

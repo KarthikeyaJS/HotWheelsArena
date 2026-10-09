@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockedLinesNotice } from '@/components/cart/BlockedLinesNotice';
+import { CartCheckoutBar } from '@/components/cart/CartCheckoutBar';
 import { CartLineItem } from '@/components/cart/CartLineItem';
 import { CartSummary } from '@/components/cart/CartSummary';
 import { EmptyCart } from '@/components/cart/EmptyCart';
@@ -144,9 +145,11 @@ export default function CartPage() {
 
   const isEmpty = cart.items.length === 0;
   const unitCount = cart.items.reduce((sum, item) => sum + item.qty, 0);
+  // Same gate as the summary's START ENGINE (CartSummary).
+  const canCheckout = !cart.hasBlockers && cart.lineLimitExcess === 0 && cart.totals.itemCount > 0;
 
   return (
-    <Container className="py-10 lg:py-14">
+    <Container className="py-6 sm:py-10 lg:py-14">
       <SectionHeading
         as="h1"
         eyebrow={
@@ -169,7 +172,7 @@ export default function CartPage() {
       />
 
       {isEmpty ? (
-        <div ref={emptyRegionRef} className="mt-10 flex flex-col gap-4">
+        <div ref={emptyRegionRef} className="mt-8 flex flex-col gap-4 sm:mt-10">
           {rows.map((row) =>
             row.type === 'removed' ? (
               <RemovedLineNotice
@@ -184,7 +187,7 @@ export default function CartPage() {
           <EmptyCart />
         </div>
       ) : (
-        <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="mt-8 grid grid-cols-1 gap-8 sm:mt-10 lg:grid-cols-12 lg:gap-10">
           <section
             aria-labelledby="cart-lines-title"
             className="flex flex-col gap-4 lg:col-span-7 xl:col-span-8"
@@ -238,6 +241,10 @@ export default function CartPage() {
                 ))}
               </ul>
             </ErrorBoundary>
+
+            {canCheckout ? (
+              <CartCheckoutBar totals={cart.totals} isVerifying={cart.isVerifying} />
+            ) : null}
           </section>
 
           <div className="lg:col-span-5 xl:col-span-4">

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, Bell, CheckCircle2, Trophy, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, type FocusEvent, type ReactNode } from 'react';
+import { useIsScrollLocked } from '@/hooks/useLockBodyScroll';
 import { MEDIA_QUERIES, useMediaQuery } from '@/hooks/useMediaQuery';
 import { SPRING_SNAPPY } from '@/lib/animations';
 import { cn } from '@/lib/cn';
@@ -64,13 +65,18 @@ const VARIANT_STYLES: Readonly<Record<ToastVariant, VariantStyle>> = {
  */
 export const SMALL_SCREEN_VISIBLE_TOASTS = 2;
 
+/** Short (landscape-phone, ≤ 500px tall) viewports show one toast at a time. */
+export const SHORT_SCREEN_VISIBLE_TOASTS = 1;
+
 /** Appended to repeat announcements so identical text is read again. */
 const NBSP = String.fromCharCode(160);
 
+/** Both positions clear the safe areas (notch / rounded corners / home bar, viewport-fit=cover). */
 const POSITIONS: Readonly<Record<ToasterPosition, string>> = {
   'bottom-right':
-    'inset-x-3 bottom-3 pb-[env(safe-area-inset-bottom)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[24rem]',
-  'top-center': 'inset-x-3 top-3 sm:left-1/2 sm:right-auto sm:w-[26rem] sm:-translate-x-1/2',
+    'bottom-3 left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:left-auto sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:w-[24rem]',
+  'top-center':
+    'left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))] sm:left-1/2 sm:right-auto sm:w-[26rem] sm:-translate-x-1/2',
 };
 
 /**
@@ -218,7 +224,7 @@ function QueuedNote({ count, className }: { count: number; className?: string })
   return (
     <p
       className={cn(
-        'hud ml-auto w-fit rounded-full border border-line bg-surface/95 px-3 py-1 text-[10px] text-muted shadow-card backdrop-blur',
+        'hud ml-auto w-fit rounded-full border border-line bg-surface/95 px-3 py-1 text-2xs text-muted shadow-card backdrop-blur',
         className,
       )}
     >
@@ -232,11 +238,17 @@ function QueuedNote({ count, className }: { count: number; className?: string })
  * persistent live regions (polite; assertive for errors), auto-dismisses after
  * `toast.duration` (paused while hovered, focused or the tab is hidden) and has a dismiss
  * button per toast. Achievement toasts get the yellow trophy treatment. On phones only the
- * oldest {@link SMALL_SCREEN_VISIBLE_TOASTS} are shown; the rest queue behind a "+N more" note.
+ * oldest {@link SMALL_SCREEN_VISIBLE_TOASTS} are shown ({@link SHORT_SCREEN_VISIBLE_TOASTS} on
+ * landscape phones); the rest queue behind a "+N more" note. While a modal / drawer / palette is
+ * open, toasts are held back so they never cover its actions (only the oldest error shows, at the
+ * top); held toasts are still announced at once and show when the overlay closes.
  */
-export function Toaster({ position = 'bottom-right', className }: ToasterProps) {
+export function Toaster({ position: preferredPosition = 'bottom-right', className }: ToasterProps) {
   const toasts = useToasts();
   const smallScreen = !useMediaQuery(MEDIA_QUERIES.sm);
+  const shortScreen = useMediaQuery(MEDIA_QUERIES.short);
+  const overlayOpen = useIsScrollLocked();
+  const position: ToasterPosition = overlayOpen ? 'top-center' : preferredPosition;
   const dismiss = useToastStore((state) => state.dismiss);
   const [hovered, setHovered] = useState(false);
   const [focusWithin, setFocusWithin] = useState(false);
@@ -380,8 +392,15 @@ export function Toaster({ position = 'bottom-right', className }: ToasterProps) 
   };
 
   // Oldest first, so queued toasts each get their full time once they show.
-  const visible = smallScreen ? toasts.slice(0, SMALL_SCREEN_VISIBLE_TOASTS) : toasts;
-  const queuedCount = toasts.length - visible.length;
+  const visible = overlayOpen
+    ? toasts.filter((item) => item.variant === 'error').slice(0, 1)
+    : shortScreen
+      ? toasts.slice(0, SHORT_SCREEN_VISIBLE_TOASTS)
+      : smallScreen
+        ? toasts.slice(0, SMALL_SCREEN_VISIBLE_TOASTS)
+        : toasts;
+  // No "+N more" note over an open dialog.
+  const queuedCount = overlayOpen ? 0 : toasts.length - visible.length;
   const ordered = position === 'top-center' ? [...visible].reverse() : visible;
   useEffect(() => {
     orderedIdsRef.current = ordered.map((item) => item.id);

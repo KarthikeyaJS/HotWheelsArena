@@ -18,6 +18,9 @@ import { BRAND_NAME, BRAND_PRODUCT_LINE, BRAND_TAGLINE, COUNTRY } from '@/config
 import { ROUTES, garagePath, shopPath } from '@/config/routes';
 import { buildBreadcrumbJsonLd, useDocumentMeta, useJsonLd } from '@/lib/seo';
 
+const PHONE_CTA_CLASS =
+  'w-full max-sm:h-12 max-sm:px-4 max-sm:text-xs max-sm:tracking-[0.08em] sm:w-auto';
+
 const BREADCRUMBS = [
   { label: 'Home', to: ROUTES.home },
   { label: 'About', to: ROUTES.about },
@@ -164,7 +167,7 @@ export default function AboutPage() {
 
       <section
         aria-labelledby="about-cta-title"
-        className="relative isolate overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-card sm:p-10"
+        className="relative isolate overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-10"
       >
         <span aria-hidden="true" className="racing-stripe is-active" />
         <div
@@ -181,11 +184,24 @@ export default function AboutPage() {
               Find your next casting, then park it in your garage.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button to={shopPath()} size="lg" rightIcon={<ArrowRight />}>
-              Explore the collection
+          {/* Phones: stacked, full width and a touch more compact so the long label fits at 320px (CA-05). */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button
+              to={shopPath()}
+              size="lg"
+              rightIcon={<ArrowRight />}
+              className={PHONE_CTA_CLASS}
+            >
+              <span className="max-[359px]:hidden">Explore the collection</span>
+              <span className="min-[360px]:hidden">Explore the cars</span>
             </Button>
-            <Button to={garagePath()} size="lg" variant="secondary" leftIcon={<Warehouse />}>
+            <Button
+              to={garagePath()}
+              size="lg"
+              variant="secondary"
+              leftIcon={<Warehouse />}
+              className={PHONE_CTA_CLASS}
+            >
               My Garage
             </Button>
           </div>

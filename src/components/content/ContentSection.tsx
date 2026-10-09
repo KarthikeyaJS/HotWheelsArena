@@ -55,7 +55,7 @@ export function ContentSection({
           to={{ hash: id }}
           aria-label={`Link to section: ${title}`}
           title="Link to this section"
-          className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md border border-transparent text-muted opacity-70 transition-[color,border-color,opacity] duration-150 hover:border-line hover:text-accent-ink hover:opacity-100 focus-visible:opacity-100 active:scale-95 group-hover/section:opacity-100"
+          className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md border border-transparent text-muted opacity-70 transition-[color,border-color,opacity] duration-150 hover:border-line hover:text-accent-ink hover:opacity-100 focus-visible:opacity-100 active:scale-95 group-hover/section:opacity-100 touch:-mr-2 touch:-mt-1.5 touch:h-11 touch:w-11 touch:opacity-100"
         >
           <Link2 aria-hidden="true" className="h-4 w-4" />
         </Link>

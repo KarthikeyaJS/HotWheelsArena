@@ -2,23 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Parked-car interaction phases:
- * idle → `rev` (engine shake + rev sound) → `lights` (headlights on) → `expanded` (card grows).
+ * idle → `rev` (engine shake) → `lights` (headlights on) → `expanded` (card grows).
  */
 export type RevPhase = 'idle' | 'rev' | 'lights' | 'expanded';
 
 /** Delays (ms) from engage to each phase. */
 export const REV_TIMINGS = { lights: 240, expand: 520 } as const;
 
-/** Minimum gap between two rev sounds while sweeping across cards. */
-const SOUND_COOLDOWN_MS = 380;
-
 export interface RevSequenceOptions {
   /** Allow the final `expanded` phase (desktop row layout without reduced motion). */
   expand: boolean;
   /** Reduced motion: skip the shake and expansion — jump straight to the lights (colour change). */
   reducedMotion: boolean;
-  /** Called when a card starts revving (e.g. play the `rev` sound). */
-  onRev?: () => void;
 }
 
 export interface RevSequence {
@@ -41,16 +36,10 @@ const IDLE: RevState = { id: null, phase: 'idle' };
  * One active card at a time; timers are cleared on every transition and on unmount, so fast
  * sweeps across the row never leave a stale card expanded.
  */
-export function useRevSequence({ expand, reducedMotion, onRev }: RevSequenceOptions): RevSequence {
+export function useRevSequence({ expand, reducedMotion }: RevSequenceOptions): RevSequence {
   const [state, setState] = useState<RevState>(IDLE);
   const stateRef = useRef<RevState>(IDLE);
   const timers = useRef<number[]>([]);
-  const lastSound = useRef(0);
-  const onRevRef = useRef(onRev);
-
-  useEffect(() => {
-    onRevRef.current = onRev;
-  }, [onRev]);
 
   const commit = useCallback((next: RevState) => {
     stateRef.current = next;
@@ -74,11 +63,6 @@ export function useRevSequence({ expand, reducedMotion, onRev }: RevSequenceOpti
         return;
       }
       commit({ id, phase: 'rev' });
-      const now = Date.now();
-      if (now - lastSound.current >= SOUND_COOLDOWN_MS) {
-        lastSound.current = now;
-        onRevRef.current?.();
-      }
       timers.current.push(
         window.setTimeout(() => {
           if (stateRef.current.id === id) commit({ id, phase: 'lights' });

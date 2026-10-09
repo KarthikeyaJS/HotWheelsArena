@@ -238,7 +238,7 @@ export function buildFaqGroups(context: FaqContext): FaqGroup[] {
           id: 'faq-cookies',
           question: 'Do you use tracking cookies?',
           answer: [
-            'No advertising or tracking cookies. Your browser storage keeps only your pit stop (cart) and display preferences such as theme and engine sounds, plus the session that keeps you signed in.',
+            'No advertising or tracking cookies. Your browser storage keeps only your pit stop (cart) and display preferences (theme and CRT scanlines), plus the session that keeps you signed in.',
           ],
           links: [{ label: 'Cookies & storage', to: `${ROUTES.privacy}#cookies` }],
         },

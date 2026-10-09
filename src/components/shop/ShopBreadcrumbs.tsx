@@ -17,7 +17,7 @@ export interface ShopBreadcrumbsProps {
 export function ShopBreadcrumbs({ items, className }: ShopBreadcrumbsProps) {
   return (
     <nav aria-label="Breadcrumb" className={cn('min-w-0', className)}>
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[11px] font-semibold uppercase tracking-hud">
+      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs font-semibold uppercase tracking-hud">
         {items.map((item, index) => {
           const last = index === items.length - 1;
           return (
@@ -25,7 +25,7 @@ export function ShopBreadcrumbs({ items, className }: ShopBreadcrumbsProps) {
               {item.to && !last ? (
                 <Link
                   to={item.to}
-                  className="rounded-sm text-muted transition-colors duration-150 hover:text-accent-ink active:opacity-80"
+                  className="relative rounded-sm text-muted transition-colors duration-150 hover:text-accent-ink active:opacity-80 touch:after:absolute touch:after:-inset-x-1 touch:after:-inset-y-3"
                 >
                   {item.label}
                 </Link>

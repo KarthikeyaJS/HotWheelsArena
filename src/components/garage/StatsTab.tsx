@@ -178,7 +178,7 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                               carName(car)
                             )}
                           </p>
-                          <p className="hud mt-0.5 text-[10px] text-muted">
+                          <p className="hud mt-0.5 text-xs text-muted">
                             {car.entry.source === 'purchase' ? 'Purchased' : 'Manual'}
                             {car.entry.addedAt != null ? (
                               <>
@@ -232,7 +232,7 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                           className="min-w-0 truncate rounded-sm text-sm font-semibold text-fg transition-colors hover:text-accent-ink"
                         >
                           {row.series.name}
-                          <span className="hud ml-2 text-[10px] text-muted">{row.series.year}</span>
+                          <span className="hud ml-2 text-xs text-muted">{row.series.year}</span>
                         </Link>
                         <span className="flex shrink-0 items-center gap-1.5 font-mono text-xs font-bold tabular-nums text-fg">
                           {row.complete ? (

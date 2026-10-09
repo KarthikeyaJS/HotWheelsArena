@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Move3d } from 'lucide-react';
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { CarImage } from '@/components/product';
 import { IconButton } from '@/components/ui';
 import { DURATION } from '@/lib/animations';
+import { useScrollFadeEnd } from '@/hooks/useScrollFadeEnd';
 import { cn } from '@/lib/cn';
 import { padNumber } from '@/lib/format';
 import { isSoldOut } from '@/lib/product';
@@ -21,6 +22,8 @@ export interface ProductMediaProps {
 
 const THUMB_WIDTH = 160;
 const THUMB_HEIGHT = 100;
+/** Horizontal travel (px) that turns a touch drag on the stage into a swipe to the next/previous view. */
+const SWIPE_THRESHOLD = 40;
 
 /**
  * Product gallery: a large showroom stage (LCP image, spring 3D tilt that follows the mouse —
@@ -37,6 +40,9 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
   const [activeIndex, setActiveIndex] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const thumbsRef = useRef<HTMLDivElement>(null);
+  const thumbsFadeEnd = useScrollFadeEnd(thumbsRef);
+  const swipeRef = useRef<{ id: number; x: number; y: number } | null>(null);
 
   const index = Math.min(activeIndex, items.length - 1);
   const active = items[index] ?? items[0];
@@ -51,6 +57,25 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
     setActiveIndex(target);
     if (options.announce) setAnnouncement(items[target]?.label ?? '');
     if (options.focus) tabRefs.current[target]?.focus();
+  };
+
+  /* Touch / pen swipe on the stage (CA-08). `touch-pan-y` keeps vertical page scrolling native
+     while horizontal drags reach us; mouse users keep the tilt + arrows. */
+  const handleSwipeStart = (event: PointerEvent<HTMLDivElement>): void => {
+    if (!hasMany || event.pointerType === 'mouse') return;
+    swipeRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  };
+  const handleSwipeEnd = (event: PointerEvent<HTMLDivElement>): void => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    if (!start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    select(index + (dx < 0 ? 1 : -1), { announce: true });
+  };
+  const cancelSwipe = (): void => {
+    swipeRef.current = null;
   };
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {
@@ -77,7 +102,13 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
           aria-labelledby={hasMany ? tabIdFor(index) : undefined}
           onPointerMove={tilt.enabled ? tilt.onPointerMove : undefined}
           onPointerLeave={tilt.enabled ? tilt.onPointerLeave : undefined}
-          className="group/stage relative isolate overflow-hidden rounded-2xl border border-line bg-card shadow-card"
+          onPointerDown={hasMany ? handleSwipeStart : undefined}
+          onPointerUp={hasMany ? handleSwipeEnd : undefined}
+          onPointerCancel={hasMany ? cancelSwipe : undefined}
+          className={cn(
+            'group/stage relative isolate overflow-hidden rounded-2xl border border-line bg-card shadow-card',
+            hasMany && 'touch-pan-y',
+          )}
         >
           {/* Showroom: floor grid, spotlight, racing stripe */}
           <span
@@ -131,14 +162,14 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-4 top-4 flex items-start justify-between gap-3 sm:inset-x-5 sm:top-5"
           >
-            <span className="hud text-[10px] text-muted">
+            <span className="hud text-2xs text-muted">
               VIEW{' '}
               <span className="text-fg">
                 {padNumber(index + 1)}/{padNumber(items.length)}
               </span>
             </span>
             {product.isNew && !soldOut ? (
-              <span className="rounded-sm bg-danger px-1.5 py-1 font-mono text-[10px] font-bold uppercase leading-none tracking-[0.14em] text-white">
+              <span className="rounded-sm bg-danger px-1.5 py-1 font-mono text-2xs font-bold uppercase leading-none tracking-[0.14em] text-white">
                 New
               </span>
             ) : null}
@@ -147,11 +178,11 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-4 bottom-3 flex items-end justify-between gap-3 sm:inset-x-5 sm:bottom-4"
           >
-            <span className="hud text-[10px] text-muted">
+            <span className="hud text-2xs text-muted">
               SCALE <span className="text-fg">{product.scale}</span>
             </span>
             {tilt.enabled ? (
-              <span className="hud hidden items-center gap-1.5 text-[10px] text-muted sm:inline-flex">
+              <span className="hud hidden items-center gap-1.5 text-2xs text-muted sm:inline-flex">
                 <Move3d className="h-3.5 w-3.5 text-accent-ink" />
                 Move to tilt
               </span>
@@ -177,7 +208,7 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
               size="sm"
               onClick={() => select(index - 1, { announce: true })}
               aria-controls={panelId}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-surface/80 backdrop-blur-sm"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-surface/80 backdrop-blur-sm touch:h-11 touch:w-11 sm:left-3"
             />
             <IconButton
               label="Next image"
@@ -186,7 +217,7 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
               size="sm"
               onClick={() => select(index + 1, { announce: true })}
               aria-controls={panelId}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-surface/80 backdrop-blur-sm"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-surface/80 backdrop-blur-sm touch:h-11 touch:w-11 sm:right-3"
             />
           </>
         ) : null}
@@ -197,7 +228,11 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
           role="tablist"
           aria-label={`${product.name} images`}
           aria-orientation="horizontal"
-          className="scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1 py-1 sm:gap-3"
+          ref={thumbsRef}
+          className={cn(
+            'scrollbar-none -mx-1 flex snap-x gap-2 overflow-x-auto overscroll-x-contain px-1 py-1 sm:gap-3',
+            thumbsFadeEnd && 'scroll-fade-x',
+          )}
         >
           {items.map((item, itemIndex) => {
             const selected = itemIndex === index;
@@ -218,7 +253,7 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
                 onClick={() => select(itemIndex)}
                 onKeyDown={handleTabKeyDown}
                 className={cn(
-                  'group/thumb relative w-24 shrink-0 overflow-hidden rounded-lg border bg-card p-1.5 transition-[border-color,background-color,transform] duration-200 ease-race active:scale-[0.97] sm:w-28',
+                  'group/thumb relative w-24 shrink-0 snap-start overflow-hidden rounded-lg border bg-card p-1.5 transition-[border-color,background-color,transform] duration-200 ease-race active:scale-[0.97] sm:w-28',
                   selected
                     ? 'border-accent bg-card-hover shadow-glow-accent'
                     : 'border-line hover:border-metal/60 hover:bg-card-hover',

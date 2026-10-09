@@ -126,7 +126,7 @@ export function ReviewStep({
           </h3>
           <Link
             to={ROUTES.cart}
-            className="inline-flex items-center gap-1.5 rounded-sm text-xs font-semibold text-accent-ink hover:underline"
+            className="relative inline-flex items-center gap-1.5 rounded-sm text-xs font-semibold text-accent-ink hover:underline touch:after:absolute touch:after:-inset-y-3.5 touch:after:inset-x-0"
           >
             <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
             Edit pit stop

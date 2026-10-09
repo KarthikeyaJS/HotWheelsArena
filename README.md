@@ -44,7 +44,7 @@ It is a React 18 + Vite + TypeScript single-page app on Firebase (Google sign-in
 - **Pit Stop cart and checkout**: GST-inclusive totals, free-shipping progress, Indian address validation (phone, PIN code, state), test-mode payments (card / UPI / COD). Orders are priced and created **only** by the `placeOrder` Cloud Function.
 - **My Garage**: owned cars (manual or auto-added after purchase), favourites, duplicates tracker, missing cars per series, collection value, wishlist, achievements and stats.
 - **Gamification**: 25 collector levels, XP for orders and badges, five badges (First Ride, Speed Demon, Treasure Hunter, Garage Builder, Master Collector), awarded server-side with live unlock toasts.
-- **Performance and accessibility**: route-level code splitting (zod and Howler stay out of the ~60 kB gzip entry chunk); metric-matched local fallbacks for the web fonts (`src/styles/fonts.css`) so the font swap moves nothing; Lighthouse desktop 95 on Home (median of three runs after the hero was simplified, 2026-10-09) and 96–97 on Shop and a product page, CLS ≤ 0.003, and 100 for accessibility, best practices and SEO (production build against the emulators). Route changes are announced to screen readers, the layout reflows at 320 px, and axe finds no serious issues in either theme.
+- **Performance and accessibility**: route-level code splitting (zod stays out of the ~60 kB gzip entry chunk); metric-matched local fallbacks for the web fonts (`src/styles/fonts.css`) so the font swap moves nothing; Lighthouse desktop 95 on Home (median of three runs after the hero was simplified, 2026-10-09) and 96–97 on Shop and a product page, CLS ≤ 0.003, and 100 for accessibility, best practices and SEO (production build against the emulators). Route changes are announced to screen readers, the layout reflows at 320 px, and axe finds no serious issues in either theme.
 - **Admin-ready backend**: admin custom claim, every admin-editable document in Firestore with `createdAt`/`updatedAt` and `isActive` soft-delete flags, strict security rules with 320+ emulator tests.
 
 ## Tech stack
@@ -57,7 +57,7 @@ It is a React 18 + Vite + TypeScript single-page app on Firebase (Google sign-in
 | Data           | TanStack Query 5 (every Firestore read and mutation), Zod 3 (shared validation), React Hook Form 7                   |
 | Firebase       | Firebase JS SDK 10.14 (modular): Auth (Google only), Firestore, callable Functions, Hosting, optional Analytics      |
 | Backend        | Cloud Functions for Firebase (TypeScript, Node.js 22, region `asia-south1`), firebase-functions 7, firebase-admin 13 |
-| Images, sound  | Cloudinary delivery URLs (`f_auto,q_auto`), local SVG fallbacks, Howler.js (optional engine sounds, off by default)  |
+| Images         | Cloudinary delivery URLs (`f_auto,q_auto`), local SVG fallbacks                                                      |
 | Tooling        | ESLint 9 (flat config), Prettier 3, Vitest 3, `@firebase/rules-unit-testing`, firebase-tools 15, tsx                 |
 
 ## Architecture
@@ -95,8 +95,8 @@ The binding contract (every export, token, hook, store, write shape and componen
 │     ├─ payments/           server-side payment verifier registry (dummy provider)
 │     ├─ lib/                pure domain logic (pricing, orders, stats, reviews, rate limits) + unit tests
 │     └─ index.ts            the six deployed functions
-├─ public/                   static files copied verbatim (placeholders/, sounds/, favicon, OG image)
-├─ scripts/                  seed + verify-seed, set-admin, e2e smoke test, image/sound generators, dev/snap.mjs (see scripts/README.md)
+├─ public/                   static files copied verbatim (placeholders/, favicon, OG image)
+├─ scripts/                  seed + verify-seed, set-admin, e2e smoke test, image generators, dev/snap.mjs (see scripts/README.md)
 ├─ shared/                   pure TS shared by web + functions (types, schemas, gamification, commerce, india)
 ├─ src/
 │  ├─ components/            ui/, layout/, product/, gamification/, common/ and feature folders
@@ -184,7 +184,6 @@ Open <http://localhost:5173> and click **Sign in**. The Auth emulator opens a fa
 | `npm run seed:emulator`           | Seeds the local Firestore emulator                                                                                                  |
 | `npm run seed:verify`             | Reads a seeded database back and checks it against the catalogue (`-- --emulator` or `-- --project <id>`)                           |
 | `npm run set-admin`               | Grants/revokes/checks the `admin` custom claim (`-- --email you@example.com [--emulator] [--revoke]`)                               |
-| `npm run sounds`                  | Regenerates the royalty-free placeholder engine sounds in `public/sounds/`                                                          |
 | `npm run images` / `images:check` | Regenerates the placeholder SVGs, favicon and OG card / fails if any is missing or stale                                            |
 | `npm run snap`                    | Playwright screenshot of a dev-server route + console errors and 375px overflow (`-- --help`)                                       |
 | `npm run functions:build`         | Compiles `functions/` to `functions/lib/`                                                                                           |
@@ -511,7 +510,7 @@ All rules live in `shared/gamification.ts` and are pure functions, shared by the
 | all                                                           | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `Permissions-Policy: camera=(), microphone=(), geolocation=()` |
 | all except Firebase's reserved `/__/*` URLs                   | `Content-Security-Policy` (below), `X-Frame-Options: DENY`                                                                                                                                                              |
 | `/assets/**` (content-hashed JS/CSS)                          | `Cache-Control: public, max-age=31536000, immutable`                                                                                                                                                                    |
-| `/sounds/**`, `/placeholders/**`                              | `Cache-Control: public, max-age=86400`                                                                                                                                                                                  |
+| `/placeholders/**`                                            | `Cache-Control: public, max-age=86400`                                                                                                                                                                                  |
 | `/index.html`, `/site.webmanifest`, extension-less app routes | `Cache-Control: no-cache` (always revalidate, so a deploy is picked up immediately)                                                                                                                                     |
 
 **Why `/__/*` is excluded**: Firebase Auth's popup and redirect flows load the helper page `https://<authDomain>/__/auth/iframe` in an iframe, and `<authDomain>` is served by your own Hosting site. `X-Frame-Options: DENY` or this app's CSP on those pages would break sign-in, so the rule uses an RE2 regex, `^/(?:[^_].*|_(?:[^_].*)?|__(?:[^/].*)?)?$` (every path whose first segment is not `__`). The `no-cache` rule for app routes uses the same idea.
@@ -527,7 +526,6 @@ All rules live in `shared/gamification.ts` and are pure functions, shared by the
 | `img-src`     | `'self'`, `data:`, `blob:`, `https://res.cloudinary.com`, Google avatars (`https://lh3.googleusercontent.com`, `https://*.googleusercontent.com`), Analytics pixels                                                                                                                    |
 | `connect-src` | `'self'`, `https://*.googleapis.com` (Firestore, Identity Toolkit, Secure Token, Installations), `https://*.cloudfunctions.net` and `https://*.a.run.app` (callables), Analytics endpoints, and the **local emulator ports** (`http://127.0.0.1:9099/8080/5001`, `http://localhost:…`) |
 | `frame-src`   | `'self'`, `https://*.firebaseapp.com`, `https://accounts.google.com`, `https://apis.google.com` (Auth helper iframe), plus the Auth emulator (`http://127.0.0.1:9099`, `http://localhost:9099`)                                                                                        |
-| `media-src`   | `'self'`, `blob:`, `data:` (engine sounds)                                                                                                                                                                                                                                             |
 | others        | `manifest-src 'self'`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`                                                                                                                                               |
 
 Notes:

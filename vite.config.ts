@@ -76,9 +76,8 @@ const VENDOR_CHUNKS: ReadonlyArray<[name: string, pattern: RegExp]> = [
 ];
 
 /**
- * Stable vendor chunks for long-term caching. howler is intentionally NOT listed: feature
- * code imports it dynamically so it lands in a lazy chunk. Firebase Analytics
- * (and its installations dependency) also stays lazy.
+ * Stable vendor chunks for long-term caching. Firebase Analytics (and its installations
+ * dependency) is intentionally NOT listed so it stays in a lazy chunk.
  */
 function manualChunks(id: string): string | undefined {
   const normalized = id.replace(/\\/g, '/');

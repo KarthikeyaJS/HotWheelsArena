@@ -37,7 +37,7 @@ D:\hotwheels
 │  ├─ main.tsx, App.tsx, router.tsx, vite-env.d.ts                              core
 │  ├─ config/  styles/  types/  store/  services/  providers/                     core
 │  ├─ lib/                        core (except lib/search.ts → layout)
-│  ├─ hooks/                      core (except useSound.ts, useHotkey.ts, useScrollProgress.ts → layout)
+│  ├─ hooks/                      core (except useHotkey.ts, useScrollProgress.ts → layout)
 │  ├─ test/setup.ts               core (Vitest jsdom setup)
 │  ├─ dev/testHooks.ts            dev + emulator only: `window.__hwaTest.signIn()` for snap.mjs / e2e (dynamic import in main.tsx, never in prod builds)
 │  ├─ pages/*.tsx                 core STUBS → replaced by WF2 feature agents
@@ -79,7 +79,6 @@ garage (`GaragePage`, `WishlistPage`, `components/garage/**`), content (Vault, C
 | zustand                                                                                                          | 5.0.15  | `create<T>()(…)` curried form                                                                   |
 | framer-motion                                                                                                    | 11.18.2 |                                                                                                 |
 | gsap                                                                                                             | —       | **removed** 2026-10-08 (user request: static home hero, no scroll-track). Don't reintroduce it. |
-| howler                                                                                                           | 2.2.4   | **dynamic import only** (inside `useSound`)                                                     |
 | zod                                                                                                              | 3.25.76 | `import { z } from 'zod'` (v3 API)                                                              |
 | react-hook-form                                                                                                  | 7.89.0  |                                                                                                 |
 | @hookform/resolvers                                                                                              | 3.10.0  | `zodResolver(Schema)` — verified with `useForm<AddressInput>`                                   |
@@ -96,7 +95,7 @@ garage (`GaragePage`, `WishlistPage`, `components/garage/**`), content (Vault, C
 
 `dev`, `build` (= `typecheck` + `vite build`), `preview`, `typecheck` (`tsc -b`), `lint` (`eslint .`), `lint:fix`, `format`, `format:check`,
 `test` (`vitest run`), `test:watch`, `test:rules`, `emulators`, `seed`, `seed:emulator`, `seed:verify` (`tsx scripts/verify-seed.ts`),
-`set-admin` (`tsx scripts/set-admin.ts`), `sounds`, `images` / `images:check` (`tsx scripts/generate-images.ts [--check]`),
+`set-admin` (`tsx scripts/set-admin.ts`), `images` / `images:check` (`tsx scripts/generate-images.ts [--check]`),
 `snap` (`node scripts/dev/snap.mjs`, Playwright screenshots), `functions:build`, `presmoke` (= `functions:build`),
 `smoke` (`firebase emulators:exec --only auth,firestore,functions … "npm run seed:emulator && node scripts/smoke-e2e.mjs"`),
 `pree2e` (= `functions:build`), `e2e` (`firebase emulators:exec --only auth,firestore,functions … "npm run seed:emulator && playwright test"`),
@@ -120,7 +119,7 @@ Load tolerance: the web project has `testTimeout: 20_000` and `src/test/setup.ts
 ### Vite
 
 - Aliases as above. `brandPlugin` replaces `%BRAND_NAME% %BRAND_TITLE% %BRAND_DESCRIPTION% %BRAND_TAGLINE% %THEME_COLOR%` in index.html and **generates `/site.webmanifest`** (dev middleware + build asset). → seed-assets: do **not** create `public/site.webmanifest`.
-- `manualChunks`: `vendor-react`, `vendor-firebase` (analytics excluded → lazy), `vendor-motion`, `vendor-query`. howler must only be imported dynamically so it stays out of the entry. Framer Motion is the only animation library (GSAP was removed on 2026-10-08).
+- `manualChunks`: `vendor-react`, `vendor-firebase` (analytics excluded → lazy), `vendor-motion`, `vendor-query`. Framer Motion is the only animation library (GSAP was removed on 2026-10-08).
 - **No zod in the entry chunk** (≈12 KB gzip): entry modules — `src/config/env.ts`, `src/lib/errors.ts`, `src/components/{layout,common}/*`, `src/hooks/useProducts.ts`, `src/store/cartStore.ts`, `src/services/firestore/{products,garage,wishlist}.ts` and anything they import — never import `zod`, `@shared/schemas` or the `@shared` barrel. Lazy modules (checkout, forms, `useOrders`) may. `env.test.ts` / `errors.test.ts` guard the two config/lib modules; check with `vite build --sourcemap` (no `node_modules/zod/` in the `index-*.js` map).
 
 ---
@@ -339,13 +338,6 @@ getPaymentProvider(): PaymentProvider                 // singleton; unknown id �
 isTestPaymentMode(): boolean                          // show TEST MODE banner when true
 interface PaymentMethodOption { id: PaymentMethod; label: string; description: string; icon: LucideIcon }
 PAYMENT_METHOD_OPTIONS: readonly PaymentMethodOption[] // card, upi, cod (filter cod when !settings.codEnabled)
-```
-
-### `sound.ts`
-
-```ts
-SOUND_SOURCES: Record<SoundName, string>; // { rev: '/sounds/rev.wav', click: '/sounds/click.wav', start: '/sounds/start.wav' }
-SOUND_VOLUME: Record<SoundName, number>;
 ```
 
 ---
@@ -764,7 +756,6 @@ interface Toast extends Required<Pick<ToastInput, 'title' | 'variant' | 'duratio
   icon?: ReactNode;
   createdAt: number;
 }
-type SoundName = 'rev' | 'click' | 'start';
 type AuthStatus = 'loading' | 'signed-in' | 'signed-out';
 interface SignInPromptState {
   open: boolean;
@@ -922,13 +913,14 @@ Persisted shape `{ items, catalogueSyncedAt }` (still v1; blobs without the stam
 
 Add-to-cart pattern: `const r = useCartStore.getState().addItem(toCartItem(product)); r.limited ? toast({ title: 'Max per collector reached' }) : toast.success('Added to your pit stop', product.name)`. When stock, not `MAX_QTY_PER_ITEM`, is what refuses the add, the title is `Only N in stock` instead (`AddToCartButton`; the wishlist's `blockedMoveToast` also says "Sold out" / "No longer available").
 
-### `uiStore.ts` (persist `hwa-prefs-v1`: `theme` only once explicitly chosen, `soundEnabled`, `scanlines`)
+### `uiStore.ts` (persist `hwa-prefs-v1`, version 2: `theme` only once explicitly chosen, `scanlines`)
 
 ```ts
-PREFS_STORAGE_KEY
-interface UiState { theme: Theme; themeExplicit: boolean; soundEnabled: boolean /* default false */; scanlines: ScanlineMode /* 'auto' */;
+PREFS_STORAGE_KEY; PREFS_VERSION /* 2 */
+migratePrefs(persisted: unknown): PersistedPrefs // persist `migrate`: keeps only a valid theme + scanlines from older versions
+interface UiState { theme: Theme; themeExplicit: boolean; scanlines: ScanlineMode /* 'auto' */;
   mobileNavOpen: boolean; searchOpen: boolean; signInPrompt: SignInPromptState;
-  setTheme(t); toggleTheme(); syncSystemTheme(t); setSoundEnabled(b); toggleSound(); setScanlines(m); cycleScanlines();
+  setTheme(t); toggleTheme(); syncSystemTheme(t); setScanlines(m); cycleScanlines();
   setMobileNavOpen(b); openMobileNav(); closeMobileNav(); toggleMobileNav();
   setSearchOpen(b); openSearch() /* closes drawer */; closeSearch(); toggleSearch();
   openSignInPrompt(reason?: string); closeSignInPrompt() }
@@ -1120,7 +1112,7 @@ useLockBodyScroll(locked = true): void   // ref-counted, scrollbar-compensated
 usePrevious<T>(value: T): T | undefined
 ```
 
-Layout-owned hooks (**layout agent**): `useSound`, `useHotkey`, `useScrollProgress` — see §13.
+Layout-owned hooks (**layout agent**): `useHotkey`, `useScrollProgress` — see §13.
 
 ---
 
@@ -1256,13 +1248,13 @@ Barrel `@/components/gamification` also exports the pure helpers `snapshotFromPr
 ### layout → `src/components/layout/*` (+ search, effects, auth, newsletter)
 
 - `AppLayout` (replaces core's placeholder; keep export name, `<main id="main-content" tabIndex={-1}>` and `<Outlet/>`) mounts **once**: `PageBackdrop`, `SkipLink`, `Navbar` (which renders `ScrollProgress` along its bottom edge), `<main>` (`min-h-[calc(100svh-var(--header-height))]`, see §3.5) with `<Suspense fallback={<RouteFallback/>}><Outlet/></Suspense>`, `Footer`, then the global overlays `MobileDrawer`, `CommandPalette`, `SignInPrompt`, `Toaster`, `BadgeWatcher`, `ScanlinesOverlay`. The route announcer lives one level up, in `RootLayout`.
-- `Navbar` (sticky `glass`, shrinks on scroll, `z-header`, NAV_LINKS with `isNavLinkActive` → `aria-current`, search button (Ctrl/Cmd+K), `WishlistNavButton`, `CartButton`, `ThemeToggle`, `SoundToggle`, `ScanlinesToggle`, `UserMenu`), `Footer` (FOOTER_LINK_GROUPS, SOCIAL_LINKS, NewsletterForm inline, FOOTER_DISCLAIMER, © COPYRIGHT_OWNER), `MobileDrawer` (uiStore.mobileNavOpen), `ThemeToggle`, `SoundToggle`, `ScanlinesToggle` (cycles auto/on/off), `CartButton` (useCartCount badge → /cart), `WishlistNavButton` (useWishlistCount → /wishlist), `UserMenu` (avatar/profile level, links My Garage/Orders/Wishlist, Sign out; signed out → GoogleSignInButton).
+- `Navbar` (sticky `glass`, shrinks on scroll, `z-header`, NAV_LINKS with `isNavLinkActive` → `aria-current`, search button (Ctrl/Cmd+K), `WishlistNavButton`, `CartButton`, `ThemeToggle`, `ScanlinesToggle`, `UserMenu`), `Footer` (FOOTER_LINK_GROUPS, SOCIAL_LINKS, NewsletterForm inline, FOOTER_DISCLAIMER, © COPYRIGHT_OWNER), `MobileDrawer` (uiStore.mobileNavOpen), `ThemeToggle`, `ScanlinesToggle` (cycles auto/on/off), `CartButton` (useCartCount badge → /cart), `WishlistNavButton` (useWishlistCount → /wishlist), `UserMenu` (avatar/profile level, links My Garage/Orders/Wishlist, Sign out; signed out → GoogleSignInButton).
 - `search/CommandPalette` (Ctrl/Cmd+K via `useHotkey`, uiStore.searchOpen, combobox ARIA, grouped suggestions, recent searches, Enter → `/search?q=`), `search/SearchInput` (`value`, `onChange(v)`, `onSubmit?(v)`, `placeholder?` = "Search the garage…", `autoFocus?`, `size?`).
 - `src/lib/search.ts`: `buildSearchIndex(products: readonly Product[]): SearchIndex`, `searchProducts(index: SearchIndex, query: string, limit?: number /* default: all */): Product[]`, `searchProductsScored(index, query, limit?): ScoredProduct[]` (`{ product, score }`), `groupSuggestions(products: readonly Product[], query: string, options?: { maxMakes?: number /* 4 */; maxModels?: number /* 6 */ }): MakeSuggestion[]` (`MakeSuggestion = { make; models: ModelSuggestion[] }`, `ModelSuggestion = { model; count; slugs: string[] }`), `matchText(text, query): number`, plus `normalizeSearchText`, `tokenize`, `editDistance`, `SEARCH_FIELD_WEIGHTS`. Strict token/prefix/joined-prefix/substring matching; typo tolerance only as a fallback pass when nothing matches strictly.
 - `effects/*`: `GridBackground` (`fade?`), `RacingLines` (`count?`), `TireMarks`, `ScanlinesOverlay` (no props; `useScanlinesActive`), `Speedometer` (`value`, `max?` 320, `label?`, `unit?`, `size?`), `Tachometer` (`rpm`, `redline?`, `size?`), `HudPanel` (`title?`, `children`). All decorative → `aria-hidden`, all accept `className`.
 - `newsletter/NewsletterForm` (`variant?: 'section'|'inline'`, `headingId?` — id of the section-variant heading so an ancestor landmark can point `aria-labelledby` at it) — `useSubscribeNewsletter`, inline success/error status (`aria-live`).
 - `auth/SignInPrompt` (no props; Modal bound to `uiStore.signInPrompt`, shows `reason`, calls `useAuth().signIn()`, closes on success — AuthProvider also closes it and runs the queued action), `auth/GoogleSignInButton` (`fullWidth?`, `size?`, `label?`, `onSignedIn?(user)`).
-- Hooks: `useSound(): (name: SoundName) => void` (lazy `import('howler')`, plays `SOUND_SOURCES[name]` at `SOUND_VOLUME[name]`; no-op when `soundEnabled` is false or the file is missing) + `playSound(name)` (same, outside React), `useHotkey(combo: string | readonly string[], handler: (e: KeyboardEvent) => void, opts?: { enabled?: boolean; preventDefault?: boolean /* true */; allowInInputs?: boolean; allowRepeat?: boolean })` (`'mod+k'` = Ctrl on Windows / Cmd on macOS) + helpers `parseHotkey`, `matchesHotkey`, `isEditableTarget`, `isMacPlatform`, `hotkeyLabels(combo)` (`['Ctrl','K']` / `['⌘','K']`), `hotkeyAria(combo)`; `useScrollProgress(): number` (0..1, rAF-throttled shared store) + `useIsScrolled(threshold = 8): boolean`.
+- Hooks: `useHotkey(combo: string | readonly string[], handler: (e: KeyboardEvent) => void, opts?: { enabled?: boolean; preventDefault?: boolean /* true */; allowInInputs?: boolean; allowRepeat?: boolean })` (`'mod+k'` = Ctrl on Windows / Cmd on macOS) + helpers `parseHotkey`, `matchesHotkey`, `isEditableTarget`, `isMacPlatform`, `hotkeyLabels(combo)` (`['Ctrl','K']` / `['⌘','K']`), `hotkeyAria(combo)`; `useScrollProgress(): number` (0..1, rAF-throttled shared store) + `useIsScrolled(threshold = 8): boolean`.
 
 **Additive layout APIs (as built — details in [`docs/components/layout.md`](components/layout.md)):** `SearchButton` (`variant?: 'pill'|'compact'|'icon'|'row'`, `aria-keyshortcuts`), `Gauge` (shared base of `Speedometer` / `Tachometer`), `HudPanel` (`meta?`, `tone?: 'default'|'accent'|'highlight'`, `titleAs?`, `as?`, `padding?`), `GoogleSignInButton` (`loadingText?`, `variant?` default `'secondary'`; also reused by `RequireAuth`), `GoogleMark` (`tile?`), `NewsletterForm` (`eyebrow?`, `title?`, `description?`, `headingAs?`), `Logo` (`size?`, `asLink?`, `onClick?`, `className?`, `textClassName?` — the Navbar passes `max-[359px]:sr-only`), `NavLinks`, `SocialLinks`, `PageBackdrop`, `ToggleRow`, `UserAvatar`, `SkipLink` (`targetId?`). The command palette dialog (`CommandPaletteDialog`) and the footer `NewsletterForm` are code-split (lazy + idle prefetch). There is no `@/components/auth` barrel — import files directly.
 
@@ -1276,7 +1268,7 @@ Barrel `@/components/gamification` also exports the pure helpers `snapshotFromPr
 | `ProductGrid`         | `products: Product[]`, `isLoading?`, `skeletonCount?` (8), `empty?: ReactNode`, `columns?: 2\|3\|4`                                                                                                                                                                                                                                                                                                             |
 | `VaultCard`           | `product: Product` — large, yellow highlight, `LIMITED EDITION`, `limitedEditionInfo` label `#001/500`, "Only 37 remaining" + animated ProgressBar (tone highlight)                                                                                                                                                                                                                                             |
 | `HorizontalRail`      | `ariaLabel: string`, `children`, `title?` — scroll-snap + drag, prev/next IconButtons, `role="region" aria-roledescription="carousel"`                                                                                                                                                                                                                                                                          |
-| `AddToCartButton`     | `product: Product`, `qty?`, `size?`, `variant?`, `fullWidth?`, `label?` — uses `cartStore.addItem(toCartItem(p), qty)`, toasts, sold-out disabled state, engine-shake + `useSound()('click')`                                                                                                                                                                                                                   |
+| `AddToCartButton`     | `product: Product`, `qty?`, `size?`, `variant?`, `fullWidth?`, `label?` — uses `cartStore.addItem(toCartItem(p), qty)`, toasts, sold-out disabled state, engine shake                                                                                                                                                                                                                   |
 | `WishlistButton`      | `product: Product`, `variant?: 'icon'\|'button'`, `size?` — `useWishlistActions`, `useIsWishlisted`, `aria-pressed`                                                                                                                                                                                                                                                                                             |
 | `AddToGarageButton`   | `product: Product`, `size?`, `fullWidth?` — `useGarageActions`, `useIsInGarage` ("IN YOUR GARAGE ✓" state)                                                                                                                                                                                                                                                                                                      |
 | `StockStatus`         | `stock: number`, `size?` — `stockStatus()` colours: in-stock success, low danger-ink, sold-out muted                                                                                                                                                                                                                                                                                                            |
@@ -1308,13 +1300,13 @@ Barrel `@/components/gamification` also exports the pure helpers `snapshotFromPr
 ### infra
 
 - Emulator ports: `EMULATOR_PORTS`; project `demo-hotwheelsarena`; hosting serves `dist/`, SPA rewrite, `no-cache` for `/index.html` **and `/site.webmanifest`**, immutable for `/assets/**`.
-- CSP: the only inline script is the no-flash theme script in index.html — hash **`'sha256-aIqL7EE1q9wXoi4hpRs7G1lGkyaiOE5b1BnhqFG3LaY='`** (index.html is excluded from Prettier to keep it byte-stable; recompute if it ever changes). Needed hosts: `style-src https://fonts.googleapis.com` (+ `'unsafe-inline'` for React/framer inline styles), `font-src https://fonts.gstatic.com`, `img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com`, `connect-src` Firebase (`https://*.googleapis.com https://*.cloudfunctions.net https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://www.google-analytics.com`), `frame-src https://<project>.firebaseapp.com https://accounts.google.com https://apis.google.com`, `script-src 'self' <hash> https://apis.google.com https://www.googletagmanager.com`, `media-src 'self'` (sounds).
+- CSP: the only inline script is the no-flash theme script in index.html — hash **`'sha256-aIqL7EE1q9wXoi4hpRs7G1lGkyaiOE5b1BnhqFG3LaY='`** (index.html is excluded from Prettier to keep it byte-stable; recompute if it ever changes). Needed hosts: `style-src https://fonts.googleapis.com` (+ `'unsafe-inline'` for React/framer inline styles), `font-src https://fonts.gstatic.com`, `img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com`, `connect-src` Firebase (`https://*.googleapis.com https://*.cloudfunctions.net https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://www.google-analytics.com`), `frame-src https://<project>.firebaseapp.com https://accounts.google.com https://apis.google.com`, `script-src 'self' <hash> https://apis.google.com https://www.googletagmanager.com`.
 - Rules must match §10 exactly; index `orders(uid ASC, createdAt DESC)`.
 
 ### seed-assets
 
 - IDs: category doc id == slug (6 `CATEGORY_SLUGS`); series doc id == slug (e.g. `hw-exotics-2026`); product docs with every `Product` field (incl. `description`, `seriesName`, `series` = series id, `images[0].url === primaryImage`, `publicId` like `hotwheelsarena/<slug>`, `currency: 'INR'`, Firestore `Timestamp` createdAt/updatedAt, `isActive: true`); `series.carIds` = product ids; reviews at `products/{id}/reviews/{uid}` with `productId, uid, displayName, photoURL, rating, text, verifiedBuyer, createdAt, updatedAt` + product `ratingAvg/ratingCount` consistent; `settings/site` = `DEFAULT_SITE_SETTINGS` + timestamps. Import shared relatively.
-- Public assets referenced by code: `/favicon.svg`, `/og-image.png` (1200×630), `/placeholders/car-generic.svg`, `/placeholders/hero-car.svg`, `/placeholders/category-{sports,off-road,racing,special,rescue,limited}.svg`, per-product silhouettes under `/placeholders/`, `/sounds/{rev,click,start}.wav`. Do **not** create `public/site.webmanifest` (generated by Vite).
+- Public assets referenced by code: `/favicon.svg`, `/og-image.png` (1200×630), `/placeholders/car-generic.svg`, `/placeholders/hero-car.svg`, `/placeholders/category-{sports,off-road,racing,special,rescue,limited}.svg`, per-product silhouettes under `/placeholders/`. Do **not** create `public/site.webmanifest` (generated by Vite).
 
 ---
 

@@ -34,17 +34,17 @@ export function OrderLinesList({
   return (
     <ul aria-label={label} className={cn('flex flex-col', compact ? 'gap-3' : 'gap-4', className)}>
       {lines.map((line) => (
-        <li key={line.productId} className="flex items-center gap-3 sm:gap-4">
+        <li key={line.productId} className="relative flex items-center gap-3 sm:gap-4">
           <span
             className={cn(
               'relative shrink-0 overflow-hidden rounded-md border border-line bg-surface',
-              compact ? 'w-16' : 'w-20 sm:w-24',
+              compact ? 'w-16' : 'w-16 sm:w-24',
             )}
           >
             <span aria-hidden="true" className="bg-grid absolute inset-0 opacity-50" />
             <CarImage src={line.image} alt="" width={96} height={60} className="relative" />
             {compact && line.qty > 1 ? (
-              <span className="absolute right-0.5 top-0.5 rounded-sm bg-fg px-1 font-mono text-[10px] font-bold leading-4 text-bg">
+              <span className="absolute right-0.5 top-0.5 rounded-sm bg-fg px-1 font-mono text-xs font-bold leading-4 text-bg">
                 ×{line.qty}
               </span>
             ) : null}
@@ -59,7 +59,8 @@ export function OrderLinesList({
               {linkToProduct ? (
                 <Link
                   to={productPath(line.slug)}
-                  className="rounded-sm transition-colors duration-150 hover:text-accent-ink"
+                  // Touch: the whole row is the link's hit area (the name alone is ~16px tall).
+                  className="rounded-sm transition-colors duration-150 hover:text-accent-ink touch:after:absolute touch:after:inset-0"
                 >
                   {line.name}
                 </Link>

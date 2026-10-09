@@ -12,6 +12,8 @@ export interface SupportCardProps {
   className?: string;
 }
 
+const [EMAIL_LOCAL, EMAIL_DOMAIN] = SUPPORT_EMAIL.split('@');
+
 const ROW =
   'flex items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors duration-150 hover:bg-fg/[0.05] hover:text-accent-ink active:opacity-80';
 
@@ -26,7 +28,16 @@ export function SupportCard({
       <address className="flex flex-col gap-1 not-italic">
         <a href={`mailto:${SUPPORT_EMAIL}`} className={ROW}>
           <Mail aria-hidden="true" className="h-4 w-4 shrink-0 text-accent-ink" />
-          <span className="min-w-0 break-all font-mono">{SUPPORT_EMAIL}</span>
+          {/* Wraps only after the "@" when space runs out (CA-12), never mid-word. */}
+          <span className="min-w-0 break-words font-mono">
+            {EMAIL_LOCAL}
+            {EMAIL_DOMAIN ? (
+              <>
+                @<wbr />
+                {EMAIL_DOMAIN}
+              </>
+            ) : null}
+          </span>
         </a>
         <a href={`tel:${SUPPORT_PHONE_E164}`} className={ROW}>
           <Phone aria-hidden="true" className="h-4 w-4 shrink-0 text-accent-ink" />

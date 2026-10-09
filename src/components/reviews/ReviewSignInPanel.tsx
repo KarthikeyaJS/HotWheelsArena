@@ -12,7 +12,7 @@ export function ReviewSignInPanel({ productName, className }: ReviewSignInPanelP
   return (
     <div
       className={cn(
-        'flex flex-col items-start gap-4 rounded-xl border border-dashed border-line bg-surface/60 p-5',
+        'flex flex-col items-start gap-4 rounded-xl border border-dashed border-line bg-surface/60 p-4 sm:p-5',
         className,
       )}
     >
@@ -32,7 +32,7 @@ export function ReviewSignInPanel({ productName, className }: ReviewSignInPanelP
           badge.
         </p>
       </div>
-      <GoogleSignInButton label="Sign in to write a review" />
+      <GoogleSignInButton label="Sign in to write a review" fullWidth className="sm:w-auto" />
     </div>
   );
 }

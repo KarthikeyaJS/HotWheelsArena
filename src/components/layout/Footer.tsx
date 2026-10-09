@@ -19,7 +19,6 @@ import { isTestPaymentMode } from '@/config/payment';
 import { Logo } from './Logo';
 import { ScanlinesToggle } from './ScanlinesToggle';
 import { SocialLinks } from './SocialLinks';
-import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 /* The form (react-hook-form + zod resolver) is below the fold on every page — keep it out of the
@@ -62,23 +61,24 @@ export function Footer() {
             <Logo size="md" />
             <p className="eyebrow mt-4">{BRAND_TAGLINE}</p>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">{BRAND_DESCRIPTION}</p>
-            <SocialLinks className="mt-6" />
-            <address className="mt-6 space-y-2 text-sm not-italic">
+            <SocialLinks size="md" className="mt-6 gap-3" />
+            {/* Touch: contact links become 44px rows (no extra spacing needed between them). */}
+            <address className="mt-6 space-y-2 text-sm not-italic touch:space-y-0">
               <a
                 href={`mailto:${SUPPORT_EMAIL}`}
-                className="flex w-fit items-center gap-2 text-muted transition-colors hover:text-fg"
+                className="flex w-fit items-center gap-2 text-muted transition-colors hover:text-fg touch:min-h-11"
               >
                 <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
                 {SUPPORT_EMAIL}
               </a>
               <a
                 href={`tel:${SUPPORT_PHONE_E164}`}
-                className="flex w-fit items-center gap-2 text-muted transition-colors hover:text-fg"
+                className="flex w-fit items-center gap-2 text-muted transition-colors hover:text-fg touch:min-h-11"
               >
                 <Phone aria-hidden="true" className="h-4 w-4 shrink-0" />
                 <span className="font-mono tabular-nums">{SUPPORT_PHONE}</span>
               </a>
-              <p className="hud pl-6 text-[10px] text-muted">{SUPPORT_HOURS}</p>
+              <p className="hud pl-6 text-xs text-muted">{SUPPORT_HOURS}</p>
             </address>
           </div>
 
@@ -90,12 +90,12 @@ export function Footer() {
                     <span aria-hidden="true" className="h-1.5 w-1.5 rounded-[1px] bg-accent" />
                     {group.title}
                   </h2>
-                  <ul className="mt-4 space-y-2.5">
+                  <ul className="mt-4 space-y-2.5 touch:mt-2 touch:space-y-0">
                     {group.links.map((link) => (
                       <li key={link.to + link.label}>
                         <Link
                           to={link.to}
-                          className="group inline-flex items-center gap-1.5 text-sm text-muted transition-colors duration-150 hover:text-fg"
+                          className="group inline-flex items-center gap-1.5 text-sm text-muted transition-colors duration-150 hover:text-fg touch:min-h-11"
                         >
                           <span
                             aria-hidden="true"
@@ -120,14 +120,15 @@ export function Footer() {
           </div>
           <div className="flex flex-col gap-5 lg:col-span-7 lg:items-end">
             <div>
-              <p className="hud mb-2 text-[10px] text-muted lg:text-right">Garage settings</p>
-              <div className="flex flex-wrap gap-2 lg:justify-end">
+              <p className="hud mb-2 text-2xs text-muted lg:text-right">Garage settings</p>
+              {/* Below 400px the two chips don't fit one row: stack them as equal full-width rows
+                  instead of letting one wrap. */}
+              <div className="grid gap-2 min-[400px]:flex min-[400px]:flex-wrap lg:justify-end">
                 <ThemeToggle variant="text" />
-                <SoundToggle variant="text" />
                 <ScanlinesToggle variant="text" />
               </div>
             </div>
-            <ul className="hud flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-muted lg:justify-end">
+            <ul className="hud flex flex-wrap items-center gap-x-4 gap-y-2 text-2xs text-muted lg:justify-end">
               <li className="inline-flex items-center gap-2">
                 <span aria-hidden="true" className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60 motion-reduce:hidden" />
@@ -152,11 +153,11 @@ export function Footer() {
         <Container className="flex flex-col gap-5 py-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <p className="max-w-3xl text-xs leading-relaxed text-muted">{FOOTER_DISCLAIMER}</p>
           <div className="flex shrink-0 flex-col gap-2 lg:items-end">
-            <p className="hud text-[10px] text-muted">
+            <p className="hud text-2xs text-muted">
               © {year} {COPYRIGHT_OWNER}
             </p>
             {testMode ? (
-              <p className="hud inline-flex w-fit items-center gap-1.5 rounded border border-line px-2 py-1 text-[10px] text-muted">
+              <p className="hud inline-flex w-fit items-center gap-1.5 rounded border border-line px-2 py-1 text-xs text-muted">
                 <FlaskConical aria-hidden="true" className="h-3 w-3" />
                 Payments are in test mode · no real charges
               </p>

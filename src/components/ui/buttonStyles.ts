@@ -25,7 +25,8 @@ const VARIANT_BASE: Readonly<Record<ButtonVariant, string>> = {
   ghost: 'rounded-md font-display tracking-display text-fg',
   outline: 'rounded-md border border-fg/25 bg-transparent font-display tracking-display text-fg',
   danger: 'rounded-md bg-danger font-display tracking-display text-white',
-  link: 'rounded-sm font-mono tracking-hud text-accent-ink underline-offset-4',
+  // On touch, an invisible ::after extends the hit area to 44px tall without moving the layout.
+  link: 'rounded-sm font-mono tracking-hud text-accent-ink underline-offset-4 touch:after:absolute touch:after:inset-x-0 touch:after:-inset-y-3',
 };
 
 const VARIANT_INTERACTIVE: Readonly<Record<ButtonVariant, string>> = {
@@ -40,13 +41,13 @@ const VARIANT_INTERACTIVE: Readonly<Record<ButtonVariant, string>> = {
 };
 
 const SIZES: Readonly<Record<ButtonSize, string>> = {
-  sm: 'h-9 px-4 text-[11px] [&_svg]:h-3.5 [&_svg]:w-3.5',
+  sm: 'h-9 px-4 text-2xs touch:h-11 touch:text-xs [&_svg]:h-3.5 [&_svg]:w-3.5',
   md: 'h-11 px-5 text-xs [&_svg]:h-4 [&_svg]:w-4',
   lg: 'h-14 px-7 text-sm [&_svg]:h-5 [&_svg]:w-5',
 };
 
 const LINK_SIZES: Readonly<Record<ButtonSize, string>> = {
-  sm: 'text-[11px] [&_svg]:h-3.5 [&_svg]:w-3.5',
+  sm: 'text-2xs touch:text-xs [&_svg]:h-3.5 [&_svg]:w-3.5',
   md: 'text-xs [&_svg]:h-4 [&_svg]:w-4',
   lg: 'text-sm [&_svg]:h-4 [&_svg]:w-4',
 };

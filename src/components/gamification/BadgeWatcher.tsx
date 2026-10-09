@@ -25,9 +25,10 @@ function isModalFreeRoute(pathname: string): boolean {
 /**
  * Mounted once in AppLayout. Watches the live profile (`useAuth().profile`, pushed by the
  * `onSnapshot` listener) and celebrates badges / level-ups awarded by Cloud Functions:
- * an achievement toast per event plus a queued `BadgeUnlockModal` per badge.
+ * a queued `BadgeUnlockModal` per badge and an achievement toast per level-up. A badge toast
+ * fires only where the modal is skipped (checkout / order-success): next to the modal it just
+ * repeated it and covered the modal's actions on phones.
  * Never fires for the first profile load, after a user switch, or after sign-out/in.
- * On checkout / order-success routes only the toasts fire (no modal).
  */
 export function BadgeWatcher() {
   const { profile, status } = useAuth();
@@ -62,15 +63,16 @@ export function BadgeWatcher() {
       return;
     }
 
-    for (const id of diff.unlocked) {
-      const badge = getBadge(id);
-      toast.achievement(
-        'BADGE UNLOCKED',
-        `${badge.title} · +${formatNumber(badge.xpReward)} XP`,
-        badge.emoji,
-      );
-    }
-    if (diff.unlocked.length > 0 && !suppressModalRef.current) {
+    if (suppressModalRef.current) {
+      for (const id of diff.unlocked) {
+        const badge = getBadge(id);
+        toast.achievement(
+          'BADGE UNLOCKED',
+          `${badge.title} · +${formatNumber(badge.xpReward)} XP`,
+          badge.emoji,
+        );
+      }
+    } else if (diff.unlocked.length > 0) {
       setQueue((current) => [...current, ...diff.unlocked.filter((id) => !current.includes(id))]);
     }
     if (diff.levelUp !== null) {

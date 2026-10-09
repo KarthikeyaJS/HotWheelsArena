@@ -145,7 +145,7 @@ export function VaultCard({
       >
         {horizontal ? <div className="hidden md:block">{header}</div> : null}
         <div className="flex flex-col gap-1.5">
-          <p className="hud text-[10px] text-muted">{productMetaLine(product)}</p>
+          <p className="hud text-xs text-muted">{productMetaLine(product)}</p>
           <Heading className="font-display text-lg font-bold uppercase leading-tight tracking-display text-fg sm:text-xl">
             {product.name}
           </Heading>

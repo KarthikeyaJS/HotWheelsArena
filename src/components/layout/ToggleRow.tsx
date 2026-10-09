@@ -20,7 +20,7 @@ export interface ToggleRowProps {
 }
 
 /**
- * Settings row used by the theme / sound / scanlines toggles inside the mobile drawer and the
+ * Settings row used by the theme / scanlines toggles inside the mobile drawer and the
  * user menu: icon, label, and a mono value pill (orange when on).
  */
 export function ToggleRow({
@@ -67,7 +67,7 @@ export function ToggleRow({
       <span
         aria-hidden="true"
         className={cn(
-          'hud rounded border px-1.5 py-0.5 text-[10px] transition-colors',
+          'hud rounded border px-1.5 py-0.5 text-2xs transition-colors',
           on ? 'border-accent/50 bg-accent/10 text-accent-ink' : 'border-line text-muted',
         )}
       >

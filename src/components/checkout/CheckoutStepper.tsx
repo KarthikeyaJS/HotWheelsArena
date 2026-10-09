@@ -15,7 +15,8 @@ export interface CheckoutStepperProps {
 
 /**
  * HUD stepper: `01 ADDRESS — 02 PAYMENT — 03 REVIEW`. Reachable steps are buttons; the current
- * one carries `aria-current="step"`.
+ * one carries `aria-current="step"`. Below `sm` it is compact: the current step takes twice the
+ * width and shows its label, the others show only their badge (labels stay for screen readers).
  */
 export function CheckoutStepper({
   current,
@@ -52,10 +53,11 @@ export function CheckoutStepper({
                 {complete ? <Check className="h-4 w-4" strokeWidth={3} /> : padNumber(index + 1)}
               </span>
               <span className="flex min-w-0 flex-col items-start text-left">
-                <span className="hud hidden text-[10px] text-muted sm:block">{meta.lap}</span>
+                <span className="hud hidden text-2xs text-muted sm:block">{meta.lap}</span>
                 <span
                   className={cn(
-                    'font-display text-[11px] font-bold uppercase tracking-display sm:text-xs',
+                    'max-w-full truncate font-display text-xs font-bold uppercase tracking-display',
+                    !isCurrent && 'max-sm:sr-only',
                     state === 'upcoming' ? 'text-muted' : 'text-fg',
                   )}
                 >
@@ -69,12 +71,18 @@ export function CheckoutStepper({
           );
 
           return (
-            <li key={step} className="flex min-w-0 flex-1 flex-col gap-2">
+            <li
+              key={step}
+              className={cn(
+                'flex min-w-0 flex-col gap-2',
+                isCurrent ? 'flex-[2_1_0%] sm:flex-1' : 'flex-1',
+              )}
+            >
               {reachable ? (
                 <button
                   type="button"
                   onClick={() => onSelect(step)}
-                  className="group flex min-w-0 items-center gap-2.5 rounded-md py-1 pr-2 transition-colors duration-150 hover:text-accent-ink sm:gap-3"
+                  className="group flex min-w-0 items-center gap-2.5 rounded-md py-1 pr-2 transition-colors duration-150 hover:text-accent-ink touch:min-h-11 sm:gap-3"
                 >
                   {content}
                 </button>

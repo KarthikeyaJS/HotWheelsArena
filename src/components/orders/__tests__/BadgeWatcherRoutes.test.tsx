@@ -65,9 +65,10 @@ describe('BadgeWatcher on commerce routes', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('still shows the modal elsewhere', async () => {
+  it('still shows the modal elsewhere (without a duplicate badge toast)', async () => {
     renderAndUnlock('/garage');
-    expect(achievementToasts()).toHaveLength(1);
+    // The modal announces the badge; a toast would only repeat it and cover its actions.
+    expect(achievementToasts()).toHaveLength(0);
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 });

@@ -17,7 +17,13 @@ const SIZES: Readonly<Record<ContainerSize, string>> = {
   wide: 'max-w-[1440px]',
 };
 
-/** Page gutter + max width: `mx-auto w-full max-w-content px-4 sm:px-6 lg:px-8`. */
+/**
+ * Page gutter (1rem / 1.5rem from sm / 2rem from lg, each widened to the safe-area inset so
+ * content clears a landscape notch) + max width.
+ */
+const GUTTER =
+  'pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] lg:pl-[max(2rem,env(safe-area-inset-left))] lg:pr-[max(2rem,env(safe-area-inset-right))]';
+
 export function Container({
   as: Component = 'div',
   size = 'content',
@@ -28,7 +34,7 @@ export function Container({
   return (
     <Component
       {...rest}
-      className={cn('mx-auto w-full px-4 sm:px-6 lg:px-8', SIZES[size], className)}
+      className={cn('mx-auto w-full', GUTTER, SIZES[size], className)}
     >
       {children}
     </Component>

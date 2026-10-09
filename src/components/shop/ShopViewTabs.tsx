@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { ShopView, ShopViewId } from '@/config/shop';
+import { useScrollFadeEnd } from '@/hooks/useScrollFadeEnd';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
 
@@ -20,6 +21,7 @@ export interface ShopViewTabsProps {
  */
 export function ShopViewTabs({ views, active, hrefFor, counts, className }: ShopViewTabsProps) {
   const listRef = useRef<HTMLUListElement>(null);
+  const fadeEnd = useScrollFadeEnd(listRef);
 
   useLayoutEffect(() => {
     const list = listRef.current;
@@ -33,7 +35,11 @@ export function ShopViewTabs({ views, active, hrefFor, counts, className }: Shop
     <nav aria-label="Shop views" className={cn('relative -mx-4 sm:-mx-6 lg:mx-0', className)}>
       <ul
         ref={listRef}
-        className="scrollbar-none flex snap-x scroll-px-4 gap-1.5 overflow-x-auto scroll-smooth px-4 py-1 sm:scroll-px-6 sm:px-6 lg:flex-wrap lg:overflow-visible lg:px-0"
+        className={cn(
+          'scrollbar-none flex snap-x scroll-px-4 gap-1.5 overflow-x-auto overscroll-x-contain scroll-smooth px-4 py-1 sm:scroll-px-6 sm:px-6 lg:flex-wrap lg:overflow-visible lg:px-0',
+          // Edge fade while more views are off-screen to the right (CA-14).
+          fadeEnd && 'scroll-fade-x',
+        )}
       >
         {views.map((view) => {
           const isActive = view.id === active;
@@ -46,7 +52,7 @@ export function ShopViewTabs({ views, active, hrefFor, counts, className }: Shop
                 preventScrollReset
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'group relative inline-flex h-10 items-center gap-1.5 overflow-hidden rounded-md border px-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-[color,background-color,border-color,transform] duration-150 ease-race active:scale-[0.97]',
+                  'group relative inline-flex h-10 items-center gap-1.5 overflow-hidden rounded-md border px-2.5 font-mono text-xs font-bold uppercase tracking-[0.12em] transition-[color,background-color,border-color,transform] duration-150 ease-race active:scale-[0.97] touch:h-11',
                   isActive
                     ? 'border-accent bg-accent/10 text-accent-ink'
                     : 'border-line bg-card/70 text-fg hover:border-fg/40 hover:bg-card-hover',
@@ -60,13 +66,21 @@ export function ShopViewTabs({ views, active, hrefFor, counts, className }: Shop
                   )}
                 />
                 <span>{view.label}</span>
-                {count !== undefined ? (
+                {/* The count slot keeps its width while counts load, so the tabs don't slide sideways. */}
+                {counts === undefined || count !== undefined ? (
                   <span
-                    className={cn('tabular-nums', isActive ? 'text-accent-ink/80' : 'text-muted')}
+                    className={cn(
+                      'min-w-[2ch] tabular-nums',
+                      isActive ? 'text-accent-ink/80' : 'text-muted',
+                    )}
                   >
-                    <span className="sr-only">, </span>
-                    {formatNumber(count)}
-                    <span className="sr-only"> {count === 1 ? 'car' : 'cars'}</span>
+                    {count !== undefined ? (
+                      <>
+                        <span className="sr-only">, </span>
+                        {formatNumber(count)}
+                        <span className="sr-only"> {count === 1 ? 'car' : 'cars'}</span>
+                      </>
+                    ) : null}
                   </span>
                 ) : null}
                 <span

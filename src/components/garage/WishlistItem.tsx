@@ -42,7 +42,7 @@ function WishlistItemImpl({
     const image = primaryImageOf(product);
     return (
       <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-dashed border-line bg-card p-4 text-fg shadow-card">
-        <p className="hud inline-flex items-center gap-1.5 text-[10px] text-muted">
+        <p className="hud inline-flex items-center gap-1.5 text-xs text-muted">
           <Archive aria-hidden="true" className="h-3.5 w-3.5" />
           Retired from the catalogue
         </p>
@@ -113,7 +113,7 @@ function WishlistItemImpl({
         />
       </div>
       {addedAt != null ? (
-        <p className="hud mt-1.5 px-1 text-[10px] text-muted">Saved {formatRelative(addedAt)}</p>
+        <p className="hud mt-1.5 px-1 text-xs text-muted">Saved {formatRelative(addedAt)}</p>
       ) : null}
     </div>
   );

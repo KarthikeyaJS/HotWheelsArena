@@ -94,7 +94,7 @@ export function RemovalUndoBar({
           className="pointer-events-auto relative flex w-full max-w-xl animate-fade-in items-center gap-3 overflow-hidden rounded-lg border border-line bg-surface/95 py-2.5 pl-4 pr-2 shadow-card-hover backdrop-blur"
         >
           <p className="min-w-0 flex-1 text-sm text-fg">
-            <span className="hud mr-2 text-[10px] text-muted">Pulled from the garage</span>
+            <span className="hud mr-2 text-2xs text-muted">Pulled from the garage</span>
             <span className="block truncate font-semibold sm:inline">{item.name}</span>
           </p>
           <Button
@@ -120,7 +120,7 @@ export function RemovalUndoBar({
         </div>
       ))}
       {pending.length > MAX_VISIBLE ? (
-        <p className="hud pointer-events-auto rounded bg-surface/90 px-2 py-1 text-[10px] text-muted">
+        <p className="hud pointer-events-auto rounded bg-surface/90 px-2 py-1 text-xs text-muted">
           +{pending.length - MAX_VISIBLE} more waiting
         </p>
       ) : null}

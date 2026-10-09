@@ -80,7 +80,7 @@ export function ContentPage({
             <aside className="hidden lg:col-span-3 lg:block">
               <TableOfContents
                 items={toc}
-                className="sticky top-[calc(var(--header-height)+2rem)] max-h-[calc(100vh-var(--header-height)-4rem)] overflow-y-auto pb-4"
+                className="sticky top-[calc(var(--header-height)+2rem)] max-h-[calc(100dvh-var(--header-height)-4rem)] overflow-y-auto pb-4"
               />
             </aside>
             <div className="flex min-w-0 flex-col gap-10 lg:col-span-9">{children}</div>

@@ -1,10 +1,13 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 /** Token colour backed by an RGB-triplet CSS variable so `/opacity` modifiers work. */
 const token = (name: string): string => `rgb(var(--${name}) / <alpha-value>)`;
 
 export default {
   darkMode: 'class',
+  // Hover styles only apply where hover exists, so card lifts don't stick after a tap.
+  future: { hoverOnlyWhenSupported: true },
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -62,6 +65,10 @@ export default {
           '"Liberation Mono"',
           'monospace',
         ],
+      },
+      fontSize: {
+        // Floor for decorative HUD labels only; informational text uses text-xs (12px) or larger.
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }],
       },
       letterSpacing: {
         display: '0.08em',
@@ -145,5 +152,12 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Interaction-media variants (see docs/ARCHITECTURE.md "Mobile & responsive").
+    plugin(({ addVariant }) => {
+      addVariant('touch', '@media (hover: none) and (pointer: coarse)'); // phones + tablets
+      addVariant('fine', '@media (hover: hover) and (pointer: fine)'); // mouse / trackpad
+      addVariant('short', '@media (max-height: 500px)'); // landscape phones
+    }),
+  ],
 } satisfies Config;

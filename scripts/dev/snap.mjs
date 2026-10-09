@@ -117,15 +117,15 @@ try {
     reducedMotion: values['reduced-motion'] ? 'reduce' : 'no-preference',
     colorScheme: theme,
   });
-  // Persisted UI prefs (zustand persist key hwa-prefs-v1, version 1 — keep in sync with
+  // Persisted UI prefs (zustand persist key hwa-prefs-v1, version 2 — keep in sync with
   // src/store/uiStore.ts) so the no-flash script and the store both pick the theme.
   await context.addInitScript((t) => {
     try {
       const key = 'hwa-prefs-v1';
       const raw = window.localStorage.getItem(key);
-      const parsed = raw ? JSON.parse(raw) : { state: {}, version: 1 };
+      const parsed = raw ? JSON.parse(raw) : { state: {}, version: 2 };
       parsed.state = { ...(parsed.state || {}), theme: t };
-      parsed.version = 1;
+      parsed.version = 2;
       window.localStorage.setItem(key, JSON.stringify(parsed));
     } catch {
       /* ignore */

@@ -68,7 +68,7 @@ export function FilterGroup({
             {title}
           </span>
           {selectedCount > 0 ? (
-            <span className="inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 font-mono text-[10px] font-bold tabular-nums leading-none text-on-accent">
+            <span className="inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 font-mono text-2xs font-bold tabular-nums leading-none text-on-accent">
               {selectedCount}
               <span className="sr-only"> selected</span>
             </span>

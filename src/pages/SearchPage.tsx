@@ -6,7 +6,7 @@ import { SearchInput } from '@/components/search/SearchInput';
 import { ProductBrowser } from '@/components/shop/ProductBrowser';
 import { QueryChipLink } from '@/components/shop/QueryChipLink';
 import { SearchLanding } from '@/components/shop/SearchLanding';
-import { SearchSuggestions } from '@/components/shop/SearchSuggestions';
+import { SearchSuggestions, SearchSuggestionsSkeleton } from '@/components/shop/SearchSuggestions';
 import { ShopEmptyState } from '@/components/shop/ShopEmptyState';
 import { ShopHeader } from '@/components/shop/ShopHeader';
 import { Container } from '@/components/ui/Container';
@@ -99,7 +99,8 @@ export default function SearchPage() {
   const description = !q
     ? 'Find any car by make, model, series, colour or rarity. Try “Porsche 911” or “rally”.'
     : loading
-      ? 'Scanning the garage…'
+      ? // About as long as the results line below, so the header keeps its height when it lands.
+        'Scanning the garage for matching machines — refine with the filters or jump to a model.'
       : results
         ? `${pluralize(results.length, 'machine')} ${results.length === 1 ? 'matches' : 'match'} your search. Refine with the filters or jump to a model.`
         : 'Search results for your query.';
@@ -144,7 +145,9 @@ export default function SearchPage() {
             clearLabel="Clear search field"
             placeholder="Search the garage… make, model, series"
           />
-          {suggestions.length > 0 ? (
+          {q && loading ? (
+            <SearchSuggestionsSkeleton />
+          ) : suggestions.length > 0 ? (
             <SearchSuggestions suggestions={suggestions} query={q} onPick={addRecent} />
           ) : null}
         </div>

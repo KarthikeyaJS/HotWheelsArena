@@ -30,7 +30,7 @@ export function HomeSection({
       id={id}
       aria-labelledby={sectionHeadingId(id)}
       tabIndex={-1}
-      className={cn('relative isolate py-16 focus:outline-none lg:py-24', className)}
+      className={cn('relative isolate py-12 focus:outline-none sm:py-16 lg:py-24', className)}
     >
       {decoration}
       <Container className={containerClassName}>{children}</Container>

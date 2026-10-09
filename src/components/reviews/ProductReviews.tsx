@@ -97,7 +97,7 @@ export const ProductReviews = forwardRef<HTMLElement, ProductReviewsProps>(funct
     );
   } else if (status === 'signed-in') {
     formArea = (
-      <div className="rounded-xl border border-line bg-card p-5 shadow-card sm:p-6">
+      <div className="min-w-0 rounded-xl border border-line bg-card p-4 shadow-card sm:p-6">
         <ReviewForm
           productId={product.id}
           productName={product.name}
@@ -129,7 +129,7 @@ export const ProductReviews = forwardRef<HTMLElement, ProductReviewsProps>(funct
       />
 
       <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
-        <div className="flex flex-col gap-6 lg:col-span-5">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-span-5">
           <div className="rounded-xl border border-line bg-card p-5 shadow-card sm:p-6">
             <DataState
               isLoading={reviewsQuery.isLoading}

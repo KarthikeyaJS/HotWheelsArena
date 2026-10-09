@@ -30,8 +30,8 @@ const BASE =
   'inline-flex max-w-full shrink-0 items-center whitespace-nowrap rounded border font-mono font-bold uppercase leading-none tracking-[0.12em]';
 
 const SIZES: Readonly<Record<ChipSize, string>> = {
-  sm: 'h-6 gap-1 px-2 text-[10px] [&_svg]:h-3 [&_svg]:w-3',
-  md: 'h-7 gap-1.5 px-2.5 text-[11px] [&_svg]:h-3.5 [&_svg]:w-3.5',
+  sm: 'h-6 gap-1 px-2 text-2xs [&_svg]:h-3 [&_svg]:w-3',
+  md: 'h-7 gap-1.5 px-2.5 text-xs [&_svg]:h-3.5 [&_svg]:w-3.5',
   lg: 'h-9 gap-2 px-3.5 text-xs [&_svg]:h-4 [&_svg]:w-4',
 };
 
@@ -64,7 +64,7 @@ const TONES: Readonly<Record<ChipVariant, Readonly<Record<ChipTone, string>>>> =
 };
 
 const INTERACTIVE =
-  'cursor-pointer transition-[color,background-color,border-color,transform] duration-150 ease-race hover:border-fg/40 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100';
+  'relative cursor-pointer transition-[color,background-color,border-color,transform] duration-150 ease-race touch:after:absolute touch:after:inset-x-0 touch:after:-inset-y-2.5 hover:border-fg/40 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100';
 
 const SELECTED = 'border-accent bg-accent/10 text-accent-ink hover:border-accent';
 
@@ -147,7 +147,7 @@ export function Chip({
         disabled={disabled}
         aria-label={resolvedRemoveLabel}
         title={resolvedRemoveLabel}
-        className="ml-0.5 inline-grid h-5 w-5 shrink-0 place-items-center rounded-sm opacity-70 transition-[opacity,background-color] duration-150 hover:bg-fg/15 hover:opacity-100 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+        className="relative ml-0.5 inline-grid h-5 w-5 shrink-0 place-items-center rounded-sm opacity-70 touch:after:absolute touch:after:-inset-3 transition-[opacity,background-color] duration-150 hover:bg-fg/15 hover:opacity-100 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <X aria-hidden="true" strokeWidth={2.5} />
       </button>

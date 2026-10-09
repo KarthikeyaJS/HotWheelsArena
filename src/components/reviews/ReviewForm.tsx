@@ -96,7 +96,7 @@ export function ReviewForm({
       aria-describedby={serverError || justSaved ? statusId : undefined}
       className={cn('flex flex-col gap-5', className)}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h3
           id={`${baseId}-title`}
           className="flex items-center gap-2 font-display text-base font-bold uppercase tracking-display text-fg"
@@ -104,7 +104,7 @@ export function ReviewForm({
           <PenLine aria-hidden="true" className="h-4 w-4 text-accent-ink" />
           {isEditing ? 'Edit your review' : 'Write a review'}
         </h3>
-        <span className="flex min-w-0 items-center gap-2 text-xs text-muted">
+        <span className="flex min-w-0 max-w-full items-center gap-2 text-xs text-muted">
           <UserAvatar name={authorName} photoURL={authorPhotoURL} size="sm" />
           <span className="truncate">
             Posting as <span className="font-semibold text-fg">{authorName}</span>

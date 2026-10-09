@@ -66,7 +66,7 @@ function GarageCarCardImpl({
       <span aria-hidden="true" className="racing-stripe z-20" />
 
       <div className="flex items-center justify-between gap-2 px-4 pt-4">
-        <p className="hud min-w-0 truncate text-[10px] text-muted">
+        <p className="hud min-w-0 truncate text-xs text-muted">
           {hud ? (
             <>
               {hud.series}
@@ -110,7 +110,7 @@ function GarageCarCardImpl({
             )}
           />
           {copies > 1 ? (
-            <span className="absolute bottom-1 left-0 rounded-sm border border-line bg-surface/90 px-1.5 py-1 font-mono text-[11px] font-bold tabular-nums leading-none text-fg backdrop-blur-sm">
+            <span className="absolute bottom-1 left-0 rounded-sm border border-line bg-surface/90 px-1.5 py-1 font-mono text-xs font-bold tabular-nums leading-none text-fg backdrop-blur-sm">
               ×{copies}
               <span className="sr-only"> copies</span>
             </span>
@@ -169,7 +169,7 @@ function GarageCarCardImpl({
             <time
               dateTime={new Date(entry.addedAt).toISOString()}
               title={formatDate(entry.addedAt, true)}
-              className="hud text-[10px] text-muted"
+              className="hud text-xs text-muted"
             >
               Added {formatRelative(entry.addedAt)}
             </time>
@@ -187,13 +187,13 @@ function GarageCarCardImpl({
         <div className="mt-auto flex flex-col gap-3 border-t border-line pt-3">
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="hud text-[10px] text-muted">Value</p>
+              <p className="hud text-2xs text-muted">Value</p>
               <p className="font-mono text-lg font-bold tabular-nums text-fg">
                 {product ? formatINR(value) : '—'}
               </p>
             </div>
             {copies > 1 && product ? (
-              <p className="pb-0.5 text-right font-mono text-[11px] tabular-nums text-muted">
+              <p className="pb-0.5 text-right font-mono text-xs tabular-nums text-muted">
                 {formatINR(product.price)} × {copies}
                 <span className="block text-fg">
                   {copies - 1} {copies - 1 === 1 ? 'spare' : 'spares'}

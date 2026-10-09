@@ -103,7 +103,7 @@ export function PaletteOption({ item, id, active, onSelect, onActivate }: Palett
           {item.label}
         </span>
         {item.description && item.kind !== 'model' ? (
-          <span className="hud mt-0.5 block truncate text-[10px] text-muted">
+          <span className="hud mt-0.5 block truncate text-xs text-muted">
             {item.description}
           </span>
         ) : null}
@@ -117,7 +117,7 @@ export function PaletteOption({ item, id, active, onSelect, onActivate }: Palett
           {product.rarity !== 'common' ? <RarityChip rarity={product.rarity} size="sm" /> : null}
         </span>
       ) : item.count !== undefined ? (
-        <span className="hud shrink-0 text-[10px] text-muted">
+        <span className="hud shrink-0 text-2xs text-muted">
           {pluralize(item.count, 'car').toUpperCase()}
         </span>
       ) : null}

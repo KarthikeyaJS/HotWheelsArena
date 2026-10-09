@@ -48,7 +48,7 @@ export function TableOfContents({
                 focusHashTarget(item.id);
               }}
               className={cn(
-                'group flex items-baseline gap-3 border-l-2 py-2 pl-4 pr-2 text-sm transition-colors duration-150 active:opacity-80',
+                'group flex items-baseline gap-3 border-l-2 py-2 pl-4 pr-2 text-sm transition-colors duration-150 active:opacity-80 touch:py-3',
                 current
                   ? 'border-accent font-semibold text-fg'
                   : 'border-line text-muted hover:border-fg/40 hover:text-fg',
@@ -57,7 +57,7 @@ export function TableOfContents({
               <span
                 aria-hidden="true"
                 className={cn(
-                  'font-mono text-[11px] tabular-nums',
+                  'font-mono text-xs tabular-nums',
                   current ? 'text-accent-ink' : 'text-muted',
                 )}
               >

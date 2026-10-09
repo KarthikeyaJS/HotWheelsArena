@@ -32,8 +32,6 @@ import {
 - Auth: wishlist and garage buttons go through `useWishlistActions` / `useGarageActions`. Those
   hooks are optimistic and auth-gated: a signed-out click opens the SignInPrompt, and the action
   runs right after sign-in.
-- Sounds go through `useSound()`: `click` on add to cart, `rev` on add to garage. Both are silent
-  unless the visitor turned sounds on.
 
 ---
 
@@ -223,7 +221,7 @@ Behaviour:
 | `onAdded`   | `(r: AddToCartResult) => void` |              | Called after every click, e.g. BUY NOW → navigate to checkout                     |
 | `className` | `string`                       |              | Classes on the wrapper                                                            |
 
-Clicking calls `useCartStore.getState().addItem(toCartItem(product), qty)`. It then toasts **"Added to your pit stop"** (or, when capped, "Max per collector reached" — or **"Only N in stock"** when the product's stock is below `MAX_QTY_PER_ITEM` and is the real cap), plays `useSound()('click')`, and runs a 1–2px engine shake.
+Clicking calls `useCartStore.getState().addItem(toCartItem(product), qty)`. It then toasts **"Added to your pit stop"** (or, when capped, "Max per collector reached" — or **"Only N in stock"** when the product's stock is below `MAX_QTY_PER_ITEM` and is the real cap), and runs a 1–2px engine shake.
 
 | State      | Visible            | Accessible name                                                                              | Enabled                                                                                               |
 | ---------- | ------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -268,7 +266,7 @@ Clicking calls `useCartStore.getState().addItem(toCartItem(product), qty)`. It t
 
 This adds the car to the collection, not the cart. It uses `useGarageActions`, which is optimistic and auth-gated.
 
-1. Idle: **ADD TO GARAGE**. A click parks the car with the `rev` sound and an engine shake (only when signed in; signed-out visitors get the sign-in prompt and the car is parked after sign-in).
+1. Idle: **ADD TO GARAGE**. A click parks the car with an engine shake (only when signed in; signed-out visitors get the sign-in prompt and the car is parked after sign-in).
 2. While saving, the button shows a loading state ("Parking…" / "Removing…").
 3. Parked: **IN YOUR GARAGE ✓** (green, `×n` for duplicates).
 4. Pressing it again arms **CONFIRM REMOVE?** (red) for 4 seconds, announced through a polite live region. Escape or blur cancels it, and a second press removes the car.

@@ -62,7 +62,7 @@ export function ScanlinesToggle({
         onClick={cycle}
         aria-label={name}
         className={cn(
-          'hud inline-flex h-8 items-center gap-2 rounded-md border border-line px-2.5 text-[10px] text-muted transition-colors hover:border-accent/60 hover:text-fg',
+          'hud inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-2xs text-muted transition-colors hover:border-accent/60 hover:text-fg touch:h-11',
           className,
         )}
       >

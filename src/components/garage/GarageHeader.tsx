@@ -130,7 +130,9 @@ export function GarageHeader({
                     <dt className="text-muted">{item.label}</dt>
                     <dd className="tabular-nums">
                       {item.loading ? (
-                        <Skeleton className="inline-block h-3 w-8 rounded-sm align-middle" />
+                        // ~2 digits wide: a wider placeholder wrapped the readouts onto a second
+                        // line at 320px, then the row jumped back up on load (CLS).
+                        <Skeleton className="inline-block h-3 w-[2ch] rounded-sm align-middle" />
                       ) : (
                         item.value
                       )}
@@ -162,13 +164,13 @@ export function GarageHeader({
               <div className="flex flex-col items-center gap-3">
                 <Tachometer rpm={progressToRpm(progress.pct)} size="md" />
                 <div className="grid w-full grid-cols-2 gap-3 border-t border-line pt-3 text-center">
-                  <p className="hud text-[10px] text-muted">
+                  <p className="hud text-2xs text-muted">
                     To next level
                     <span className="mt-1 block font-mono text-base font-bold tracking-normal text-fg">
                       {progress.isMax ? '—' : formatNumber(progress.toNext)}
                     </span>
                   </p>
-                  <p className="hud text-[10px] text-muted">
+                  <p className="hud text-2xs text-muted">
                     Unique models
                     <span className="mt-1 block font-mono text-base font-bold tracking-normal text-fg">
                       {formatNumber(stats.uniqueCars)}

@@ -129,7 +129,7 @@ export function AchievementsTab({ profile, isLoading }: AchievementsTabProps) {
           </h2>
           <div className="flex items-center justify-between gap-4">
             <LevelBadge level={progress.level} size="md" showTitle />
-            <p className="hud text-right text-[10px] text-muted">
+            <p className="hud text-right text-2xs text-muted">
               {progress.isMax ? 'Max level' : 'To next level'}
               <span className="mt-1 block font-mono text-lg font-bold tracking-normal text-fg">
                 {progress.isMax ? '—' : formatNumber(progress.toNext)}
@@ -146,7 +146,7 @@ export function AchievementsTab({ profile, isLoading }: AchievementsTabProps) {
                 <span className="flex items-center justify-between gap-3">
                   <span className="font-display text-xs font-bold uppercase tracking-display text-fg">
                     {formatLevel(progress.level)}
-                    <span className="hud ml-2 text-[10px] text-accent-ink">You are here</span>
+                    <span className="hud ml-2 text-2xs text-accent-ink">You are here</span>
                   </span>
                   <span className="font-mono text-xs tabular-nums text-muted">
                     {formatNumber(xpForLevel(progress.level))} XP
@@ -172,11 +172,11 @@ export function AchievementsTab({ profile, isLoading }: AchievementsTabProps) {
                       <ChevronsUp aria-hidden="true" className="h-3.5 w-3.5 text-muted" />
                       {formatLevel(step.level)}
                     </span>
-                    <span className="hud mt-0.5 block text-[10px] text-muted">{step.title}</span>
+                    <span className="hud mt-0.5 block text-xs text-muted">{step.title}</span>
                   </span>
                   <span className="shrink-0 text-right font-mono text-xs tabular-nums">
                     <span className="block text-fg">{formatNumber(step.threshold)} XP</span>
-                    <span className="block text-[11px] text-muted">
+                    <span className="block text-xs text-muted">
                       {formatNumber(step.remaining)} to go
                     </span>
                   </span>
@@ -205,7 +205,7 @@ export function AchievementsTab({ profile, isLoading }: AchievementsTabProps) {
                 </span>
                 <span className="shrink-0 text-right font-mono text-xs font-bold tabular-nums text-accent-ink">
                   +{formatNumber(rule.xp)} XP
-                  <span className="block text-[10px] font-normal uppercase tracking-hud text-muted">
+                  <span className="block text-2xs font-normal uppercase tracking-hud text-muted">
                     {perLabel(rule.per)}
                   </span>
                 </span>

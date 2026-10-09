@@ -235,7 +235,6 @@ describe('index.html ↔ Content-Security-Policy', () => {
       ['img-src', 'https://lh3.googleusercontent.com'],
       ['style-src', 'https://fonts.googleapis.com'],
       ['font-src', 'https://fonts.gstatic.com'],
-      ['media-src', "'self'"],
     ];
     for (const [directive, source] of expectations) {
       expect(csp.get(directive) ?? [], `${directive} should allow ${source}`).toContain(source);
@@ -249,6 +248,10 @@ describe('index.html ↔ Content-Security-Policy', () => {
     expect(csp.get('base-uri')).toEqual(["'self'"]);
     expect(csp.get('form-action')).toEqual(["'self'"]);
     expect(csp.get('frame-ancestors')).toEqual(["'none'"]);
+  });
+
+  it('has no media-src: the app plays no audio or video (falls back to default-src)', () => {
+    expect(cspFor('/').has('media-src')).toBe(false);
   });
 });
 
@@ -283,8 +286,7 @@ describe('hosting headers and caching', () => {
     expect(headerValue('/site.webmanifest', 'Cache-Control')).toBe('no-cache');
   });
 
-  it('sounds and placeholders are cached for a day', () => {
-    expect(headerValue('/sounds/rev.wav', 'Cache-Control')).toBe('public, max-age=86400');
+  it('placeholders are cached for a day', () => {
     expect(headerValue('/placeholders/car-generic.svg', 'Cache-Control')).toBe(
       'public, max-age=86400',
     );

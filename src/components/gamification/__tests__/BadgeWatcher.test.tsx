@@ -48,9 +48,9 @@ describe('BadgeWatcher', () => {
     useToastStore.getState().clear();
   });
 
-  function renderWatcher() {
+  function renderWatcher(path = '/') {
     const utils = render(
-      <MemoryRouter future={ROUTER_FUTURE}>
+      <MemoryRouter future={ROUTER_FUTURE} initialEntries={[path]}>
         <BadgeWatcher />
       </MemoryRouter>,
     );
@@ -73,7 +73,7 @@ describe('BadgeWatcher', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('celebrates a live unlock with a toast and the unlock modal', async () => {
+  it('celebrates a live unlock with the unlock modal (no duplicate badge toast)', async () => {
     const { rerender } = renderWatcher();
     setAuth({ profile: profile('u1', ['first-ride'], 2), status: 'signed-in' }, rerender);
     setAuth(
@@ -81,13 +81,24 @@ describe('BadgeWatcher', () => {
       rerender,
     );
 
-    expect(toastTitles()).toEqual(['BADGE UNLOCKED', 'LEVEL UP — LEVEL 03']);
+    expect(toastTitles()).toEqual(['LEVEL UP — LEVEL 03']);
     await waitFor(() =>
       // (jsdom's name computation pads inline elements with spaces; browsers do not)
       expect(
         screen.getByRole('dialog', { name: /badge unlocked\s*:\s*treasure hunter/i }),
       ).toBeInTheDocument(),
     );
+  });
+
+  it('toasts the badge instead of opening the modal on modal-free routes', () => {
+    const { rerender } = renderWatcher('/checkout');
+    setAuth({ profile: profile('u1', ['first-ride'], 2), status: 'signed-in' }, rerender);
+    setAuth(
+      { profile: profile('u1', ['first-ride', 'treasure-hunter'], 2), status: 'signed-in' },
+      rerender,
+    );
+    expect(toastTitles()).toEqual(['BADGE UNLOCKED']);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('does not fire on a user switch or after signing out and back in', () => {

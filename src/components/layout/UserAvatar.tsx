@@ -9,7 +9,7 @@ export interface UserAvatarProps {
 }
 
 const SIZES = {
-  sm: 'h-8 w-8 text-[11px]',
+  sm: 'h-8 w-8 text-2xs',
   md: 'h-10 w-10 text-xs',
   lg: 'h-12 w-12 text-sm',
 } as const;

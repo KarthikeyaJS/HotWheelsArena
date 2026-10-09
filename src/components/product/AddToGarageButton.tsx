@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { Button, type ButtonSize } from '@/components/ui';
 import { useUid } from '@/hooks/useAuth';
 import { useGarageActions } from '@/hooks/useGarageActions';
-import { useSound } from '@/hooks/useSound';
 import { cn } from '@/lib/cn';
 import { useGarageQuantity, useIsInGarage } from '@/store/garageStore';
 import type { Product } from '@/types';
@@ -24,8 +23,8 @@ const CONFIRM_WINDOW_MS = 4000;
 
 /**
  * ADD TO GARAGE (collection, not cart). Uses `useGarageActions` — optimistic, auth-gated (opens
- * the sign-in prompt and parks the car right after sign-in). Parking plays the optional rev
- * sound with an engine shake. Parked state: "IN YOUR GARAGE ✓" (×n for duplicates); pressing it
+ * the sign-in prompt and parks the car right after sign-in). Parking runs an engine shake.
+ * Parked state: "IN YOUR GARAGE ✓" (×n for duplicates); pressing it
  * arms a "Confirm remove?" step (4s, Escape/blur cancels) and a second press removes the car.
  */
 export function AddToGarageButton({
@@ -39,7 +38,6 @@ export function AddToGarageButton({
   const inGarage = useIsInGarage(product.id);
   const quantity = useGarageQuantity(product.id);
   const { addToGarage, removeFromGarage, pendingProductId } = useGarageActions();
-  const playSound = useSound();
   const { controls, variants, shake } = useEngineShake();
   const [confirming, setConfirming] = useState(false);
   const [lastAction, setLastAction] = useState<'add' | 'remove'>('add');
@@ -72,10 +70,7 @@ export function AddToGarageButton({
       setLastAction('add');
       setAnnouncement('');
       addToGarage({ id: product.id, name: product.name });
-      if (uid) {
-        playSound('rev');
-        shake();
-      }
+      if (uid) shake();
       return;
     }
 

@@ -7,6 +7,8 @@ export const MEDIA_QUERIES = {
   lg: '(min-width: 1024px)',
   xl: '(min-width: 1280px)',
   hover: '(hover: hover) and (pointer: fine)',
+  /** Landscape phones (Tailwind `short:` variant). */
+  short: '(max-height: 500px)',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   prefersLight: '(prefers-color-scheme: light)',
 } as const;

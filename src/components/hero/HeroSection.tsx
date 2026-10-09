@@ -52,25 +52,21 @@ export function HeroSection() {
       <Container className="py-10 sm:py-14 lg:py-16 xl:py-20">
         <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-12 lg:gap-6">
           <div className="lg:col-span-6">
-            {/* One line from 320px up, before and after the count loads (no reflow). */}
-            <p className="hud flex flex-wrap items-center gap-x-2 gap-y-1 whitespace-nowrap text-muted">
+            {/* Phones: two fixed lines (the live count gets its own line, so the eyebrow is the same
+                height before and after the count loads — no layout shift, CA-03). One line from 640px. */}
+            <p className="hud grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1 whitespace-nowrap text-muted sm:flex sm:flex-wrap">
               <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-accent" />
               <span className="text-fg">Digital garage</span>
-              <span aria-hidden="true">·</span>
-              {count > 0 ? (
-                <span>
-                  {formatNumber(count)} machines
-                  <span className="max-[359px]:hidden"> parked</span>
-                </span>
-              ) : (
-                <span>
-                  <span className="max-[359px]:hidden">Doors </span>open 24/7
-                </span>
-              )}
+              <span aria-hidden="true" className="hidden sm:inline">
+                ·
+              </span>
+              <span className="col-start-2">
+                {count > 0 ? <>{formatNumber(count)} machines parked</> : <>Doors open 24/7</>}
+              </span>
             </p>
             <h1
               id={headingId}
-              className="mt-4 font-black leading-[0.95] tracking-[0.04em] text-fg sm:tracking-display"
+              className="mt-3 font-black leading-[0.95] tracking-[0.04em] text-fg sm:mt-4 sm:tracking-display"
             >
               <span className="block text-[clamp(2.05rem,9.4vw,3.75rem)] lg:text-[clamp(3rem,4.6vw,4.25rem)]">
                 {BRAND_HERO_TITLE}

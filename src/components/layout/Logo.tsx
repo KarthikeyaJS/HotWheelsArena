@@ -78,12 +78,14 @@ export function Logo({ size = 'md', asLink = true, onClick, className, textClass
 
   if (!asLink) return <span className={classes}>{content}</span>;
 
+  // As a link: py-3/-my-3 grows the tap target to ~44px tall without moving the layout.
+
   return (
     <Link
       to={ROUTES.home}
       aria-label={`${BRAND_NAME} — home`}
       onClick={onClick}
-      className={classes}
+      className={cn(classes, 'relative -my-3 py-3')}
     >
       {content}
     </Link>

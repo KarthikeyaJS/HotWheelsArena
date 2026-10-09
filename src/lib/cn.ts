@@ -35,6 +35,7 @@ const twMerge = extendTailwindMerge({
       tracking: [{ tracking: ['display', 'hud'] }],
       z: [{ z: ['header', 'overlay', 'drawer', 'modal', 'palette', 'toast', 'scanlines'] }],
       'max-w': [{ 'max-w': ['content'] }],
+      'font-size': [{ text: ['2xs'] }],
       'font-family': [{ font: ['display', 'sans', 'mono'] }],
       animate: [
         {
