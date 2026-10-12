@@ -133,7 +133,7 @@ export const StarRatingInput = forwardRef<HTMLInputElement, StarRatingInputProps
                 <label
                   key={star}
                   className={cn(
-                    'group/star relative inline-flex p-0.5',
+                    'group/star relative inline-flex p-0.5 touch:p-1',
                     disabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   )}
                   onMouseEnter={() => {

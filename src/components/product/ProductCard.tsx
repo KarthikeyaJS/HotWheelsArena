@@ -54,7 +54,7 @@ const NO_BREAK_TOKEN_MAX = 8;
  * Keeps short hyphenated tokens on one line, so "SKYLINE GT-R" never wraps as "GT- / R".
  * Longer ones ("MERCEDES-AMG") may still break, or they could overflow a 2-up phone card.
  */
-export function withNoBreakHyphens(name: string): ReactNode {
+function withNoBreakHyphens(name: string): ReactNode {
   const parts = name.split(/(\S+)/);
   if (!parts.some((part) => part.includes('-') && part.length <= NO_BREAK_TOKEN_MAX)) return name;
   return parts.map((part, index) =>
@@ -71,7 +71,7 @@ export function withNoBreakHyphens(name: string): ReactNode {
 /**
  * The Collectible Product Card (spec §5.2), used everywhere. Below sm (640px) it switches to a
  * phone density that fits a 2-up grid: series line, collector chip and spec row are hidden, the
- * ♡ moves to the top-right corner and + CART becomes a full-width 44px row (≈ 320px tall at 375).
+ * ♡ moves to the top-right corner and + CART becomes a full-width 44px row (≈ 350px tall at 375).
  * The whole card navigates to the
  * product page through a stretched link on the name, while the + CART and ♡ buttons sit above
  * that overlay (no nested interactive elements; tab order: name → cart → wishlist).
@@ -226,6 +226,9 @@ function ProductCardImpl({
             compact ? 'text-[13px]' : 'text-[15px] max-sm:text-[13px]',
             // Exactly two 1.25 lines tall: names align across the grid and never peek a 3rd line.
             'line-clamp-2 h-[2.5em] leading-[1.25]',
+            // Phones (2-up): up to three lines with tighter tracking, so long names aren't cut.
+            !compact &&
+              'max-sm:line-clamp-3 max-sm:h-auto max-sm:min-h-[2.5em] max-sm:tracking-[0.04em]',
           )}
         >
           <Link

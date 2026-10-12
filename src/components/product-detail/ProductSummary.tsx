@@ -54,7 +54,7 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
             <button
               type="button"
               onClick={onReviewsClick}
-              className="group/rating inline-flex items-center gap-2 rounded-sm transition-opacity duration-150 active:opacity-70"
+              className="group/rating relative inline-flex items-center gap-2 rounded-sm transition-opacity duration-150 active:opacity-70 touch:after:absolute touch:after:-inset-y-3.5 touch:after:inset-x-0"
               aria-label={`Rated ${product.ratingAvg.toFixed(1)} out of 5 from ${formatNumber(product.ratingCount)} ${product.ratingCount === 1 ? 'review' : 'reviews'} — jump to reviews`}
             >
               <StarRating value={product.ratingAvg} size="sm" showValue />
@@ -67,7 +67,7 @@ export function ProductSummary({ product, onReviewsClick, className }: ProductSu
             <button
               type="button"
               onClick={onReviewsClick}
-              className="inline-flex items-center gap-2 rounded-sm font-mono text-xs text-muted underline decoration-line underline-offset-4 transition-colors duration-150 hover:text-accent-ink hover:decoration-accent active:opacity-70"
+              className="relative inline-flex items-center gap-2 rounded-sm font-mono text-xs text-muted underline decoration-line underline-offset-4 transition-colors duration-150 hover:text-accent-ink hover:decoration-accent active:opacity-70 touch:after:absolute touch:after:-inset-y-3.5 touch:after:inset-x-0"
             >
               <MessageSquarePlus aria-hidden="true" className="h-4 w-4" />
               No reviews yet — be the first

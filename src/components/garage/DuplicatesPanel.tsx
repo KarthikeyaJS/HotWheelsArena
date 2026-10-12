@@ -70,12 +70,13 @@ export function DuplicatesPanel({ rows, className }: DuplicatesPanelProps) {
                     height={50}
                     className={cn('w-14 shrink-0', car.retired && 'opacity-60 grayscale')}
                   />
-                  <div className="min-w-0 flex-1">
+                  {/* Touch: the name link's hit area covers the name + copies block. */}
+                  <div className="relative min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-fg" title={name}>
                       {car.product && !car.retired ? (
                         <Link
                           to={productPath(car.product.slug)}
-                          className="rounded-sm transition-colors hover:text-accent-ink"
+                          className="rounded-sm transition-colors hover:text-accent-ink touch:after:absolute touch:after:-inset-y-1 touch:after:inset-x-0"
                         >
                           {name}
                         </Link>

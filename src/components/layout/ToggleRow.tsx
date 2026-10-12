@@ -55,7 +55,7 @@ export function ToggleRow({
       onClick={onClick}
       className={cn(
         'group flex w-full items-center gap-3 rounded-md px-3 text-left text-sm text-fg transition-colors duration-150 hover:bg-fg/[0.06] active:bg-fg/[0.1]',
-        menuItem ? 'h-10' : 'h-12',
+        menuItem ? 'h-10 touch:h-11' : 'h-12',
         className,
       )}
     >

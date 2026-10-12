@@ -29,7 +29,8 @@ export function CartCheckoutBar({ totals, isVerifying, className }: CartCheckout
       <div className="flex items-center gap-3 rounded-xl border border-line bg-surface/95 py-2 pl-4 pr-2 shadow-card-hover backdrop-blur-md">
         <p className="min-w-0 flex-1">
           <span className="hud block truncate text-2xs text-muted">
-            Total · {pluralize(totals.itemCount, 'unit')}
+            Total
+            <span className="max-[359px]:hidden"> · {pluralize(totals.itemCount, 'unit')}</span>
           </span>
           <span className="block font-mono text-lg font-bold tabular-nums leading-tight text-fg">
             {formatINR(totals.total)}

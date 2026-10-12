@@ -98,7 +98,7 @@ function ModalContent({
   useOverlayBehavior(panelRef, { onClose, closeOnEsc, initialFocusRef });
 
   return (
-    <div className="fixed inset-0 z-modal flex items-end justify-center sm:items-center sm:p-6 short:p-2">
+    <div className="fixed inset-0 z-modal flex items-end justify-center short:!p-2 sm:items-center sm:p-6">
       <motion.div
         aria-hidden="true"
         className="absolute inset-0 bg-fg/40 backdrop-blur-sm dark:bg-bg/80"
@@ -120,7 +120,7 @@ function ModalContent({
         animate="visible"
         exit="exit"
         className={cn(
-          'relative flex max-h-[calc(100dvh-1rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-line bg-surface shadow-card-hover outline-none sm:max-h-[calc(100dvh-3rem)] sm:rounded-xl short:max-h-[calc(100dvh-1rem)]',
+          'relative flex max-h-[calc(100dvh-1rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-line bg-surface shadow-card-hover outline-none short:!max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-3rem)] sm:rounded-xl',
           SIZES[size],
           className,
         )}
@@ -129,31 +129,31 @@ function ModalContent({
         {/* Short (landscape-phone) viewports: the header scrolls with the body (one scroll
             area instead of a sliver under a fixed header); the action footer stays pinned. */}
         <div className="flex min-h-0 flex-1 flex-col short:overflow-y-auto short:overscroll-contain">
-        <OverlayHeader
-          titleId={titleId}
-          descriptionId={descriptionId}
-          title={title}
-          description={description}
-          eyebrow={eyebrow}
-          onClose={onClose}
-          hideCloseButton={hideCloseButton}
-          closeLabel={closeLabel}
-          className="px-5 pb-4 pt-6 sm:px-6 short:pb-3 short:pt-4"
-        />
-        {children !== undefined && children !== null ? (
-          <div
-            className={cn(
-              'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:px-6 short:flex-none short:overflow-visible',
-              footer ? 'pb-6' : 'pb-[max(1.5rem,env(safe-area-inset-bottom))]',
-              bodyClassName,
-            )}
-          >
-            {children}
-          </div>
-        ) : null}
+          <OverlayHeader
+            titleId={titleId}
+            descriptionId={descriptionId}
+            title={title}
+            description={description}
+            eyebrow={eyebrow}
+            onClose={onClose}
+            hideCloseButton={hideCloseButton}
+            closeLabel={closeLabel}
+            className="px-5 pb-4 pt-6 short:pb-3 short:pt-4 sm:px-6"
+          />
+          {children !== undefined && children !== null ? (
+            <div
+              className={cn(
+                'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 short:flex-none short:overflow-visible sm:px-6',
+                footer ? 'pb-6' : 'pb-[max(1.5rem,env(safe-area-inset-bottom))]',
+                bodyClassName,
+              )}
+            >
+              {children}
+            </div>
+          ) : null}
         </div>
         {footer ? (
-          <div className="safe-bottom flex shrink-0 flex-col-reverse gap-3 border-t border-line bg-bg/40 px-5 pt-4 sm:flex-row sm:flex-wrap-reverse sm:items-center sm:justify-end sm:px-6 short:pb-[max(0.75rem,env(safe-area-inset-bottom))] short:pt-3">
+          <div className="safe-bottom flex shrink-0 flex-col-reverse gap-3 border-t border-line bg-bg/40 px-5 pt-4 short:pb-[max(0.75rem,env(safe-area-inset-bottom))] short:pt-3 sm:flex-row sm:flex-wrap-reverse sm:items-center sm:justify-end sm:px-6">
             {footer}
           </div>
         ) : null}

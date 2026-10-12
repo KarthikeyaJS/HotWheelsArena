@@ -99,8 +99,6 @@ export default function CollectionsPage() {
       />
 
       <Container className="flex flex-col gap-8 py-10 lg:py-14">
-        {!owned.isSignedIn && !owned.isLoading ? <TrackProgressBanner /> : null}
-
         <section aria-label="All series">
           <ErrorBoundary label="Collections">
             <DataState
@@ -154,6 +152,9 @@ export default function CollectionsPage() {
             </p>
           ) : null}
         </section>
+        {/* After the grid, not above it: it only mounts once auth settles, so above the grid it
+            pushed every series card down (CLS 0.07–0.10 on phones/tablets). */}
+        {!owned.isSignedIn && !owned.isLoading ? <TrackProgressBanner /> : null}
       </Container>
     </>
   );

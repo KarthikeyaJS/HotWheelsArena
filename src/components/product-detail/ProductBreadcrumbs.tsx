@@ -28,7 +28,7 @@ export function ProductBreadcrumbs({ items, className }: ProductBreadcrumbsProps
               ) : (
                 <Link
                   to={item.path}
-                  className="relative rounded-sm transition-colors duration-150 hover:text-accent-ink active:opacity-80 touch:after:absolute touch:after:-inset-x-1 touch:after:-inset-y-3"
+                  className="relative rounded-sm transition-colors duration-150 hover:text-accent-ink active:opacity-80 touch:after:absolute touch:after:-inset-x-1 touch:after:-inset-y-3.5"
                 >
                   {item.name}
                 </Link>

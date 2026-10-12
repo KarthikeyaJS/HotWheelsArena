@@ -11,6 +11,7 @@ export {
 } from './ProductCard';
 export { ProductCardSkeleton, type ProductCardSkeletonProps } from './ProductCardSkeleton';
 export { ProductGrid, type ProductGridColumns, type ProductGridProps } from './ProductGrid';
+export { PRODUCT_GRID_COLUMNS, PRODUCT_GRID_GAP } from './productGridLayout';
 export { VaultCard, type VaultCardLayout, type VaultCardProps } from './VaultCard';
 export { HorizontalRail, type HorizontalRailGap, type HorizontalRailProps } from './HorizontalRail';
 export { AddToCartButton, type AddToCartButtonProps } from './AddToCartButton';

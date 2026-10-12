@@ -59,7 +59,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     <label
       htmlFor={inputId}
       className={cn(
-        'group/checkbox inline-flex items-start gap-3',
+        // Touch: ±12px of padding (cancelled by negative margin) makes a one-line row a 44px target.
+        'group/checkbox inline-flex items-start gap-3 touch:-my-3 touch:py-3',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
         containerClassName,
       )}

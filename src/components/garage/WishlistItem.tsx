@@ -84,11 +84,12 @@ function WishlistItemImpl({
         headingAs={headingAs}
         className="flex-1 rounded-b-none"
       />
-      <div className="flex items-center gap-2 rounded-b-xl border border-t-0 border-line bg-surface px-3 py-2.5">
+      <div className="flex items-center gap-2 rounded-b-xl border border-t-0 border-line bg-surface px-2.5 py-2 sm:px-3 sm:py-2.5">
         <Button
           size="sm"
           variant="secondary"
-          leftIcon={<ShoppingCart />}
+          // No cart icon on the disabled "Sold out" state (it also clipped the label on 2-up phone cards).
+          leftIcon={soldOut ? undefined : <ShoppingCart />}
           disabled={soldOut}
           aria-label={
             soldOut
@@ -99,7 +100,15 @@ function WishlistItemImpl({
           onClick={() => onMove(product)}
           className="min-w-0 flex-1"
         >
-          {soldOut ? 'Sold out' : 'Move to pit stop'}
+          {soldOut ? (
+            'Sold out'
+          ) : (
+            <>
+              {/* 2-up phone cards: the short label (the accessible name stays complete). */}
+              <span className="sm:hidden">Move</span>
+              <span className="max-sm:hidden">Move to pit stop</span>
+            </>
+          )}
         </Button>
         <IconButton
           size="sm"

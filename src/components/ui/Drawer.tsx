@@ -143,41 +143,34 @@ function DrawerContent({
         )}
       >
         <span aria-hidden="true" className={STRIPE_CLASSES[side]} />
-        {/* Short (landscape-phone) viewports: a side panel's header, body and footer scroll as one,
-            so the content never shrinks to a sliver between fixed chrome. Bottom sheets keep their
-            pinned footer (it holds the primary action, e.g. "Show results"). */}
-        <div
-          className={cn(
-            'flex min-h-0 flex-1 flex-col',
-            side !== 'bottom' && 'short:overflow-y-auto short:overscroll-contain',
-          )}
-        >
-        <OverlayHeader
-          titleId={titleId}
-          descriptionId={descriptionId}
-          title={title}
-          description={description}
-          eyebrow={eyebrow}
-          onClose={onClose}
-          hideCloseButton={hideCloseButton}
-          closeLabel={closeLabel}
-          className="shrink-0 border-b border-line px-5 py-4 short:py-3"
-        />
-        <div
-          className={cn(
-            'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5',
-            side !== 'bottom' && 'short:flex-none short:overflow-visible',
-            bodyClassName,
-          )}
-        >
-          {children}
+        {/* Short (landscape-phone) viewports: the header scrolls away with the body (one scroll
+            area instead of a sliver under fixed chrome); the action footer stays pinned. */}
+        <div className="flex min-h-0 flex-1 flex-col short:overflow-y-auto short:overscroll-contain">
+          <OverlayHeader
+            titleId={titleId}
+            descriptionId={descriptionId}
+            title={title}
+            description={description}
+            eyebrow={eyebrow}
+            onClose={onClose}
+            hideCloseButton={hideCloseButton}
+            closeLabel={closeLabel}
+            className="shrink-0 border-b border-line px-5 py-4 short:py-3"
+          />
+          <div
+            className={cn(
+              'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 short:flex-none short:overflow-visible',
+              bodyClassName,
+            )}
+          >
+            {children}
+          </div>
         </div>
         {footer ? (
-          <div className="safe-bottom flex shrink-0 flex-col gap-3 border-t border-line bg-bg/40 px-5 pt-4">
+          <div className="safe-bottom flex shrink-0 flex-col gap-3 border-t border-line bg-bg/40 px-5 pt-4 short:pb-[max(0.75rem,env(safe-area-inset-bottom))] short:pt-3">
             {footer}
           </div>
         ) : null}
-        </div>
       </motion.div>
     </div>
   );

@@ -15,7 +15,7 @@ export interface SupportCardProps {
 const [EMAIL_LOCAL, EMAIL_DOMAIN] = SUPPORT_EMAIL.split('@');
 
 const ROW =
-  'flex items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors duration-150 hover:bg-fg/[0.05] hover:text-accent-ink active:opacity-80';
+  'flex items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors duration-150 hover:bg-fg/[0.05] hover:text-accent-ink active:opacity-80 touch:min-h-11';
 
 /** HUD card with the support email, phone and hours (IST) from `brand.ts`. */
 export function SupportCard({
@@ -43,7 +43,7 @@ export function SupportCard({
           <Phone aria-hidden="true" className="h-4 w-4 shrink-0 text-accent-ink" />
           <span className="font-mono tabular-nums">{SUPPORT_PHONE}</span>
         </a>
-        <p className="flex items-center gap-3 px-2 py-2 text-sm text-muted">
+        <p className="flex items-center gap-3 px-2 py-2 text-sm text-muted touch:min-h-11">
           <Clock aria-hidden="true" className="h-4 w-4 shrink-0 text-accent-ink" />
           <span>{SUPPORT_HOURS}</span>
         </p>

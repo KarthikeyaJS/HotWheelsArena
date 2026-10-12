@@ -25,8 +25,8 @@ const VARIANT_BASE: Readonly<Record<ButtonVariant, string>> = {
   ghost: 'rounded-md font-display tracking-display text-fg',
   outline: 'rounded-md border border-fg/25 bg-transparent font-display tracking-display text-fg',
   danger: 'rounded-md bg-danger font-display tracking-display text-white',
-  // On touch, an invisible ::after extends the hit area to 44px tall without moving the layout.
-  link: 'rounded-sm font-mono tracking-hud text-accent-ink underline-offset-4 touch:after:absolute touch:after:inset-x-0 touch:after:-inset-y-3',
+  // On touch, an invisible ::after extends the hit area to ≥ 44px tall without moving the layout.
+  link: 'rounded-sm font-mono tracking-hud text-accent-ink underline-offset-4 touch:after:absolute touch:after:inset-x-0 touch:after:-inset-y-3.5',
 };
 
 const VARIANT_INTERACTIVE: Readonly<Record<ButtonVariant, string>> = {

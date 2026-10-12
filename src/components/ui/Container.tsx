@@ -32,10 +32,7 @@ export function Container({
   ...rest
 }: ContainerProps) {
   return (
-    <Component
-      {...rest}
-      className={cn('mx-auto w-full', GUTTER, SIZES[size], className)}
-    >
+    <Component {...rest} className={cn('mx-auto w-full', GUTTER, SIZES[size], className)}>
       {children}
     </Component>
   );

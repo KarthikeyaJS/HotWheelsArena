@@ -162,7 +162,7 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                           height={50}
                           className={cn('w-14 shrink-0', car.retired && 'opacity-60 grayscale')}
                         />
-                        <div className="min-w-0 flex-1">
+                        <div className="relative min-w-0 flex-1">
                           <p
                             className="truncate text-sm font-semibold text-fg"
                             title={carName(car)}
@@ -170,7 +170,7 @@ export function StatsTab({ dashboard }: StatsTabProps) {
                             {car.product && !car.retired ? (
                               <Link
                                 to={productPath(car.product.slug)}
-                                className="rounded-sm transition-colors hover:text-accent-ink"
+                                className="rounded-sm transition-colors hover:text-accent-ink touch:after:absolute touch:after:-inset-y-1 touch:after:inset-x-0"
                               >
                                 {carName(car)}
                               </Link>
@@ -224,12 +224,12 @@ export function StatsTab({ dashboard }: StatsTabProps) {
               ) : (
                 <ul className="flex flex-col gap-4">
                   {series.map((row) => (
-                    <li key={row.series.id} className="flex flex-col gap-1.5">
+                    <li key={row.series.id} className="relative flex flex-col gap-1.5">
                       <div className="flex items-baseline justify-between gap-3">
                         <Link
                           to={seriesPath(row.series.slug)}
                           title={row.series.name}
-                          className="min-w-0 truncate rounded-sm text-sm font-semibold text-fg transition-colors hover:text-accent-ink"
+                          className="min-w-0 truncate rounded-sm text-sm font-semibold text-fg transition-colors hover:text-accent-ink touch:after:absolute touch:after:-inset-y-1.5 touch:after:inset-x-0"
                         >
                           {row.series.name}
                           <span className="hud ml-2 text-xs text-muted">{row.series.year}</span>

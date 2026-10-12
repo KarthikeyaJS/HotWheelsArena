@@ -40,27 +40,34 @@ export function ProductBuyBar({ product, anchorRef }: ProductBuyBarProps) {
   const [typing, setTyping] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
 
+  /* Scroll position checks (rAF-throttled) rather than IntersectionObserver: a jump (Home/End,
+     the "jump to reviews" link with reduced motion, a fast fling) can move the actions from below
+     the fold to above it without ever intersecting, which an observer never reports. */
   useEffect(() => {
     const anchor = anchorRef.current;
-    if (!enabled || !anchor || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry) return;
-      // Only once the actions are *above* the viewport (not while they are still below it).
-      setPastActions(!entry.isIntersecting && entry.boundingClientRect.bottom < 0);
-    });
-    observer.observe(anchor);
-    return () => observer.disconnect();
-  }, [anchorRef, enabled]);
-
-  useEffect(() => {
-    const footer = document.querySelector('footer');
-    if (!enabled || !footer || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(([entry]) =>
-      setOverFooter(Boolean(entry?.isIntersecting)),
+    if (!enabled || !anchor) return undefined;
+    // The site footer (landmark), not a <footer> inside a card or review on the page.
+    const footer = Array.from(document.querySelectorAll('footer')).find(
+      (element) => !element.closest('main, article, section, aside, nav, li'),
     );
-    observer.observe(footer);
-    return () => observer.disconnect();
-  }, [enabled]);
+    let frame = 0;
+    const update = (): void => {
+      frame = 0;
+      setPastActions(anchor.getBoundingClientRect().bottom < 0);
+      setOverFooter(footer ? footer.getBoundingClientRect().top < window.innerHeight : false);
+    };
+    const schedule = (): void => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [anchorRef, enabled]);
 
   useEffect(() => {
     if (!enabled) return undefined;

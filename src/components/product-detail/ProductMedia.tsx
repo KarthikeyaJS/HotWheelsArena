@@ -125,7 +125,8 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
           />
 
           <motion.div
-            className="relative aspect-[16/10] [transform-style:preserve-3d]"
+            // Landscape phones (short:): a wide, low stage so the whole car fits on the first screen.
+            className="relative aspect-[16/10] [transform-style:preserve-3d] short:aspect-[16/5]"
             style={
               tilt.enabled
                 ? { rotateX: tilt.rotateX, rotateY: tilt.rotateY, transformPerspective: 1100 }
@@ -134,7 +135,7 @@ export function ProductMedia({ product, models, className }: ProductMediaProps) 
           >
             <span
               aria-hidden="true"
-              className="absolute bottom-[13%] left-1/2 h-[7%] w-[64%] -translate-x-1/2 rounded-[50%] bg-black/20 blur-lg dark:bg-black/70"
+              className="absolute bottom-[13%] left-1/2 h-[7%] w-[64%] -translate-x-1/2 rounded-[50%] bg-black/20 blur-lg short:w-[34%] dark:bg-black/70"
             />
             <AnimatePresence initial={false}>
               <motion.div

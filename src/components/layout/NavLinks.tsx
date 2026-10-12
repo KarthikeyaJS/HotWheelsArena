@@ -26,7 +26,7 @@ export function NavLinks({ className }: NavLinksProps) {
                 to={link.to}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'group relative flex h-10 items-center whitespace-nowrap rounded-md px-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-200 xl:px-2.5 xl:text-xs xl:tracking-[0.14em]',
+                  'group relative flex h-10 items-center whitespace-nowrap rounded-md px-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors duration-200 touch:h-11 xl:px-2.5 xl:text-xs xl:tracking-[0.14em]',
                   active ? 'text-fg' : 'text-muted hover:text-fg active:text-fg',
                 )}
               >

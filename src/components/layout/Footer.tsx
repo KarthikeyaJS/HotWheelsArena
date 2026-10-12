@@ -95,7 +95,7 @@ export function Footer() {
                       <li key={link.to + link.label}>
                         <Link
                           to={link.to}
-                          className="group inline-flex items-center gap-1.5 text-sm text-muted transition-colors duration-150 hover:text-fg touch:min-h-11"
+                          className="group inline-flex items-center gap-1.5 text-sm text-muted transition-colors duration-150 hover:text-fg touch:min-h-11 touch:min-w-11"
                         >
                           <span
                             aria-hidden="true"

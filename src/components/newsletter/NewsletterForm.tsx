@@ -160,7 +160,8 @@ export function NewsletterForm({
               loading={mutation.isPending}
               loadingText={inline ? 'Joining…' : 'Joining the grid…'}
               rightIcon={inline ? undefined : <ArrowRight />}
-              className="shrink-0"
+              // Narrower below 400px so the email placeholder isn't clipped next to it.
+              className="shrink-0 max-[399px]:px-3"
             >
               {inline ? 'Join' : 'Join the grid'}
             </Button>

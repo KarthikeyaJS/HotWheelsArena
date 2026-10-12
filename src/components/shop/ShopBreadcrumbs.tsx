@@ -25,7 +25,7 @@ export function ShopBreadcrumbs({ items, className }: ShopBreadcrumbsProps) {
               {item.to && !last ? (
                 <Link
                   to={item.to}
-                  className="relative rounded-sm text-muted transition-colors duration-150 hover:text-accent-ink active:opacity-80 touch:after:absolute touch:after:-inset-x-1 touch:after:-inset-y-3"
+                  className="relative rounded-sm text-muted transition-colors duration-150 hover:text-accent-ink active:opacity-80 touch:after:absolute touch:after:-inset-x-1 touch:after:-inset-y-3.5"
                 >
                   {item.label}
                 </Link>

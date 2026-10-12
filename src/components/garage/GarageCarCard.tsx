@@ -141,7 +141,8 @@ function GarageCarCardImpl({
           {linkable && product ? (
             <Link
               to={productPath(product.slug)}
-              className="rounded-sm transition-colors hover:text-accent-ink"
+              // Touch: the whole card opens the car (its controls sit above on z-10).
+              className="rounded-sm transition-colors hover:text-accent-ink touch:after:absolute touch:after:inset-0"
             >
               {name}
             </Link>
@@ -184,7 +185,7 @@ function GarageCarCardImpl({
           </p>
         ) : null}
 
-        <div className="mt-auto flex flex-col gap-3 border-t border-line pt-3">
+        <div className="relative z-10 mt-auto flex flex-col gap-3 border-t border-line pt-3">
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
               <p className="hud text-2xs text-muted">Value</p>

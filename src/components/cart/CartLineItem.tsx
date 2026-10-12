@@ -124,7 +124,7 @@ export const CartLineItem = memo(function CartLineItem({
           <Link
             ref={nameRef}
             to={href}
-            className="rounded-sm text-fg transition-colors duration-150 hover:text-accent-ink"
+            className="relative inline-block max-w-full rounded-sm text-fg transition-colors duration-150 hover:text-accent-ink touch:after:absolute touch:after:-inset-y-3.5 touch:after:inset-x-0"
           >
             {item.name}
           </Link>

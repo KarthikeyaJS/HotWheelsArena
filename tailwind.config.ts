@@ -4,6 +4,21 @@ import plugin from 'tailwindcss/plugin';
 /** Token colour backed by an RGB-triplet CSS variable so `/opacity` modifiers work. */
 const token = (name: string): string => `rgb(var(--${name}) / <alpha-value>)`;
 
+/**
+ * `short:` = (max-height: 500px), with !important declarations (see the plugin below). Uses the
+ * legacy variant callback (`container`), which the public typings don't describe — hence the cast.
+ */
+const shortVariant = (({
+  container,
+}: {
+  container: { walkDecls: (fn: (decl: { important: boolean }) => void) => void };
+}) => {
+  container.walkDecls((decl) => {
+    decl.important = true;
+  });
+  return '@media (max-height: 500px)';
+}) as unknown as () => string;
+
 export default {
   darkMode: 'class',
   // Hover styles only apply where hover exists, so card lifts don't stick after a tap.
@@ -157,7 +172,11 @@ export default {
     plugin(({ addVariant }) => {
       addVariant('touch', '@media (hover: none) and (pointer: coarse)'); // phones + tablets
       addVariant('fine', '@media (hover: hover) and (pointer: fine)'); // mouse / trackpad
-      addVariant('short', '@media (max-height: 500px)'); // landscape phones
+      // Landscape phones. Tailwind emits responsive (sm:/md:/…) utilities after plugin variants,
+      // so a plain `short:x` could never override `sm:y`; every `short:` declaration is made
+      // !important instead (`sm:short:x` still wins over `short:x`: it comes later). A raw
+      // `screens` entry would sort correctly but disables the max-*/min-[…] variants we rely on.
+      addVariant('short', shortVariant);
     }),
   ],
 } satisfies Config;

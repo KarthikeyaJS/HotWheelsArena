@@ -63,11 +63,11 @@ export function SignInPrompt() {
       {/* Short (landscape-phone) viewports: the sign-in button comes first and the perks shrink
           to title-only chips, so the action is visible without scrolling. */}
       <div className="flex flex-col">
-        <ul className="grid gap-3 sm:grid-cols-2 short:order-3 short:mt-4 short:gap-2">
+        <ul className="grid gap-3 short:order-3 short:mt-4 short:gap-2 sm:grid-cols-2">
           {BENEFITS.map(({ icon: Icon, title, text }) => (
             <li
               key={title}
-              className="flex gap-3 rounded-lg border border-line bg-card p-3 dark:bg-card-hover/40 short:items-center short:p-2"
+              className="flex gap-3 rounded-lg border border-line bg-card p-3 short:items-center short:p-2 dark:bg-card-hover/40"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-surface short:h-7 short:w-7">
                 <Icon aria-hidden="true" className="h-4 w-4 text-accent-ink" />

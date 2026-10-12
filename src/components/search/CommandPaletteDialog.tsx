@@ -190,8 +190,9 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
   let flatIndex = -1;
 
   return (
-    // Short (landscape-phone) viewports keep the full-height phone layout: no 10vh gap, no hint footer.
-    <div className="fixed inset-0 z-palette flex items-start justify-center sm:px-6 sm:pt-[10vh] short:px-0 short:pt-0">
+    // Short (landscape-phone) viewports keep the full-height phone layout: no 10vh gap, no hint
+    // footer. (`!`: responsive sm: utilities are emitted after custom variants and would win.)
+    <div className="fixed inset-0 z-palette flex items-start justify-center short:!px-0 short:!pt-0 sm:px-6 sm:pt-[10vh]">
       <motion.div
         aria-hidden="true"
         className="absolute inset-0 bg-fg/40 backdrop-blur-sm dark:bg-bg/80"
@@ -211,7 +212,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="relative flex h-[100dvh] w-full flex-col overflow-hidden border-line bg-surface shadow-card-hover outline-none sm:h-auto sm:max-h-[min(40rem,80dvh)] sm:max-w-2xl sm:rounded-xl sm:border short:h-[100dvh] short:max-h-none short:rounded-none short:border-0 short:pl-[env(safe-area-inset-left)] short:pr-[env(safe-area-inset-right)]"
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden border-line bg-surface shadow-card-hover outline-none short:!h-[100dvh] short:!max-h-none short:!rounded-none short:!border-0 short:pl-[env(safe-area-inset-left)] short:pr-[env(safe-area-inset-right)] sm:h-auto sm:max-h-[min(40rem,80dvh)] sm:max-w-2xl sm:rounded-xl sm:border"
       >
         <span aria-hidden="true" className="racing-stripe is-active" />
         <h2 id={titleId} className="sr-only">
@@ -247,8 +248,8 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
                 aria-label="Close search"
               >
                 {/* Touch screens have no Esc key: they always get the word. */}
-                <span className="hud text-xs sm:hidden touch:inline">Close</span>
-                <Kbd className="hidden sm:inline-flex touch:hidden">Esc</Kbd>
+                <span className="hud text-xs touch:!inline sm:hidden">Close</span>
+                <Kbd className="hidden touch:!hidden sm:inline-flex">Esc</Kbd>
               </button>
             }
           />
@@ -362,7 +363,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
         </div>
 
         {/* Footer */}
-        <div className="safe-bottom hidden shrink-0 items-center justify-between gap-4 border-t border-line bg-bg/40 px-5 pt-3 text-muted sm:flex short:hidden">
+        <div className="safe-bottom hidden shrink-0 items-center justify-between gap-4 border-t border-line bg-bg/40 px-5 pt-3 text-muted short:!hidden sm:flex">
           <p className="hud flex items-center gap-4 text-2xs">
             <span className="inline-flex items-center gap-1.5">
               <Kbd>↑</Kbd>
@@ -375,9 +376,7 @@ export function CommandPaletteDialog({ onClose }: CommandPaletteDialogProps) {
               <Kbd>Esc</Kbd> Close
             </span>
           </p>
-          <p
-            className={cn('hud text-2xs', productsQuery.isSuccess ? 'text-muted' : 'opacity-0')}
-          >
+          <p className={cn('hud text-2xs', productsQuery.isSuccess ? 'text-muted' : 'opacity-0')}>
             Garage index · {products?.length ?? 0} cars
           </p>
         </div>

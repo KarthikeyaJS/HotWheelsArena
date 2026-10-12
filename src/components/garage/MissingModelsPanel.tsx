@@ -40,11 +40,12 @@ function MissingCarRow({
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5">
       <CarImage image={image} alt="" width={96} height={60} className="w-16 shrink-0" />
-      <div className="min-w-0 flex-1">
+      {/* Touch: the name link's hit area covers the whole name + meta block. */}
+      <div className="relative min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-fg" title={product.name}>
           <Link
             to={productPath(product.slug)}
-            className="rounded-sm transition-colors hover:text-accent-ink"
+            className="block truncate rounded-sm transition-colors hover:text-accent-ink touch:after:absolute touch:after:-inset-y-1 touch:after:inset-x-0"
           >
             {product.name}
           </Link>
@@ -116,11 +117,11 @@ function SeriesCard({ row, onHaveIt }: { row: SeriesProgress; onHaveIt: (p: Prod
   return (
     <li ref={cardRef} className="rounded-lg border border-line bg-card p-3 sm:p-4">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-        <div className="min-w-0">
+        <div className="relative min-w-0">
           <h3 className="font-display text-sm font-bold uppercase tracking-display text-fg">
             <Link
               to={seriesPath(row.series.slug)}
-              className="rounded-sm transition-colors hover:text-accent-ink"
+              className="rounded-sm transition-colors hover:text-accent-ink touch:after:absolute touch:after:-inset-y-1 touch:after:inset-x-0"
             >
               {row.series.name}
             </Link>

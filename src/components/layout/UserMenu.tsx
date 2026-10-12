@@ -45,7 +45,7 @@ const MENU_LINKS: readonly MenuLink[] = [
 ];
 
 const ITEM_CLASSES =
-  'flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm text-fg transition-colors duration-150 hover:bg-fg/[0.06] focus-visible:bg-fg/[0.06] active:bg-fg/[0.1]';
+  'flex h-10 w-full touch:h-11 items-center gap-3 rounded-md px-3 text-left text-sm text-fg transition-colors duration-150 hover:bg-fg/[0.06] focus-visible:bg-fg/[0.06] active:bg-fg/[0.1]';
 
 /**
  * Account control in the navbar. Signed in: avatar menu button (WAI-ARIA menu button — ↑/↓,
@@ -212,7 +212,7 @@ export function UserMenu({ className }: UserMenuProps) {
         }}
         onKeyDown={onButtonKeyDown}
         className={cn(
-          'group flex h-10 items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 transition-colors duration-200 hover:bg-fg/[0.06]',
+          'group flex h-10 items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 transition-colors duration-200 hover:bg-fg/[0.06] touch:h-11',
           open && 'bg-fg/[0.06]',
         )}
       >

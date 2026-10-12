@@ -103,9 +103,7 @@ export function PaletteOption({ item, id, active, onSelect, onActivate }: Palett
           {item.label}
         </span>
         {item.description && item.kind !== 'model' ? (
-          <span className="hud mt-0.5 block truncate text-xs text-muted">
-            {item.description}
-          </span>
+          <span className="hud mt-0.5 block truncate text-xs text-muted">{item.description}</span>
         ) : null}
       </span>
 

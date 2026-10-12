@@ -57,7 +57,7 @@ export function HudReadout({
       >
         {value}
         {unit ? (
-          <span className="ml-1.5 align-baseline text-[0.45em] font-semibold uppercase tracking-hud text-muted">
+          <span className="ml-1.5 align-baseline text-[max(0.45em,11px)] font-semibold uppercase tracking-hud text-muted">
             {unit}
           </span>
         ) : null}

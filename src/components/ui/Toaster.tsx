@@ -71,10 +71,14 @@ export const SHORT_SCREEN_VISIBLE_TOASTS = 1;
 /** Appended to repeat announcements so identical text is read again. */
 const NBSP = String.fromCharCode(160);
 
-/** Both positions clear the safe areas (notch / rounded corners / home bar, viewport-fit=cover). */
+/**
+ * Both positions clear the safe areas (notch / rounded corners / home bar, viewport-fit=cover).
+ * Below sm the bottom stack also sits above a sticky bottom bar (e.g. the product buy bar sets
+ * `--hwa-bottom-bar: <px>` on <html> while it is shown).
+ */
 const POSITIONS: Readonly<Record<ToasterPosition, string>> = {
   'bottom-right':
-    'bottom-3 left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:left-auto sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:w-[24rem]',
+    'bottom-[calc(0.75rem+var(--hwa-bottom-bar,0px))] left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] sm:bottom-6 sm:left-auto sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:w-[24rem]',
   'top-center':
     'left-[max(0.75rem,env(safe-area-inset-left))] right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))] sm:left-1/2 sm:right-auto sm:w-[26rem] sm:-translate-x-1/2',
 };

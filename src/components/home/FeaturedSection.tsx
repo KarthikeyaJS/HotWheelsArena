@@ -2,11 +2,13 @@ import { ArrowRight, Star } from 'lucide-react';
 import { DataState } from '@/components/common/DataState';
 import { ProductCardSkeleton } from '@/components/product/ProductCardSkeleton';
 import { ProductGrid } from '@/components/product/ProductGrid';
+import { PRODUCT_GRID_COLUMNS, PRODUCT_GRID_GAP } from '@/components/product';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { shopPath } from '@/config/routes';
 import { productSelectors, useProducts } from '@/hooks/useProducts';
+import { cn } from '@/lib/cn';
 import { HomeSection } from './HomeSection';
 import { HOME_SECTION_IDS, sectionHeadingId } from './homeSections';
 
@@ -15,10 +17,7 @@ const PHONE_FEATURED_COUNT = 4;
 
 function FeaturedSkeleton() {
   return (
-    <div
-      className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4"
-      aria-hidden="true"
-    >
+    <div className={cn('grid', PRODUCT_GRID_COLUMNS[4], PRODUCT_GRID_GAP)} aria-hidden="true">
       {[0, 1, 2, 3].map((index) => (
         <ProductCardSkeleton key={index} />
       ))}

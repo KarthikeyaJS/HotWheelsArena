@@ -2,6 +2,7 @@ import { Gem, Heart, ShoppingCart } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DataState } from '@/components/common/DataState';
 import { ProductCardSkeleton } from '@/components/product/ProductCardSkeleton';
+import { PRODUCT_GRID_COLUMNS, PRODUCT_GRID_GAP } from '@/components/product';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { HudReadout } from '@/components/ui/HudReadout';
@@ -41,7 +42,7 @@ function focusWasLost(active: Element | null): boolean {
 
 function WishlistSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className={cn('grid', PRODUCT_GRID_COLUMNS[4], PRODUCT_GRID_GAP)}>
       {Array.from({ length: 4 }, (_, index) => (
         <ProductCardSkeleton key={index} />
       ))}
@@ -238,7 +239,8 @@ export function WishlistCollection({
             </div>
             <ul
               aria-label="Wishlisted cars"
-              className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              // Same columns as the shop grid: 2-up compact cards on phones from 360px.
+              className={cn('grid gap-y-5', PRODUCT_GRID_COLUMNS[4], PRODUCT_GRID_GAP)}
             >
               {products.map((product, index) => (
                 <li key={product.id} data-wishlist-item="" className="min-w-0">

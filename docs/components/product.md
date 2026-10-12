@@ -67,7 +67,10 @@ wrapper is a `<span>`, so it is valid inside links and buttons (gallery thumbnai
 
 ## `ProductCard`
 
+
 The Collectible Product Card (spec §5.2), used everywhere. It is memoized.
+
+**Phone density (below `sm`, automatic):** series line, collector-edition chip and spec row are hidden, the ♡ is pinned to the top-right corner, the name drops to 13px (up to three lines) and + CART becomes a full-width 44px row (≈ 166×353 at 375px, 2-up; names wrap to up to three lines). `AddToCartButton` takes `compactLabel` for this (short "In cart ×n" / "Max ×n" labels below `sm`; the accessible name is unchanged). Short hyphenated model codes ("GT-R", "V-SPEC") never break at the hyphen (`withNoBreakHyphens`).
 
 | Prop         | Type                     | Default            | Notes                                                     |
 | ------------ | ------------------------ | ------------------ | --------------------------------------------------------- |
@@ -110,7 +113,7 @@ Interaction:
 | `isLoading`            | `boolean`              | `false`            | While loading with no products: skeletons in a `role="status"` wrapper with sr-only text |
 | `skeletonCount`        | `number`               | `8`                |                                                                                          |
 | `emptyState` / `empty` | `ReactNode`            | generic EmptyState | Either name works (`empty` is the ARCHITECTURE name)                                     |
-| `columns`              | `2 \| 3 \| 4`          | `4`                | Max columns: 1 → `sm` 2 → `lg` 3 → `xl` 4                                                |
+| `columns`              | `2 \| 3 \| 4`          | `4`                | Max columns: 1 (below 360px) → 2 (from 360px) → `lg` 3 → `xl` 4; 12px gap on phones. `PRODUCT_GRID_COLUMNS` / `PRODUCT_GRID_GAP` are exported for hand-built card grids |
 | `variant`              | `ProductCardVariant`   | `'default'`        |                                                                                          |
 | `priorityCount`        | `number`               | `0`                | The first N images are eager and high priority, with no entrance fade                    |
 | `cardHeadingAs`        | `'h2' \| 'h3' \| 'h4'` | `'h3'`             |                                                                                          |

@@ -121,7 +121,7 @@ Decorative avatar (`referrerPolicy="no-referrer"`, lazy) with initials fallback 
 
 ui-kit `Drawer` (left, `size="sm"`) bound to `uiStore.mobileNavOpen`: search row, primary links (icon, description,
 active racing stripe, lock hint for My Garage when signed out), "Your pit" links with counts (cart / wishlist / orders),
-theme / scanlines rows, account footer (user + level + Sign out, or Google sign-in). Closes on navigation and when
+theme / scanlines rows, account footer (one compact row: avatar, full-width name, "LVL 05 · Street Racer", icon-only Sign out; or Google sign-in). On short (landscape) viewports the header scrolls with the links and the footer stays pinned. Closes on navigation and when
 the viewport reaches `lg`.
 
 ### `Footer` (no props)

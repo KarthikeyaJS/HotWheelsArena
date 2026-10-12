@@ -147,7 +147,7 @@ export function Chip({
         disabled={disabled}
         aria-label={resolvedRemoveLabel}
         title={resolvedRemoveLabel}
-        className="relative ml-0.5 inline-grid h-5 w-5 shrink-0 place-items-center rounded-sm opacity-70 touch:after:absolute touch:after:-inset-3 transition-[opacity,background-color] duration-150 hover:bg-fg/15 hover:opacity-100 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+        className="relative ml-0.5 inline-grid h-5 w-5 shrink-0 place-items-center rounded-sm opacity-70 transition-[opacity,background-color] duration-150 hover:bg-fg/15 hover:opacity-100 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40 touch:after:absolute touch:after:-inset-3"
       >
         <X aria-hidden="true" strokeWidth={2.5} />
       </button>
